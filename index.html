@@ -2,7 +2,7 @@
 <html lang="si">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Health 411 - Communicable Disease Report System</title>
     <style>
         * { box-sizing: border-box; }
@@ -159,10 +159,10 @@
         }
 
         .form-group input, .form-group select, .form-group textarea {
-            padding: 8px 12px;
+            padding: 10px 12px;
             border: 1px solid #cbd5e0;
             border-radius: 6px;
-            font-size: 13px;
+            font-size: 14px;
             transition: all 0.2s;
         }
 
@@ -182,7 +182,7 @@
 
         .radio-group label {
             font-weight: normal;
-            font-size: 12px;
+            font-size: 13px;
             cursor: pointer;
             color: #1e293b;
         }
@@ -225,8 +225,8 @@
         }
 
         .btn {
-            padding: 10px 16px;
-            font-size: 13px;
+            padding: 12px 18px;
+            font-size: 14px;
             font-weight: bold;
             cursor: pointer;
             border: none;
@@ -253,6 +253,59 @@
         .btn-reset { background-color: #ef4444; color: white; margin-left: auto; }
         .btn-reset:hover { background-color: #dc2626; }
 
+        /* 📱 MOBILE RESPONSIVE UI STYLES (NEW UPGRADE) */
+        @media screen and (max-width: 900px) {
+            body {
+                overflow: auto;
+            }
+
+            .dashboard-container {
+                flex-direction: column;
+                height: auto;
+            }
+
+            /* Right Portal Panel First on Mobile */
+            .portal-panel {
+                width: 100%;
+                height: auto;
+                order: 1;
+                padding: 15px;
+            }
+
+            /* Left Preview Panel Second on Mobile */
+            .preview-panel {
+                width: 100%;
+                height: auto;
+                order: 2;
+                border-right: none;
+                border-top: 4px solid #0f172a;
+                padding: 15px 5px;
+            }
+
+            .preview-scale-wrapper {
+                transform: scale(0.32); /* Scaled down for mobile screen */
+                margin-bottom: -290px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr; /* Single column on phones */
+            }
+
+            .portal-card {
+                padding: 15px;
+            }
+
+            .btn {
+                width: 100%;
+                text-align: center;
+            }
+
+            .btn-reset {
+                margin-left: 0;
+            }
+        }
+
+        /* STRICT PRINT STYLES */
         @media print {
             @page {
                 size: A4 landscape;
@@ -472,11 +525,12 @@
                     <div class="form-group">
                         <label>GPS Coordinates (Type / Auto / Pin)</label>
                         <input type="text" id="inGpsCoords" placeholder="e.g. 6.9271, 79.8612" oninput="updatePrintForm()">
+                        <span id="gpsStatusNotice" style="font-size: 11px; color: #dc2626; margin-top: 4px; display: none;"></span>
                     </div>
                 </div>
 
                 <div class="form-grid">
-                    <div class="form-group" style="grid-column: span 4; display: flex; flex-direction: row; gap: 10px;">
+                    <div class="form-group" style="grid-column: span 4; display: flex; flex-direction: row; gap: 10px; flex-wrap: wrap;">
                         <button type="button" class="btn btn-gps" onclick="fetchGPS()">📍 Auto Pick Current GPS</button>
                         <a id="btnMapPinLink" href="https://maps.google.com" target="_blank" class="btn btn-map">🗺️ Open Map Pin Selector</a>
                     </div>
@@ -570,33 +624,37 @@
 
                 <!-- CONTACTS INVESTIGATED TABLES IN PORTAL -->
                 <div class="section-title">06. I. රෝගියාගේ නිවෙසේ පදිංචි අය / Patient's household Contacts</div>
-                <table class="portal-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 35%;">නම / Name</th>
-                            <th style="width: 15%;">වයස / Age</th>
-                            <th style="width: 25%;">බලන ලද දිනය / Date seen</th>
-                            <th style="width: 25%;">නිරීක්ෂණය / Observation</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableHouseholdBody"></tbody>
-                </table>
+                <div style="overflow-x: auto;">
+                    <table class="portal-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 35%;">නම / Name</th>
+                                <th style="width: 15%;">වයස / Age</th>
+                                <th style="width: 25%;">බලන ලද දිනය / Date seen</th>
+                                <th style="width: 25%;">නිරීක්ෂණය / Observation</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableHouseholdBody"></tbody>
+                    </table>
+                </div>
 
                 <div class="section-title">07. II. ස්පර්ශ කළ අනෙකුත් අය / Other Contacts</div>
-                <table class="portal-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 35%;">නම / Name</th>
-                            <th style="width: 15%;">වයස / Age</th>
-                            <th style="width: 25%;">බලන ලද දිනය / Date seen</th>
-                            <th style="width: 25%;">නිරීක්ෂණය / Observation</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableOtherBody"></tbody>
-                </table>
+                <div style="overflow-x: auto;">
+                    <table class="portal-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 35%;">නම / Name</th>
+                                <th style="width: 15%;">වයස / Age</th>
+                                <th style="width: 25%;">බලන ලද දිනය / Date seen</th>
+                                <th style="width: 25%;">නිරීක්ෂණය / Observation</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableOtherBody"></tbody>
+                    </table>
+                </div>
 
                 <!-- PAGE 2 SCREENSHOT LAYOUT SECTION CONTROLS WITH AI AUTO-GENERATOR -->
-                <div class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="section-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                     <span>08. PAGE 2 - CONTENT BLOCKS</span>
                     <button type="button" class="btn btn-ai" onclick="generateAiNotes()">✨ Auto Generate AI Notes</button>
                 </div>
@@ -716,17 +774,30 @@
         updatePrintForm();
     }
 
+    // SMART MOBILE-FRIENDLY GPS LOCATION PICKER
     function fetchGPS() {
+        const noticeEl = document.getElementById('gpsStatusNotice');
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition((position) => {
                 const coords = position.coords.latitude.toFixed(6) + ", " + position.coords.longitude.toFixed(6);
                 document.getElementById('inGpsCoords').value = coords;
+                if (noticeEl) noticeEl.style.display = 'none';
                 updatePrintForm();
             }, (error) => {
-                alert("GPS Error: " + error.message + ". You can type coordinates manually.");
+                if (noticeEl) {
+                    noticeEl.innerText = "⚠️ Mobile Location Permission Blocked. Please type coordinates or use Map Pin Selector.";
+                    noticeEl.style.display = 'block';
+                }
+            }, {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
             });
         } else {
-            alert("Geolocation not supported. Please type coordinates manually.");
+            if (noticeEl) {
+                noticeEl.innerText = "⚠️ Geolocation not supported on this browser. Type coordinates manually.";
+                noticeEl.style.display = 'block';
+            }
         }
     }
 
@@ -739,7 +810,6 @@
         return dateStr;
     }
 
-    // AI AUTO CONTENT GENERATOR FOR PAGE 2
     function generateAiNotes() {
         const patientName = document.getElementById('inPatientName').value || 'Patient';
         const disease = document.getElementById('inDiseaseConfirmed').value || document.getElementById('inDiseaseNotified').value || 'Communicable Disease';
@@ -747,18 +817,12 @@
         const hospital = document.getElementById('inHospitalName').value || 'Hospital';
         const todayDate = new Date().toISOString().split('T')[0];
 
-        // Fill Dates
         if (!document.getElementById('inP2Date1').value) document.getElementById('inP2Date1').value = todayDate;
         if (!document.getElementById('inP2Date2').value) document.getElementById('inP2Date2').value = todayDate;
         if (!document.getElementById('inP2Date3').value) document.getElementById('inP2Date3').value = todayDate;
 
-        // Content 01: Investigation & Source Notes
         document.getElementById('inP2Content1').value = `Field investigation conducted for ${patientName} diagnosed with ${disease}. Source of infection evaluated at residence (${address}). Potential vector breeding sites inspected around premises.`;
-
-        // Content 02: Control Measures & Action Taken
         document.getElementById('inP2Content2').value = `ACTION TAKEN: Vector control measures initiated. Fogging & larviciding conducted around a 50m radius of ${address}. Patient advised strict isolation at ${hospital}. Health education on preventive measures provided to household contacts.`;
-
-        // Content 03: Follow-Up & Recommendations
         document.getElementById('inP2Content3').value = `Follow-up visit scheduled in 7 days. Local MOH notified for area surveillance. Household contacts advised to report immediately if symptoms develop.`;
 
         updatePrintForm();
@@ -875,7 +939,7 @@
         document.getElementById('containerHouseholdOverlay').innerHTML = hhHtml;
         document.getElementById('containerOtherOverlay').innerHTML = othHtml;
 
-        // PAGE 2 SCREENSHOT MAPPING (3 BLOCKS + BOTTOM GPS)
+        // PAGE 2 SCREENSHOT MAPPING
         document.getElementById('outP2Date1').innerText = document.getElementById('inP2Date1').value;
         document.getElementById('outP2Content1').innerText = document.getElementById('inP2Content1').value;
 
@@ -895,10 +959,7 @@
             mapBtn.href = `https://maps.google.com`;
         }
 
-        // Output GPS Block at Page 2 Bottom
         document.getElementById('outP2GpsBlock').innerText = gpsVal ? "PATIENT LOCATION GPS - " + gpsVal : "";
-
-        // Output Page 1 Bottom Stamp
         document.getElementById('outGpsCoordsPage1').innerText = gpsVal ? "PATIENT HOME / LOCATION GPS COORDINATE - " + gpsVal : "";
 
         saveFormData();
