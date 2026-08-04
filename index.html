@@ -221,6 +221,7 @@
             background: white;
             padding: 12px 0 0 0;
             border-top: 1px solid #e2e8f0;
+            flex-wrap: wrap;
         }
 
         .btn {
@@ -236,6 +237,9 @@
 
         .btn-update { background-color: #16a34a; color: white; }
         .btn-update:hover { background-color: #15803d; }
+
+        .btn-ai { background-color: #7c3aed; color: white; }
+        .btn-ai:hover { background-color: #6d28d9; }
 
         .btn-gps { background-color: #2563eb; color: white; }
         .btn-gps:hover { background-color: #1d4ed8; }
@@ -354,7 +358,7 @@
             </div>
         </div>
 
-        <!-- PAGE 2: BACK SIDE PREVIEW (EXACT SCREENSHOT LAYOUT MATCH) -->
+        <!-- PAGE 2: BACK SIDE PREVIEW -->
         <div class="preview-scale-wrapper">
             <div class="page-container" id="page-2">
                 
@@ -370,7 +374,7 @@
                 <span class="data-overlay" id="outP2Date3" style="top: 520px; left: 140px; width: 110px;"></span>
                 <div class="data-overlay-textarea" id="outP2Content3" style="top: 520px; left: 270px; width: 780px; height: 130px;"></div>
 
-                <!-- PATIENT LOCATION GPS DEDICATED BLOCK (AT BOTTOM OF PAGE 2) -->
+                <!-- PATIENT LOCATION GPS DEDICATED BLOCK -->
                 <div class="data-overlay" id="outP2GpsBlock" style="top: 675px; left: 270px; width: 780px; font-size: 15px; color: #000080; font-weight: 900;"></div>
 
             </div>
@@ -591,8 +595,12 @@
                     <tbody id="tableOtherBody"></tbody>
                 </table>
 
-                <!-- PAGE 2 SCREENSHOT LAYOUT SECTION CONTROLS -->
-                <div class="section-title">08. PAGE 2 - CONTENT BLOCK 01</div>
+                <!-- PAGE 2 SCREENSHOT LAYOUT SECTION CONTROLS WITH AI AUTO-GENERATOR -->
+                <div class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>08. PAGE 2 - CONTENT BLOCKS</span>
+                    <button type="button" class="btn btn-ai" onclick="generateAiNotes()">✨ Auto Generate AI Notes</button>
+                </div>
+
                 <div class="form-grid">
                     <div class="form-group">
                         <label>DATE 01</label>
@@ -604,7 +612,6 @@
                     </div>
                 </div>
 
-                <div class="section-title">09. PAGE 2 - CONTENT BLOCK 02</div>
                 <div class="form-grid">
                     <div class="form-group">
                         <label>DATE 02</label>
@@ -616,7 +623,6 @@
                     </div>
                 </div>
 
-                <div class="section-title">10. PAGE 2 - CONTENT BLOCK 03</div>
                 <div class="form-grid">
                     <div class="form-group">
                         <label>DATE 03</label>
@@ -731,6 +737,31 @@
             return `${parts[1]}-${parts[2]}`;
         }
         return dateStr;
+    }
+
+    // AI AUTO CONTENT GENERATOR FOR PAGE 2
+    function generateAiNotes() {
+        const patientName = document.getElementById('inPatientName').value || 'Patient';
+        const disease = document.getElementById('inDiseaseConfirmed').value || document.getElementById('inDiseaseNotified').value || 'Communicable Disease';
+        const address = document.getElementById('inPatientAddress').value || 'Premises';
+        const hospital = document.getElementById('inHospitalName').value || 'Hospital';
+        const todayDate = new Date().toISOString().split('T')[0];
+
+        // Fill Dates
+        if (!document.getElementById('inP2Date1').value) document.getElementById('inP2Date1').value = todayDate;
+        if (!document.getElementById('inP2Date2').value) document.getElementById('inP2Date2').value = todayDate;
+        if (!document.getElementById('inP2Date3').value) document.getElementById('inP2Date3').value = todayDate;
+
+        // Content 01: Investigation & Source Notes
+        document.getElementById('inP2Content1').value = `Field investigation conducted for ${patientName} diagnosed with ${disease}. Source of infection evaluated at residence (${address}). Potential vector breeding sites inspected around premises.`;
+
+        // Content 02: Control Measures & Action Taken
+        document.getElementById('inP2Content2').value = `ACTION TAKEN: Vector control measures initiated. Fogging & larviciding conducted around a 50m radius of ${address}. Patient advised strict isolation at ${hospital}. Health education on preventive measures provided to household contacts.`;
+
+        // Content 03: Follow-Up & Recommendations
+        document.getElementById('inP2Content3').value = `Follow-up visit scheduled in 7 days. Local MOH notified for area surveillance. Household contacts advised to report immediately if symptoms develop.`;
+
+        updatePrintForm();
     }
 
     function updatePrintForm() {
@@ -857,7 +888,6 @@
         // GPS LOCATION MAPPING
         const gpsVal = document.getElementById('inGpsCoords').value;
         
-        // Dynamic Map Pin Selector Link
         const mapBtn = document.getElementById('btnMapPinLink');
         if (gpsVal) {
             mapBtn.href = `https://www.google.com/maps?q=${gpsVal}`;
