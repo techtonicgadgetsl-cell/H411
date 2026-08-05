@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Health 411 - Communicable Disease Report System</title>
+    <title>Health 411 - Communicable Disease Report System (Gemini Fixed)</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -21,7 +21,6 @@
             height: 100vh;
         }
 
-        /* LEFT COLUMN: FORM PREVIEW PANEL */
         .preview-panel {
             width: 50%;
             height: 100%;
@@ -90,7 +89,6 @@
             overflow: hidden;
         }
 
-        /* RIGHT COLUMN: DATA ENTRY PORTAL PANEL */
         .portal-panel {
             width: 50%;
             height: 100%;
@@ -225,8 +223,8 @@
         }
 
         .btn {
-            padding: 12px 18px;
-            font-size: 14px;
+            padding: 10px 16px;
+            font-size: 13px;
             font-weight: bold;
             cursor: pointer;
             border: none;
@@ -241,6 +239,9 @@
         .btn-ai { background-color: #7c3aed; color: white; }
         .btn-ai:hover { background-color: #6d28d9; }
 
+        .btn-scan { background-color: #d97706; color: white; }
+        .btn-scan:hover { background-color: #b45309; }
+
         .btn-gps { background-color: #2563eb; color: white; }
         .btn-gps:hover { background-color: #1d4ed8; }
 
@@ -253,76 +254,26 @@
         .btn-reset { background-color: #ef4444; color: white; margin-left: auto; }
         .btn-reset:hover { background-color: #dc2626; }
 
-        /* 📱 MOBILE RESPONSIVE UI STYLES (NEW UPGRADE) */
         @media screen and (max-width: 900px) {
-            body {
-                overflow: auto;
-            }
-
-            .dashboard-container {
-                flex-direction: column;
-                height: auto;
-            }
-
-            /* Right Portal Panel First on Mobile */
-            .portal-panel {
-                width: 100%;
-                height: auto;
-                order: 1;
-                padding: 15px;
-            }
-
-            /* Left Preview Panel Second on Mobile */
-            .preview-panel {
-                width: 100%;
-                height: auto;
-                order: 2;
-                border-right: none;
-                border-top: 4px solid #0f172a;
-                padding: 15px 5px;
-            }
-
-            .preview-scale-wrapper {
-                transform: scale(0.32); /* Scaled down for mobile screen */
-                margin-bottom: -290px;
-            }
-
-            .form-grid {
-                grid-template-columns: 1fr; /* Single column on phones */
-            }
-
-            .portal-card {
-                padding: 15px;
-            }
-
-            .btn {
-                width: 100%;
-                text-align: center;
-            }
-
-            .btn-reset {
-                margin-left: 0;
-            }
+            body { overflow: auto; }
+            .dashboard-container { flex-direction: column; height: auto; }
+            .portal-panel { width: 100%; height: auto; order: 1; padding: 15px; }
+            .preview-panel { width: 100%; height: auto; order: 2; border-right: none; border-top: 4px solid #0f172a; padding: 15px 5px; }
+            .preview-scale-wrapper { transform: scale(0.32); margin-bottom: -290px; }
+            .form-grid { grid-template-columns: 1fr; }
+            .portal-card { padding: 15px; }
+            .btn { width: 100%; text-align: center; }
+            .btn-reset { margin-left: 0; }
         }
 
-        /* STRICT PRINT STYLES */
         @media print {
-            @page {
-                size: A4 landscape;
-                margin: 0;
-            }
-
+            @page { size: A4 landscape; margin: 0; }
             body { background: none; overflow: visible; }
             .dashboard-container { display: block; width: 100%; height: auto; }
             .portal-panel { display: none !important; }
             .preview-panel { width: 100%; height: auto; background: none; padding: 0; overflow: visible; border: none; }
             .preview-scale-wrapper { transform: none !important; margin-bottom: 0 !important; }
-            .page-container {
-                box-shadow: none !important;
-                page-break-after: always;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
+            .page-container { box-shadow: none !important; page-break-after: always; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
     </style>
 </head>
@@ -330,16 +281,9 @@
 
 <div class="dashboard-container">
 
-    <!-- ======================================================== -->
-    <!-- LEFT PANEL: LIVE FORM PREVIEW -->
-    <!-- ======================================================== -->
     <div class="preview-panel">
-        
-        <!-- PAGE 1: FRONT SIDE PREVIEW -->
         <div class="preview-scale-wrapper">
             <div class="page-container" id="page-1">
-                
-                <!-- TOP 5 HEADER POSITIONS -->
                 <span class="data-overlay" id="outPhiRefNo" style="top: 97px; left: 595px; width: 140px;"></span>
                 <span class="data-overlay" id="outPhiRange" style="top: 97px; left: 885px; width: 140px;"></span>
 
@@ -348,96 +292,69 @@
 
                 <span class="data-overlay" id="outMohRegNo" style="top: 170px; left: 625px; width: 140px;"></span>
 
-                <!-- Disease Details & Dates -->
                 <span class="data-overlay" id="outDiseaseNotified" style="top: 205px; left: 260px; width: 180px;"></span>
                 <span class="data-overlay" id="outDateNotified" style="top: 203px; left: 480px; width: 100px;"></span>
 
                 <span class="data-overlay" id="outDiseaseConfirmed" style="top: 229px; left: 290px; width: 180px;"></span>
                 <span class="data-overlay" id="outDateConfirmed" style="top: 226px; left: 480px; width: 100px;"></span>
 
-                <!-- Patient Name & Address -->
                 <span class="data-overlay" id="outPatientName" style="top: 260px; left: 250px; width: 290px;"></span>
                 <span class="data-overlay" id="outPatientAddress" style="top: 280px; left: 190px; width: 330px;"></span>
 
-                <!-- Birthday + Age Overlay Display -->
                 <span class="data-overlay" id="outPatientDobAge" style="top: 325px; left: 180px; width: 180px;"></span>
 
-                <!-- Sex Checkmarks -->
                 <span class="data-overlay" id="outSexMale" style="top: 350px; left: 295px; width: 30px;"></span>
-                <span class="data-overlay" id="outSexFemale" style="top: 370px; left: 295px; width: 30px;"></span>
+                <span class="data-overlay" id="outSexFemale" style="top: 350px; left: 295px; width: 30px;"></span>
 
-                <!-- Ethnic Group Checkmarks -->
                 <span class="data-overlay" id="outEthnicSinhalese" style="top: 385px; left: 295px; width: 30px;"></span>
                 <span class="data-overlay" id="outEthnicTamil" style="top: 404px; left: 295px; width: 30px;"></span>
                 <span class="data-overlay" id="outEthnicMuslim" style="top: 421px; left: 295px; width: 30px;"></span>
                 <span class="data-overlay" id="outEthnicBurgher" style="top: 438px; left: 295px; width: 30px;"></span>
                 <span class="data-overlay" id="outEthnicOthers" style="top: 453px; left: 295px; width: 30px;"></span>
 
-                <!-- PATIENT MOVEMENTS OVERLAY -->
                 <div class="data-overlay-textarea-bold" id="outMovements" style="top: 350px; left: 330px; width: 200px; height: 125px;"></div>
 
-                <!-- Dates & Hospitalization -->
                 <span class="data-overlay" id="outDateOnset" style="top: 480px; left: 235px; width: 160px;"></span>
                 <span class="data-overlay" id="outDateHospitalized" style="top: 505px; left: 235px; width: 160px;"></span>
                 <span class="data-overlay" id="outDateDischarged" style="top: 527px; left: 235px; width: 160px;"></span>
                 <span class="data-overlay" id="outHospitalName" style="top: 544px; left: 230px; width: 300px;"></span>
 
-                <!-- Laboratory Findings Overlay -->
                 <div class="data-overlay-textarea" id="outLabFindings" style="top: 565px; left: 330px; width: 200px; height: 180px;"></div>
 
-                <!-- Outcome Checkmarks -->
                 <span class="data-overlay" id="outOutcomeRecovered" style="top: 580px; left: 295px; width: 30px;"></span>
                 <span class="data-overlay" id="outOutcomeDied" style="top: 593px; left: 295px; width: 30px;"></span>
 
-                <!-- Where Isolated Checkmarks -->
                 <span class="data-overlay" id="outIsolatedHome" style="top: 610px; left: 295px; width: 30px;"></span>
                 <span class="data-overlay" id="outIsolatedHospital" style="top: 632px; left: 295px; width: 30px;"></span>
                 <span class="data-overlay" id="outIsolatedNotIsolated" style="top: 648px; left: 295px; width: 30px;"></span>
 
-                <!-- Nature of Case Checkmark -->
                 <span class="data-overlay" id="outNatureIsolatedCase" style="top: 672px; left: 295px; width: 30px;"></span>
 
-                <!-- Outbreak Checkmark -->
                 <span class="data-overlay" id="outOutbreakReportNeeded" style="top: 715px; left: 295px; width: 30px;"></span>
 
-                <!-- TABLE I OVERLAY POSITIONS -->
                 <div id="containerHouseholdOverlay"></div>
-
-                <!-- TABLE II OVERLAY POSITIONS -->
                 <div id="containerOtherOverlay"></div>
 
-                <!-- Page 1 Bottom GPS Stamp -->
                 <span class="data-overlay" id="outGpsCoordsPage1" style="bottom: 12px; left: 20px; width: 600px; color: #111; font-size: 12px; font-weight: 900;"></span>
             </div>
         </div>
 
-        <!-- PAGE 2: BACK SIDE PREVIEW -->
         <div class="preview-scale-wrapper">
             <div class="page-container" id="page-2">
-                
-                <!-- CONTENT BLOCK 01 -->
                 <span class="data-overlay" id="outP2Date1" style="top: 155px; left: 140px; width: 110px;"></span>
                 <div class="data-overlay-textarea" id="outP2Content1" style="top: 155px; left: 270px; width: 780px; height: 130px;"></div>
 
-                <!-- CONTENT BLOCK 02 -->
                 <span class="data-overlay" id="outP2Date2" style="top: 310px; left: 140px; width: 110px;"></span>
                 <div class="data-overlay-textarea" id="outP2Content2" style="top: 310px; left: 270px; width: 780px; height: 190px;"></div>
 
-                <!-- CONTENT BLOCK 03 -->
                 <span class="data-overlay" id="outP2Date3" style="top: 520px; left: 140px; width: 110px;"></span>
                 <div class="data-overlay-textarea" id="outP2Content3" style="top: 520px; left: 270px; width: 780px; height: 130px;"></div>
 
-                <!-- PATIENT LOCATION GPS DEDICATED BLOCK -->
                 <div class="data-overlay" id="outP2GpsBlock" style="top: 675px; left: 270px; width: 780px; font-size: 15px; color: #000080; font-weight: 900;"></div>
-
             </div>
         </div>
-
     </div>
 
-    <!-- ======================================================== -->
-    <!-- RIGHT PANEL: DATA ENTRY PORTAL -->
-    <!-- ======================================================== -->
     <div class="portal-panel">
         <div class="portal-card">
             <div class="portal-header">
@@ -446,8 +363,22 @@
             </div>
             
             <form id="healthPortalForm">
-                
-                <!-- TOP 5 HEADER TEXT BOXES -->
+                <div class="section-title">00. Vision AI Provider Engine Setup</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Select AI Engine</label>
+                        <select id="inAiEngineProvider" onchange="toggleAiEngineUI()">
+                            <option value="GEMINI_AI" selected>Google Gemini AI</option>
+                            <option value="OCR_SPACE">Free OCR.space API</option>
+                            <option value="OPENAI_GPT4">OpenAI GPT-4o Vision API</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="grid-column: span 3;">
+                        <label id="lblAiKey">API Key (AQ.Ab8RN... Active)</label>
+                        <input type="password" id="inAiApiKey" placeholder="Enter API key" value="AQ.Ab8RN6LpFLEnS-aCOGwEa4sxvhbnJ5_NWsVPzHD8sSpwMAbCBA" oninput="saveFormData()">
+                    </div>
+                </div>
+
                 <div class="section-title">01. Office & Administrative Reference Details</div>
                 <div class="form-grid">
                     <div class="form-group">
@@ -472,7 +403,6 @@
                     </div>
                 </div>
 
-                <!-- DISEASE DETAILS & DROPDOWNS -->
                 <div class="section-title">02. Disease Information & Notification Dates</div>
                 <div class="form-grid">
                     <div class="form-group">
@@ -493,7 +423,6 @@
                     </div>
                 </div>
 
-                <!-- PATIENT DETAILS & GPS LOCATION TOOL -->
                 <div class="section-title">03. Patient Details & Location Tagging</div>
                 <div class="form-grid">
                     <div class="form-group" style="grid-column: span 2;">
@@ -523,7 +452,7 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>GPS Coordinates (Type / Auto / Pin)</label>
+                        <label>GPS Coordinates</label>
                         <input type="text" id="inGpsCoords" placeholder="e.g. 6.9271, 79.8612" oninput="updatePrintForm()">
                         <span id="gpsStatusNotice" style="font-size: 11px; color: #dc2626; margin-top: 4px; display: none;"></span>
                     </div>
@@ -536,7 +465,6 @@
                     </div>
                 </div>
 
-                <!-- ETHNIC GROUP -->
                 <div class="section-title">03.1 ජාති අනුව වෙන් කිරීම / Ethnic Group</div>
                 <div class="form-grid">
                     <div class="form-group" style="grid-column: span 4;">
@@ -550,8 +478,7 @@
                     </div>
                 </div>
 
-                <!-- PATIENT MOVEMENTS & LAB FINDINGS -->
-                <div class="section-title">03.2 Patient Movements & Lab Findings</div>
+                <div class="section-title">03.2 Patient Movements</div>
                 <div class="form-grid">
                     <div class="form-group" style="grid-column: span 4;">
                         <label>රෝගය වැළඳීමට පෙර සති තුන ඇතුළත රෝගියාගේ සැම ගමනක්ම / Patient's movements</label>
@@ -559,8 +486,7 @@
                     </div>
                 </div>
 
-                <!-- DATES & HOSPITAL -->
-                <div class="section-title">04. Hospitalization Details</div>
+                <div class="section-title">04. Hospitalization Details & Lab Findings</div>
                 <div class="form-grid">
                     <div class="form-group">
                         <label>Date of Onset</label>
@@ -582,12 +508,18 @@
 
                 <div class="form-grid">
                     <div class="form-group" style="grid-column: span 4;">
-                        <label>රසායනාගාරයේදී සොයාගත් දේ / Laboratory findings</label>
-                        <textarea id="inLabFindings" rows="3" placeholder="Enter findings..." oninput="updatePrintForm()"></textarea>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
+                            <label style="margin-bottom: 0;">රසායනාගාරයේදී සොයාගත් දේ / Laboratory findings</label>
+                            <div>
+                                <input type="file" id="labPhotoFileInput" accept="image/*" capture="environment" style="display: none;" onchange="processLabPhotoAI(event)">
+                                <button type="button" class="btn btn-scan" onclick="document.getElementById('labPhotoFileInput').click()">📷 Scan Handwritten Lab Photo</button>
+                            </div>
+                        </div>
+                        <span id="ocrStatusNotice" style="font-size: 11px; color: #d97706; font-weight: bold; display: none; margin-bottom: 5px;">⏳ AI scanning handwritten report... Please wait.</span>
+                        <textarea id="inLabFindings" rows="5" placeholder="Enter findings manually or scan handwritten lab report photo..." oninput="updatePrintForm()"></textarea>
                     </div>
                 </div>
 
-                <!-- OUTCOME & ISOLATION OPTIONS -->
                 <div class="section-title">05. Outcome, Isolation & Case Nature</div>
                 <div class="form-grid">
                     <div class="form-group">
@@ -622,7 +554,6 @@
                     </div>
                 </div>
 
-                <!-- CONTACTS INVESTIGATED TABLES IN PORTAL -->
                 <div class="section-title">06. I. රෝගියාගේ නිවෙසේ පදිංචි අය / Patient's household Contacts</div>
                 <div style="overflow-x: auto;">
                     <table class="portal-table">
@@ -653,7 +584,6 @@
                     </table>
                 </div>
 
-                <!-- PAGE 2 SCREENSHOT LAYOUT SECTION CONTROLS WITH AI AUTO-GENERATOR -->
                 <div class="section-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                     <span>08. PAGE 2 - CONTENT BLOCKS</span>
                     <button type="button" class="btn btn-ai" onclick="generateAiNotes()">✨ Auto Generate AI Notes</button>
@@ -692,7 +622,6 @@
                     </div>
                 </div>
 
-                <!-- BUTTONS -->
                 <div class="btn-group">
                     <button type="button" class="btn btn-update" onclick="updatePrintForm()">Update Preview</button>
                     <button type="button" class="btn btn-print" onclick="window.print()">Print A4 Form</button>
@@ -761,6 +690,23 @@
         loadSavedData();
     };
 
+    function toggleAiEngineUI() {
+        const provider = document.getElementById('inAiEngineProvider').value;
+        const keyInput = document.getElementById('inAiApiKey');
+        const lblKey = document.getElementById('lblAiKey');
+
+        if (provider === 'GEMINI_AI') {
+            lblKey.innerText = "Google Gemini API Key (AQ.Ab8RN... Active)";
+            if(!keyInput.value) keyInput.value = "AQ.Ab8RN6LpFLEnS-aCOGwEa4sxvhbnJ5_NWsVPzHD8sSpwMAbCBA";
+        } else if (provider === 'OCR_SPACE') {
+            lblKey.innerText = "Free OCR.space API Key";
+            keyInput.value = "K88879688888957";
+        } else if (provider === 'OPENAI_GPT4') {
+            lblKey.innerText = "OpenAI API Key (sk-...)";
+            keyInput.placeholder = "sk-proj-...";
+        }
+    }
+
     function autoCalcAge(dobStr) {
         if (!dobStr) return;
         const birthDate = new Date(dobStr);
@@ -774,7 +720,6 @@
         updatePrintForm();
     }
 
-    // SMART MOBILE-FRIENDLY GPS LOCATION PICKER
     function fetchGPS() {
         const noticeEl = document.getElementById('gpsStatusNotice');
         if (navigator.geolocation) {
@@ -799,6 +744,134 @@
                 noticeEl.style.display = 'block';
             }
         }
+    }
+
+    // MULTI-AI PHOTO PROCESSING HANDLER WITH STABLE V1 GEMINI ENDPOINT
+    async function processLabPhotoAI(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const provider = document.getElementById('inAiEngineProvider').value;
+        const apiKey = document.getElementById('inAiApiKey').value.trim();
+        const noticeEl = document.getElementById('ocrStatusNotice');
+
+        if (!apiKey) {
+            alert("Please enter a valid API key for the selected AI Engine!");
+            return;
+        }
+
+        if (noticeEl) {
+            noticeEl.innerText = `⏳ Processing handwritten lab photo via ${provider}... Please wait.`;
+            noticeEl.style.display = 'block';
+        }
+
+        if (provider === 'GEMINI_AI') {
+            // FIXED STABLE V1 GEMINI API ENDPOINT
+            const reader = new FileReader();
+            reader.onloadend = async function () {
+                const base64Image = reader.result.split(',')[1];
+                try {
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{
+                                parts: [
+                                    { text: "Extract medical findings line by line (WBC, HCT, Hb, Creatinine, AST, ALT, CRP values)." },
+                                    { inline_data: { mime_type: file.type || "image/jpeg", data: base64Image } }
+                                ]
+                            }]
+                        })
+                    });
+                    const data = await res.json();
+                    if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+                        appendParsedLabText(data.candidates[0].content.parts[0].text);
+                    } else {
+                        throw new Error(data.error?.message || "Gemini Parsing Error");
+                    }
+                } catch(e) {
+                    alert("Gemini Error: " + e.message);
+                } finally {
+                    if (noticeEl) noticeEl.style.display = 'none';
+                }
+            };
+            reader.readAsDataURL(file);
+
+        } else if (provider === 'OCR_SPACE') {
+            // Free OCR.Space Engine
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("apikey", apiKey);
+            formData.append("language", "eng");
+            formData.append("isTable", "true");
+            formData.append("OCREngine", "2");
+
+            try {
+                const res = await fetch("https://api.ocr.space/parse/image", {
+                    method: "POST",
+                    body: formData
+                });
+                const data = await res.json();
+                if (data.ParsedResults && data.ParsedResults[0]) {
+                    const parsedText = data.ParsedResults[0].ParsedText;
+                    appendParsedLabText(parsedText);
+                } else {
+                    throw new Error("OCR.space parse failed. Try another image.");
+                }
+            } catch (err) {
+                alert("OCR.Space Error: " + err.message);
+            } finally {
+                if (noticeEl) noticeEl.style.display = 'none';
+            }
+
+        } else if (provider === 'OPENAI_GPT4') {
+            // OpenAI GPT-4o Vision Engine
+            const reader = new FileReader();
+            reader.onloadend = async function () {
+                const base64Data = reader.result;
+                try {
+                    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${apiKey}`
+                        },
+                        body: JSON.stringify({
+                            model: "gpt-4o",
+                            messages: [{
+                                role: "user",
+                                content: [
+                                    { type: "text", text: "Extract medical findings line by line (WBC, HCT, Hb, Creatinine, AST, ALT, CRP values)." },
+                                    { type: "image_url", image_url: { url: base64Data } }
+                                ]
+                            }]
+                        })
+                    });
+                    const data = await res.json();
+                    if (data.choices && data.choices[0]?.message?.content) {
+                        appendParsedLabText(data.choices[0].message.content);
+                    } else {
+                        throw new Error(data.error?.message || "OpenAI parsing error");
+                    }
+                } catch(e) {
+                    alert("OpenAI Error: " + e.message);
+                } finally {
+                    if (noticeEl) noticeEl.style.display = 'none';
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function appendParsedLabText(text) {
+        const labTextarea = document.getElementById('inLabFindings');
+        const cleanText = text.trim();
+        if (labTextarea.value.trim() !== '') {
+            labTextarea.value += "\n" + cleanText;
+        } else {
+            labTextarea.value = cleanText;
+        }
+        updatePrintForm();
     }
 
     function formatMonthDay(dateStr) {
@@ -829,34 +902,28 @@
     }
 
     function updatePrintForm() {
-        // TOP 5 HEADER MAPPINGS
         document.getElementById('outPhiRefNo').innerText = document.getElementById('inPhiRefNo').value;
         document.getElementById('outPhiRange').innerText = document.getElementById('inPhiRange').value;
         document.getElementById('outMohNotifNo').innerText = document.getElementById('inMohNotifNo').value;
         document.getElementById('outMohArea').innerText = document.getElementById('inMohArea').value;
         document.getElementById('outMohRegNo').innerText = document.getElementById('inMohRegNo').value;
 
-        // Disease & Dates
         document.getElementById('outDiseaseNotified').innerText = document.getElementById('inDiseaseNotified').value;
         document.getElementById('outDateNotified').innerText = document.getElementById('inDateNotified').value;
         document.getElementById('outDiseaseConfirmed').innerText = document.getElementById('inDiseaseConfirmed').value;
         document.getElementById('outDateConfirmed').innerText = document.getElementById('inDateConfirmed').value;
 
-        // Patient Info
         document.getElementById('outPatientName').innerText = document.getElementById('inPatientName').value;
         document.getElementById('outPatientAddress').innerText = document.getElementById('inPatientAddress').value;
 
-        // DOB & Age
         const dob = document.getElementById('inPatientDob').value;
         const age = document.getElementById('inPatientAge').value;
         document.getElementById('outPatientDobAge').innerText = dob ? `${dob} (${age})` : age;
 
-        // Sex
         const sexVal = document.querySelector('input[name="sexOption"]:checked')?.value;
         document.getElementById('outSexMale').innerText = (sexVal === 'Male') ? '✓' : '';
         document.getElementById('outSexFemale').innerText = (sexVal === 'Female') ? '✓' : '';
 
-        // Ethnic Group
         const ethnicVal = document.querySelector('input[name="ethnicOption"]:checked')?.value;
         document.getElementById('outEthnicSinhalese').innerText = (ethnicVal === 'Sinhalese') ? '✓' : '';
         document.getElementById('outEthnicTamil').innerText = (ethnicVal === 'Tamil') ? '✓' : '';
@@ -864,38 +931,30 @@
         document.getElementById('outEthnicBurgher').innerText = (ethnicVal === 'Burgher') ? '✓' : '';
         document.getElementById('outEthnicOthers').innerText = (ethnicVal === 'Others') ? '✓' : '';
 
-        // Movements & Lab Findings
         document.getElementById('outMovements').innerText = document.getElementById('inMovements').value;
         document.getElementById('outLabFindings').innerText = document.getElementById('inLabFindings').value;
 
-        // Outcome
         const outcomeVal = document.querySelector('input[name="outcomeOption"]:checked')?.value;
         document.getElementById('outOutcomeRecovered').innerText = (outcomeVal === 'Recovered') ? '✓' : '';
         document.getElementById('outOutcomeDied').innerText = (outcomeVal === 'Died') ? '✓' : '';
 
-        // Where Isolated
         const isoVal = document.querySelector('input[name="isolatedOption"]:checked')?.value;
         document.getElementById('outIsolatedHome').innerText = (isoVal === 'Home') ? '✓' : '';
         document.getElementById('outIsolatedHospital').innerText = (isoVal === 'Hospital') ? '✓' : '';
         document.getElementById('outIsolatedNotIsolated').innerText = (isoVal === 'NotIsolated') ? '✓' : '';
 
-        // Nature of Case
         const isNatureIso = document.getElementById('inNatureIsolatedCase').checked;
         document.getElementById('outNatureIsolatedCase').innerText = isNatureIso ? '✓' : '';
 
-        // Outbreak
         const isOutbreakReq = document.getElementById('inOutbreakReportNeeded').checked;
         document.getElementById('outOutbreakReportNeeded').innerText = isOutbreakReq ? '✓' : '';
 
-        // Hospital Details
         document.getElementById('outHospitalName').innerText = document.getElementById('inHospitalName').value;
 
-        // Dates
         document.getElementById('outDateOnset').innerText = document.getElementById('inDateOnset').value;
         document.getElementById('outDateHospitalized').innerText = document.getElementById('inDateHospitalized').value;
         document.getElementById('outDateDischarged').innerText = document.getElementById('inDateDischarged').value;
 
-        // CONTACT TABLES
         let hhHtml = '';
         let othHtml = '';
         const baseTopHH = 300;
@@ -939,7 +998,6 @@
         document.getElementById('containerHouseholdOverlay').innerHTML = hhHtml;
         document.getElementById('containerOtherOverlay').innerHTML = othHtml;
 
-        // PAGE 2 SCREENSHOT MAPPING
         document.getElementById('outP2Date1').innerText = document.getElementById('inP2Date1').value;
         document.getElementById('outP2Content1').innerText = document.getElementById('inP2Content1').value;
 
@@ -949,7 +1007,6 @@
         document.getElementById('outP2Date3').innerText = document.getElementById('inP2Date3').value;
         document.getElementById('outP2Content3').innerText = document.getElementById('inP2Content3').value;
 
-        // GPS LOCATION MAPPING
         const gpsVal = document.getElementById('inGpsCoords').value;
         
         const mapBtn = document.getElementById('btnMapPinLink');
