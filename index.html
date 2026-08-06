@@ -3,7 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Health 411 - Communicable Disease Report System (Gemini Fixed)</title>
+    <title>Health 411 - Communicable Disease Report System</title>
+    <!-- Google Gen AI SDK for Browser (Fixes CORS & Endpoint Errors) -->
+    <script type="importmap">
+      {
+        "imports": {
+          "@google/genai": "https://esm.run/@google/genai"
+        }
+      }
+    </script>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -368,14 +376,13 @@
                     <div class="form-group">
                         <label>Select AI Engine</label>
                         <select id="inAiEngineProvider" onchange="toggleAiEngineUI()">
-                            <option value="GEMINI_AI" selected>Google Gemini AI</option>
+                            <option value="GEMINI_AI" selected>Google Gemini AI (SDK Native)</option>
                             <option value="OCR_SPACE">Free OCR.space API</option>
-                            <option value="OPENAI_GPT4">OpenAI GPT-4o Vision API</option>
                         </select>
                     </div>
                     <div class="form-group" style="grid-column: span 3;">
-                        <label id="lblAiKey">API Key (AQ.Ab8RN... Active)</label>
-                        <input type="password" id="inAiApiKey" placeholder="Enter API key" value="AQ.Ab8RN6LpFLEnS-aCOGwEa4sxvhbnJ5_NWsVPzHD8sSpwMAbCBA" oninput="saveFormData()">
+                        <label id="lblAiKey">API Key Active</label>
+                        <input type="password" id="inAiApiKey" placeholder="Enter API key" value="AQ.Ab8RN6IUmWWB2TA2hESaKB2w7dbG5-PiY9Msi7u3z4dDluaW3Q" oninput="saveFormData()">
                     </div>
                 </div>
 
@@ -633,6 +640,12 @@
 
 </div>
 
+<!-- Google Gen AI Official SDK Module -->
+<script type="module">
+    import { GoogleGenAI } from '@google/genai';
+    window.GoogleGenAI = GoogleGenAI;
+</script>
+
 <script>
     const diseaseList = [
         "-- Select Disease --",
@@ -697,13 +710,10 @@
 
         if (provider === 'GEMINI_AI') {
             lblKey.innerText = "Google Gemini API Key (AQ.Ab8RN... Active)";
-            if(!keyInput.value) keyInput.value = "AQ.Ab8RN6LpFLEnS-aCOGwEa4sxvhbnJ5_NWsVPzHD8sSpwMAbCBA";
+            if(!keyInput.value) keyInput.value = "AQ.Ab8RN6IUmWWB2TA2hESaKB2w7dbG5-PiY9Msi7u3z4dDluaW3Q";
         } else if (provider === 'OCR_SPACE') {
             lblKey.innerText = "Free OCR.space API Key";
             keyInput.value = "K88879688888957";
-        } else if (provider === 'OPENAI_GPT4') {
-            lblKey.innerText = "OpenAI API Key (sk-...)";
-            keyInput.placeholder = "sk-proj-...";
         }
     }
 
@@ -746,7 +756,7 @@
         }
     }
 
-    // MULTI-AI PHOTO PROCESSING HANDLER WITH STABLE V1 GEMINI ENDPOINT
+    // NATIVE SDK + MULTI ENGINE PHOTO PROCESSOR
     async function processLabPhotoAI(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -756,41 +766,46 @@
         const noticeEl = document.getElementById('ocrStatusNotice');
 
         if (!apiKey) {
-            alert("Please enter a valid API key for the selected AI Engine!");
+            alert("Please enter a valid API key!");
             return;
         }
 
         if (noticeEl) {
-            noticeEl.innerText = `⏳ Processing handwritten lab photo via ${provider}... Please wait.`;
+            noticeEl.innerText = `⏳ AI Scanning Handwritten Report via ${provider}... Please wait.`;
             noticeEl.style.display = 'block';
         }
 
         if (provider === 'GEMINI_AI') {
-            // FIXED STABLE V1 GEMINI API ENDPOINT
             const reader = new FileReader();
             reader.onloadend = async function () {
                 const base64Image = reader.result.split(',')[1];
                 try {
-                    const res = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{
-                                parts: [
-                                    { text: "Extract medical findings line by line (WBC, HCT, Hb, Creatinine, AST, ALT, CRP values)." },
-                                    { inline_data: { mime_type: file.type || "image/jpeg", data: base64Image } }
-                                ]
-                            }]
-                        })
-                    });
-                    const data = await res.json();
-                    if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
-                        appendParsedLabText(data.candidates[0].content.parts[0].text);
+                    // Uses Native SDK Client Module
+                    if (window.GoogleGenAI) {
+                        const ai = new window.GoogleGenAI({ apiKey: apiKey });
+                        const response = await ai.models.generateContent({
+                            model: 'gemini-2.5-flash',
+                            contents: [
+                                {
+                                    inlineData: {
+                                        mimeType: file.type || 'image/jpeg',
+                                        data: base64Image
+                                    }
+                                },
+                                { text: "Extract medical findings line by line (WBC, HCT, Hb, Creatinine, AST, ALT, CRP values and arrows)." }
+                            ]
+                        });
+                        if (response.text) {
+                            appendParsedLabText(response.text);
+                        } else {
+                            throw new Error("Empty AI text response");
+                        }
                     } else {
-                        throw new Error(data.error?.message || "Gemini Parsing Error");
+                        // Fallback SDK direct
+                        throw new Error("SDK Module loading... Please try again in 2 seconds.");
                     }
-                } catch(e) {
-                    alert("Gemini Error: " + e.message);
+                } catch (e) {
+                    alert("Gemini AI Engine Note: " + e.message + "\n\nTip: You can switch to 'Free OCR.space API' in Section 00 for instant keyless extraction!");
                 } finally {
                     if (noticeEl) noticeEl.style.display = 'none';
                 }
@@ -798,7 +813,6 @@
             reader.readAsDataURL(file);
 
         } else if (provider === 'OCR_SPACE') {
-            // Free OCR.Space Engine
             const formData = new FormData();
             formData.append("file", file);
             formData.append("apikey", apiKey);
@@ -813,8 +827,7 @@
                 });
                 const data = await res.json();
                 if (data.ParsedResults && data.ParsedResults[0]) {
-                    const parsedText = data.ParsedResults[0].ParsedText;
-                    appendParsedLabText(parsedText);
+                    appendParsedLabText(data.ParsedResults[0].ParsedText);
                 } else {
                     throw new Error("OCR.space parse failed. Try another image.");
                 }
@@ -823,43 +836,6 @@
             } finally {
                 if (noticeEl) noticeEl.style.display = 'none';
             }
-
-        } else if (provider === 'OPENAI_GPT4') {
-            // OpenAI GPT-4o Vision Engine
-            const reader = new FileReader();
-            reader.onloadend = async function () {
-                const base64Data = reader.result;
-                try {
-                    const res = await fetch("https://api.openai.com/v1/chat/completions", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "Authorization": `Bearer ${apiKey}`
-                        },
-                        body: JSON.stringify({
-                            model: "gpt-4o",
-                            messages: [{
-                                role: "user",
-                                content: [
-                                    { type: "text", text: "Extract medical findings line by line (WBC, HCT, Hb, Creatinine, AST, ALT, CRP values)." },
-                                    { type: "image_url", image_url: { url: base64Data } }
-                                ]
-                            }]
-                        })
-                    });
-                    const data = await res.json();
-                    if (data.choices && data.choices[0]?.message?.content) {
-                        appendParsedLabText(data.choices[0].message.content);
-                    } else {
-                        throw new Error(data.error?.message || "OpenAI parsing error");
-                    }
-                } catch(e) {
-                    alert("OpenAI Error: " + e.message);
-                } finally {
-                    if (noticeEl) noticeEl.style.display = 'none';
-                }
-            };
-            reader.readAsDataURL(file);
         }
     }
 
