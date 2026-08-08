@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Health 411 - Communicable Disease Report System</title>
+    
     <!-- Google Gen AI Official Browser SDK -->
     <script type="importmap">
       {
@@ -12,6 +13,11 @@
         }
       }
     </script>
+
+    <!-- Firebase Compatibility SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
     <style>
         * { box-sizing: border-box; }
         body {
@@ -128,13 +134,13 @@
         }
 
         .status-badge {
-            background: #dcfce7;
-            color: #15803d;
             font-size: 12px;
             font-weight: bold;
             padding: 4px 10px;
             border-radius: 20px;
         }
+        .status-online { background: #dcfce7; color: #15803d; }
+        .status-offline { background: #fef2f2; color: #b91c1c; }
 
         .section-title {
             font-weight: bold;
@@ -259,8 +265,43 @@
         .btn-print { background-color: #0284c7; color: white; }
         .btn-print:hover { background-color: #0369a1; }
 
+        .btn-delete { background-color: #dc2626; color: white; }
+        .btn-delete:hover { background-color: #b91c1c; }
+
         .btn-reset { background-color: #ef4444; color: white; margin-left: auto; }
         .btn-reset:hover { background-color: #dc2626; }
+
+        /* DATABASE RECORD CARD & NAVIGATION STYLES */
+        .record-viewer-card {
+            background: #1e293b;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .record-nav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .db-records-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+        .db-records-table th, .db-records-table td {
+            border: 1px solid #cbd5e0;
+            padding: 8px;
+            text-align: left;
+        }
+        .db-records-table th {
+            background-color: #1e293b;
+            color: white;
+        }
 
         .modal-overlay {
             position: fixed;
@@ -408,7 +449,6 @@
                 <span class="data-overlay" id="outP2Date3" style="top: 520px; left: 140px; width: 110px;"></span>
                 <div class="data-overlay-textarea" id="outP2Content3" style="top: 520px; left: 270px; width: 780px; height: 130px;"></div>
 
-                <!-- 🧪 PAGE 2 REPEAT LABORATORY REPORTS OVERLAY BLOCK -->
                 <div class="data-overlay-textarea" id="outP2LabReports" style="top: 580px; left: 270px; width: 780px; height: 85px; font-size: 12px; color: #000080; border-top: 1px dashed #2563eb; padding-top: 4px;"></div>
 
                 <div class="data-overlay" id="outP2GpsBlock" style="top: 675px; left: 270px; width: 780px; font-size: 15px; color: #000080; font-weight: 900;"></div>
@@ -420,7 +460,7 @@
         <div class="portal-card">
             <div class="portal-header">
                 <h3>Communicable Disease Data Entry Portal</h3>
-                <span class="status-badge">🟢 Live Preview Active</span>
+                <span id="networkStatusBadge" class="status-badge status-online">🟢 Online Mode</span>
             </div>
             
             <form id="healthPortalForm">
@@ -682,12 +722,64 @@
                     </div>
                 </div>
 
-                <!-- 🧪 PAGE 2 REPEAT LABORATORY REPORTS CONTROL FIELD -->
                 <div class="form-grid">
                     <div class="form-group" style="grid-column: span 4;">
                         <label>PAGE 2 REPEAT LABORATORY REPORTS (Auto Synced from Page 1)</label>
                         <textarea id="inP2LabReports" rows="3" placeholder="Auto Synced Laboratory Findings..." oninput="updatePrintForm()"></textarea>
                     </div>
+                </div>
+
+                <!-- 09. RECORD MANAGEMENT & NAVIGATION -->
+                <div class="section-title">09. Saved Reports Navigation & Search</div>
+                <div class="form-grid">
+                    <div class="form-group" style="grid-column: span 4; display: flex; flex-direction: row; gap: 10px; flex-wrap: wrap;">
+                        <button type="button" class="btn btn-update" onclick="saveRecordOfflineFirst()">💾 Save Current Report</button>
+                        <button type="button" class="btn btn-gps" onclick="manualSyncToFirebase()">🔄 Force Sync to Cloud</button>
+                    </div>
+                </div>
+
+                <!-- SEARCH BAR FOR PATIENTS -->
+                <div class="form-grid">
+                    <div class="form-group" style="grid-column: span 4;">
+                        <label>🔍 Search Saved Reports by Patient Name, Ref No, or Disease</label>
+                        <input type="text" id="inSearchQuery" placeholder="Type Patient Name, Ref No, or Disease to filter..." oninput="filterAndRenderRecords()">
+                    </div>
+                </div>
+
+                <!-- 🎴 CARD NAVIGATION VIEW WITH DELETE BUTTON -->
+                <div class="record-viewer-card" id="cardNavViewer" style="display: none;">
+                    <div class="record-nav-header">
+                        <span id="navCardCounter" style="font-weight: bold; color: #60a5fa; font-size: 13px;">Report 0 of 0</span>
+                        <div style="display: flex; gap: 8px;">
+                            <button type="button" class="btn btn-gps" style="padding: 4px 10px; font-size: 12px;" onclick="navigateRecord(-1)">⏮️ Previous</button>
+                            <button type="button" class="btn btn-gps" style="padding: 4px 10px; font-size: 12px;" onclick="navigateRecord(1)">Next ⏭️</button>
+                        </div>
+                    </div>
+                    <div id="navCardBody" style="font-size: 13px; line-height: 1.6;">
+                        <!-- Auto-filled by JS -->
+                    </div>
+                    <div style="margin-top: 12px; display: flex; justify-content: flex-end; gap: 8px;">
+                        <button type="button" class="btn btn-ai" style="font-size: 12px; padding: 6px 14px;" onclick="loadCurrentNavRecordToForm()">✏️ Load into Form to Edit / Print</button>
+                        <button type="button" class="btn btn-delete" style="font-size: 12px; padding: 6px 14px;" onclick="deleteCurrentNavRecord()">🗑️ Delete Report</button>
+                    </div>
+                </div>
+
+                <!-- SAVED RECORDS TABLE WITH DELETE BUTTONS -->
+                <div style="overflow-x: auto; margin-top: 15px;">
+                    <table class="db-records-table">
+                        <thead>
+                            <tr>
+                                <th>Ref No</th>
+                                <th>Patient Name</th>
+                                <th>Disease</th>
+                                <th>Sync Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="savedRecordsTableBody">
+                            <tr><td colspan="5" style="text-align:center;">No saved records found in IndexedDB database.</td></tr>
+                        </tbody>
+                    </table>
                 </div>
 
                 <div class="btn-group">
@@ -701,7 +793,7 @@
 
 </div>
 
-<!-- 🪟 MODAL DIALOG POPUP FOR CONFIRMING PAGE 2 FIELD INVESTIGATION DETAILS -->
+<!-- MODAL DIALOG POPUP -->
 <div class="modal-overlay" id="noteConfirmModal">
     <div class="modal-card">
         <div class="modal-header">
@@ -768,6 +860,291 @@
 </script>
 
 <script>
+    // FIREBASE INITIALIZATION
+    const firebaseConfig = {
+        apiKey: "AIzaSyDd9yyyPywkuLYVBXG584PKtNhdWLSVsY8",
+        authDomain: "h411-3b136.firebaseapp.com",
+        databaseURL: "https://h411-3b136-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "h411-3b136",
+        storageBucket: "h411-3b136.firebasestorage.app",
+        messagingSenderId: "1096863942583",
+        appId: "1:1096863942583:web:f814fe2bb72fd0a3f30a32"
+    };
+
+    let fbDb = null;
+    try {
+        firebase.initializeApp(firebaseConfig);
+        fbDb = firebase.database();
+    } catch(e) { console.log("Firebase Init Notice:", e.message); }
+
+    let dbDB = null;
+    let activeEditingRecordId = null;
+    
+    let allFetchedRecords = [];
+    let filteredRecords = [];
+    let currentNavIndex = 0;
+
+    function initIndexedDB() {
+        const req = indexedDB.open('Health411OfflineDB', 1);
+        req.onupgradeneeded = function(e) {
+            dbDB = e.target.result;
+            if (!dbDB.objectStoreNames.contains('patient_records')) {
+                dbDB.createObjectStore('patient_records', { keyPath: 'id' });
+            }
+        };
+        req.onsuccess = function(e) {
+            dbDB = e.target.result;
+            loadOfflineRecordsTable();
+            checkAndSyncFirebase();
+        };
+    }
+
+    window.addEventListener('online', () => {
+        updateNetworkBadge(true);
+        checkAndSyncFirebase();
+    });
+    window.addEventListener('offline', () => {
+        updateNetworkBadge(false);
+    });
+
+    function updateNetworkBadge(isOnline) {
+        const badge = document.getElementById('networkStatusBadge');
+        if (isOnline) {
+            badge.className = "status-badge status-online";
+            badge.innerText = "🟢 Online Mode";
+        } else {
+            badge.className = "status-badge status-offline";
+            badge.innerText = "🔴 Offline Mode";
+        }
+    }
+
+    function saveRecordOfflineFirst() {
+        if (!dbDB) return;
+
+        const recordId = activeEditingRecordId || 'REC_' + Date.now();
+        
+        const formData = { id: recordId, synced: false, timestamp: new Date().toISOString() };
+        const inputs = document.querySelectorAll('#healthPortalForm input, #healthPortalForm select, #healthPortalForm textarea');
+        inputs.forEach(input => {
+            if (input.type === 'radio' || input.type === 'checkbox') {
+                formData[input.id || input.name + '_' + input.value] = input.checked;
+            } else {
+                formData[input.id] = input.value;
+            }
+        });
+
+        const tx = dbDB.transaction('patient_records', 'readwrite');
+        const store = tx.objectStore('patient_records');
+        store.put(formData);
+
+        tx.oncomplete = function() {
+            alert(activeEditingRecordId ? "✅ Record updated in Local Database!" : "✅ New Record saved in Offline Local Database!");
+            activeEditingRecordId = null;
+            loadOfflineRecordsTable();
+            checkAndSyncFirebase();
+        };
+    }
+
+    function checkAndSyncFirebase() {
+        if (!navigator.onLine || !fbDb || !dbDB) return;
+
+        const tx = dbDB.transaction('patient_records', 'readonly');
+        const store = tx.objectStore('patient_records');
+        const req = store.getAll();
+
+        req.onsuccess = function() {
+            const allRecords = req.result;
+            const unsynced = allRecords.filter(r => !r.synced);
+
+            if (unsynced.length === 0) return;
+
+            unsynced.forEach(rec => {
+                const recCopy = { ...rec, synced: true };
+                fbDb.ref('health_reports/' + rec.id).set(recCopy).then(() => {
+                    const txUpdate = dbDB.transaction('patient_records', 'readwrite');
+                    txUpdate.objectStore('patient_records').put(recCopy);
+                    txUpdate.oncomplete = () => loadOfflineRecordsTable();
+                }).catch(err => console.log("Firebase Sync Fail:", err));
+            });
+        };
+    }
+
+    function manualSyncToFirebase() {
+        if (!navigator.onLine) {
+            alert("⚠️ Internet connection unavailable. Records remain saved safely in local IndexedDB.");
+            return;
+        }
+        checkAndSyncFirebase();
+        alert("🔄 Sync process triggered! Checking and syncing unsynced records to Firebase...");
+    }
+
+    function loadOfflineRecordsTable() {
+        if (!dbDB) return;
+
+        const tx = dbDB.transaction('patient_records', 'readonly');
+        const store = tx.objectStore('patient_records');
+        const req = store.getAll();
+
+        req.onsuccess = function() {
+            allFetchedRecords = req.result;
+            filterAndRenderRecords();
+        };
+    }
+
+    function filterAndRenderRecords() {
+        const query = document.getElementById('inSearchQuery')?.value.toLowerCase().trim() || '';
+        
+        filteredRecords = allFetchedRecords.filter(r => {
+            const name = (r.inPatientName || '').toLowerCase();
+            const ref = (r.inPhiRefNo || '').toLowerCase();
+            const disease = (r.inDiseaseConfirmed || r.inDiseaseNotified || '').toLowerCase();
+            return name.includes(query) || ref.includes(query) || disease.includes(query);
+        });
+
+        const tbody = document.getElementById('savedRecordsTableBody');
+        const cardViewer = document.getElementById('cardNavViewer');
+        tbody.innerHTML = '';
+
+        if (filteredRecords.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No matching saved records found.</td></tr>';
+            cardViewer.style.display = 'none';
+            return;
+        }
+
+        filteredRecords.forEach(r => {
+            const ref = r.inPhiRefNo || 'No Ref';
+            const name = r.inPatientName || 'Unnamed Patient';
+            const disease = r.inDiseaseConfirmed || r.inDiseaseNotified || 'N/A';
+            const statusHtml = r.synced ? '<span style="color:#16a34a; font-weight:bold;">🟢 Synced</span>' : '<span style="color:#d97706; font-weight:bold;">🟡 Local Only</span>';
+
+            tbody.innerHTML += `
+                <tr>
+                    <td><b>${ref}</b></td>
+                    <td>${name}</td>
+                    <td>${disease}</td>
+                    <td>${statusHtml}</td>
+                    <td>
+                        <button type="button" class="btn btn-gps" style="padding:4px 8px; font-size:11px;" onclick="loadRecordForEditing('${r.id}')">✏️ Edit</button>
+                        <button type="button" class="btn btn-delete" style="padding:4px 8px; font-size:11px;" onclick="deleteRecord('${r.id}')">🗑️ Delete</button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        if (currentNavIndex >= filteredRecords.length) currentNavIndex = 0;
+        cardViewer.style.display = 'block';
+        renderCurrentNavCard();
+    }
+
+    function navigateRecord(direction) {
+        if (filteredRecords.length === 0) return;
+        currentNavIndex += direction;
+        if (currentNavIndex < 0) currentNavIndex = filteredRecords.length - 1;
+        if (currentNavIndex >= filteredRecords.length) currentNavIndex = 0;
+        renderCurrentNavCard();
+    }
+
+    function renderCurrentNavCard() {
+        const rec = filteredRecords[currentNavIndex];
+        if (!rec) return;
+
+        document.getElementById('navCardCounter').innerText = `Report ${currentNavIndex + 1} of ${filteredRecords.length}`;
+        
+        const ref = rec.inPhiRefNo || 'No Ref';
+        const name = rec.inPatientName || 'Unnamed Patient';
+        const address = rec.inPatientAddress || 'No Address';
+        const disease = rec.inDiseaseConfirmed || rec.inDiseaseNotified || 'N/A';
+        const hospital = rec.inHospitalName || 'N/A';
+        const syncStr = rec.synced ? '🟢 Synced to Cloud' : '🟡 Offline Local Only';
+
+        document.getElementById('navCardBody').innerHTML = `
+            <div><b>👤 Patient:</b> ${name}</div>
+            <div><b>🏷️ PHI Ref No:</b> ${ref} | <b>🦠 Disease:</b> ${disease}</div>
+            <div><b>📍 Address:</b> ${address}</div>
+            <div><b>🏥 Hospital:</b> ${hospital} | <b>Status:</b> ${syncStr}</div>
+        `;
+    }
+
+    function loadCurrentNavRecordToForm() {
+        const rec = filteredRecords[currentNavIndex];
+        if (rec) {
+            loadRecordForEditing(rec.id);
+        }
+    }
+
+    function deleteCurrentNavRecord() {
+        const rec = filteredRecords[currentNavIndex];
+        if (rec) {
+            deleteRecord(rec.id);
+        }
+    }
+
+    // 🗑️ DELETE RECORD FROM BOTH INDEXEDDB & FIREBASE
+    function deleteRecord(recordId) {
+        if (!confirm("Are you sure you want to permanently delete this report? This cannot be undone.")) {
+            return;
+        }
+
+        // 1. Delete from local IndexedDB
+        if (dbDB) {
+            const tx = dbDB.transaction('patient_records', 'readwrite');
+            const store = tx.objectStore('patient_records');
+            store.delete(recordId);
+
+            tx.oncomplete = function() {
+                // 2. Delete from Firebase if online and initialized
+                if (fbDb && navigator.onLine) {
+                    fbDb.ref('health_reports/' + recordId).remove().then(() => {
+                        console.log("Deleted from Firebase Cloud.");
+                    }).catch(err => console.log("Firebase Delete Notice:", err));
+                }
+
+                if (activeEditingRecordId === recordId) {
+                    activeEditingRecordId = null;
+                }
+
+                alert("🗑️ Report permanently deleted successfully!");
+                loadOfflineRecordsTable();
+            };
+        }
+    }
+
+    function loadRecordForEditing(recordId) {
+        if (!dbDB) return;
+
+        const tx = dbDB.transaction('patient_records', 'readonly');
+        const store = tx.objectStore('patient_records');
+        const req = store.get(recordId);
+
+        req.onsuccess = function() {
+            const data = req.result;
+            if (!data) return;
+
+            activeEditingRecordId = data.id;
+
+            Object.keys(data).forEach(key => {
+                const el = document.getElementById(key);
+                if (el) {
+                    if (el.type === 'checkbox') {
+                        el.checked = data[key];
+                    } else {
+                        el.value = data[key];
+                    }
+                } else {
+                    const radios = document.querySelectorAll(`input[name="${key.split('_')[0]}"]`);
+                    radios.forEach(radio => {
+                        if (radio.value === key.split('_')[1]) {
+                            radio.checked = data[key];
+                        }
+                    });
+                }
+            });
+
+            updatePrintForm();
+            alert("📋 Report loaded into form! You can now view, modify or print.");
+        };
+    }
+
     const diseaseList = [
         "-- Select Disease --",
         "Cholera", "Plague", "Yellow Fever",
@@ -821,6 +1198,8 @@
         });
 
         generateContactTableRows();
+        initIndexedDB();
+        updateNetworkBadge(navigator.onLine);
         loadSavedData();
     };
 
@@ -877,7 +1256,6 @@
         }
     }
 
-    // MULTI AI SCANNING HANDLER
     async function processLabPhotoAI(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -978,7 +1356,6 @@
         return dateStr;
     }
 
-    // 🪟 SMART MODAL POPUP LOGIC FOR PAGE 2 NOTE GENERATION
     function openNoteConfirmModal() {
         const confirmedDis = document.getElementById('inDiseaseConfirmed').value || document.getElementById('inDiseaseNotified').value || 'Communicable Disease';
         const movements = document.getElementById('inMovements').value || '';
@@ -1067,11 +1444,9 @@
         document.getElementById('outEthnicBurgher').innerText = (ethnicVal === 'Burgher') ? '✓' : '';
         document.getElementById('outEthnicOthers').innerText = (ethnicVal === 'Others') ? '✓' : '';
 
-        // AUTO-SYNC LAB FINDINGS FROM PAGE 1 TO PAGE 2
         const page1LabFindings = document.getElementById('inLabFindings').value;
         document.getElementById('outLabFindings').innerText = page1LabFindings;
         
-        // Sync to Page 2 Portal Field and Page 2 Overlay Output
         const p2LabField = document.getElementById('inP2LabReports');
         if (page1LabFindings && !p2LabField.value) {
             p2LabField.value = page1LabFindings;
@@ -1212,6 +1587,7 @@
         if (confirm("Are you sure you want to clear all form fields?")) {
             document.getElementById('healthPortalForm').reset();
             localStorage.removeItem('h411_form_data');
+            activeEditingRecordId = null;
             updatePrintForm();
         }
     }
