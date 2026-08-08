@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Health 411 - Communicable Disease Report System</title>
-    <!-- Google Gen AI SDK for Browser (Fixes CORS & Endpoint Errors) -->
+    <!-- Google Gen AI Official Browser SDK -->
     <script type="importmap">
       {
         "imports": {
@@ -262,6 +262,56 @@
         .btn-reset { background-color: #ef4444; color: white; margin-left: auto; }
         .btn-reset:hover { background-color: #dc2626; }
 
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(15, 23, 42, 0.75);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 15px;
+        }
+
+        .modal-card {
+            background: #ffffff;
+            width: 100%;
+            max-width: 650px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            overflow: hidden;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            background: #2563eb;
+            color: white;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h4 { margin: 0; font-size: 16px; }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .modal-footer {
+            padding: 15px 20px;
+            background: #f1f5f9;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
         @media screen and (max-width: 900px) {
             body { overflow: auto; }
             .dashboard-container { flex-direction: column; height: auto; }
@@ -357,6 +407,9 @@
 
                 <span class="data-overlay" id="outP2Date3" style="top: 520px; left: 140px; width: 110px;"></span>
                 <div class="data-overlay-textarea" id="outP2Content3" style="top: 520px; left: 270px; width: 780px; height: 130px;"></div>
+
+                <!-- 🧪 PAGE 2 REPEAT LABORATORY REPORTS OVERLAY BLOCK -->
+                <div class="data-overlay-textarea" id="outP2LabReports" style="top: 580px; left: 270px; width: 780px; height: 85px; font-size: 12px; color: #000080; border-top: 1px dashed #2563eb; padding-top: 4px;"></div>
 
                 <div class="data-overlay" id="outP2GpsBlock" style="top: 675px; left: 270px; width: 780px; font-size: 15px; color: #000080; font-weight: 900;"></div>
             </div>
@@ -593,7 +646,7 @@
 
                 <div class="section-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                     <span>08. PAGE 2 - CONTENT BLOCKS</span>
-                    <button type="button" class="btn btn-ai" onclick="generateAiNotes()">✨ Auto Generate AI Notes</button>
+                    <button type="button" class="btn btn-ai" onclick="openNoteConfirmModal()">✨ Auto Generate AI Notes</button>
                 </div>
 
                 <div class="form-grid">
@@ -629,6 +682,14 @@
                     </div>
                 </div>
 
+                <!-- 🧪 PAGE 2 REPEAT LABORATORY REPORTS CONTROL FIELD -->
+                <div class="form-grid">
+                    <div class="form-group" style="grid-column: span 4;">
+                        <label>PAGE 2 REPEAT LABORATORY REPORTS (Auto Synced from Page 1)</label>
+                        <textarea id="inP2LabReports" rows="3" placeholder="Auto Synced Laboratory Findings..." oninput="updatePrintForm()"></textarea>
+                    </div>
+                </div>
+
                 <div class="btn-group">
                     <button type="button" class="btn btn-update" onclick="updatePrintForm()">Update Preview</button>
                     <button type="button" class="btn btn-print" onclick="window.print()">Print A4 Form</button>
@@ -638,6 +699,66 @@
         </div>
     </div>
 
+</div>
+
+<!-- 🪟 MODAL DIALOG POPUP FOR CONFIRMING PAGE 2 FIELD INVESTIGATION DETAILS -->
+<div class="modal-overlay" id="noteConfirmModal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h4>📋 Confirm Investigation Details for Page 2 AI Note</h4>
+            <button type="button" style="background:none; border:none; color:white; font-size:18px; cursor:pointer;" onclick="closeNoteConfirmModal()">✖</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>1. Confirmed Disease (First Page)</label>
+                <input type="text" id="modalDisease" readonly style="background-color: #f1f5f9;">
+            </div>
+
+            <div class="form-group">
+                <label>2. Probable Infection Source / High-Risk Spot (Extracted from Movements)</label>
+                <input type="text" id="modalSource" placeholder="e.g. Workplace, Local School, Travelled area, Residence neighbourhood">
+            </div>
+
+            <div class="form-group">
+                <label>3. Patient Case Classification (Chain / Index Case)</label>
+                <select id="modalCaseIndex">
+                    <option value="INDEX_CASE">1st Primary Patient in MOH Area (Index Case)</option>
+                    <option value="SUBSEQUENT_CASE" selected>Secondary / Subsequent Patient in Known Transmission Chain</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>4. Outbreak Status in Local Area</label>
+                <select id="modalOutbreakStatus">
+                    <option value="NO_OUTBREAK">No active local outbreak reported (Isolated Case)</option>
+                    <option value="ACTIVE_OUTBREAK">Active Local Disease Outbreak Ongoing</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>5. Control Actions Taken (Vector/Sanitation/Quarantine)</label>
+                <input type="text" id="modalActionTaken" value="Fogging, larviciding, premises inspection, and vector breeding site destruction conducted.">
+            </div>
+
+            <div class="form-group">
+                <label>6. Health Advice & Directives Issued</label>
+                <input type="text" id="modalAdviceGiven" value="Strict isolation advised. Health education and disease prevention directives given to household contacts.">
+            </div>
+
+            <div class="form-group">
+                <label>7. Patient Current Situation / Outcome Status</label>
+                <select id="modalPatientCondition">
+                    <option value="Recovering / Stable at Home or Hospital">Recovering / Stable Condition</option>
+                    <option value="Under Strict Hospital Isolation">Under Active Hospital Care & Isolation</option>
+                    <option value="Fatal Outcome / Deceased">Fatal Outcome (Deceased)</option>
+                </select>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-reset" onclick="closeNoteConfirmModal()">Cancel</button>
+            <button type="button" class="btn btn-update" onclick="submitAndGeneratePage2Note()">✨ Generate Official Note</button>
+        </div>
+    </div>
 </div>
 
 <!-- Google Gen AI Official SDK Module -->
@@ -756,7 +877,7 @@
         }
     }
 
-    // NATIVE SDK + MULTI ENGINE PHOTO PROCESSOR
+    // MULTI AI SCANNING HANDLER
     async function processLabPhotoAI(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -780,7 +901,6 @@
             reader.onloadend = async function () {
                 const base64Image = reader.result.split(',')[1];
                 try {
-                    // Uses Native SDK Client Module
                     if (window.GoogleGenAI) {
                         const ai = new window.GoogleGenAI({ apiKey: apiKey });
                         const response = await ai.models.generateContent({
@@ -801,7 +921,6 @@
                             throw new Error("Empty AI text response");
                         }
                     } else {
-                        // Fallback SDK direct
                         throw new Error("SDK Module loading... Please try again in 2 seconds.");
                     }
                 } catch (e) {
@@ -859,21 +978,62 @@
         return dateStr;
     }
 
-    function generateAiNotes() {
+    // 🪟 SMART MODAL POPUP LOGIC FOR PAGE 2 NOTE GENERATION
+    function openNoteConfirmModal() {
+        const confirmedDis = document.getElementById('inDiseaseConfirmed').value || document.getElementById('inDiseaseNotified').value || 'Communicable Disease';
+        const movements = document.getElementById('inMovements').value || '';
+        
+        document.getElementById('modalDisease').value = confirmedDis;
+        
+        if(movements) {
+            document.getElementById('modalSource').value = movements.split('\n')[0];
+        } else {
+            document.getElementById('modalSource').value = "Residential neighbourhood & local environment";
+        }
+
+        const outcomeVal = document.querySelector('input[name="outcomeOption"]:checked')?.value;
+        if(outcomeVal === 'Recovered') {
+            document.getElementById('modalPatientCondition').value = "Recovering / Stable at Home or Hospital";
+        } else if (outcomeVal === 'Died') {
+            document.getElementById('modalPatientCondition').value = "Fatal Outcome / Deceased";
+        }
+
+        document.getElementById('noteConfirmModal').style.display = 'flex';
+    }
+
+    function closeNoteConfirmModal() {
+        document.getElementById('noteConfirmModal').style.display = 'none';
+    }
+
+    function submitAndGeneratePage2Note() {
         const patientName = document.getElementById('inPatientName').value || 'Patient';
-        const disease = document.getElementById('inDiseaseConfirmed').value || document.getElementById('inDiseaseNotified').value || 'Communicable Disease';
+        const disease = document.getElementById('modalDisease').value;
         const address = document.getElementById('inPatientAddress').value || 'Premises';
         const hospital = document.getElementById('inHospitalName').value || 'Hospital';
         const todayDate = new Date().toISOString().split('T')[0];
+
+        const source = document.getElementById('modalSource').value || 'Local vicinity';
+        const isIndexCase = document.getElementById('modalCaseIndex').value === 'INDEX_CASE';
+        const isOutbreak = document.getElementById('modalOutbreakStatus').value === 'ACTIVE_OUTBREAK';
+        const actionTaken = document.getElementById('modalActionTaken').value;
+        const adviceGiven = document.getElementById('modalAdviceGiven').value;
+        const patientCondition = document.getElementById('modalPatientCondition').value;
 
         if (!document.getElementById('inP2Date1').value) document.getElementById('inP2Date1').value = todayDate;
         if (!document.getElementById('inP2Date2').value) document.getElementById('inP2Date2').value = todayDate;
         if (!document.getElementById('inP2Date3').value) document.getElementById('inP2Date3').value = todayDate;
 
-        document.getElementById('inP2Content1').value = `Field investigation conducted for ${patientName} diagnosed with ${disease}. Source of infection evaluated at residence (${address}). Potential vector breeding sites inspected around premises.`;
-        document.getElementById('inP2Content2').value = `ACTION TAKEN: Vector control measures initiated. Fogging & larviciding conducted around a 50m radius of ${address}. Patient advised strict isolation at ${hospital}. Health education on preventive measures provided to household contacts.`;
-        document.getElementById('inP2Content3').value = `Follow-up visit scheduled in 7 days. Local MOH notified for area surveillance. Household contacts advised to report immediately if symptoms develop.`;
+        document.getElementById('inP2Content1').value = 
+            `Epidemiological field investigation conducted for ${patientName} diagnosed with confirmed ${disease}. ` +
+            `Evaluated potential source of infection at: ${source}. Case classified as ${isIndexCase ? "Primary Index Case in MOH Area" : "Subsequent case reported in established transmission chain"}. Residence premises (${address}) thoroughly inspected.`;
 
+        document.getElementById('inP2Content2').value = 
+            `ACTION TAKEN: ${actionTaken} ${isOutbreak ? "Active local outbreak reported in area; enhanced surveillance initiated." : "No active disease outbreak reported in immediate neighbourhood."} ${adviceGiven} Patient advised strict isolation protocols at ${hospital}.`;
+
+        document.getElementById('inP2Content3').value = 
+            `PATIENT STATUS: ${patientCondition}. Routine 7-day follow-up visit scheduled. Local MOH office notified for continuous disease surveillance and tracking.`;
+
+        closeNoteConfirmModal();
         updatePrintForm();
     }
 
@@ -907,8 +1067,20 @@
         document.getElementById('outEthnicBurgher').innerText = (ethnicVal === 'Burgher') ? '✓' : '';
         document.getElementById('outEthnicOthers').innerText = (ethnicVal === 'Others') ? '✓' : '';
 
+        // AUTO-SYNC LAB FINDINGS FROM PAGE 1 TO PAGE 2
+        const page1LabFindings = document.getElementById('inLabFindings').value;
+        document.getElementById('outLabFindings').innerText = page1LabFindings;
+        
+        // Sync to Page 2 Portal Field and Page 2 Overlay Output
+        const p2LabField = document.getElementById('inP2LabReports');
+        if (page1LabFindings && !p2LabField.value) {
+            p2LabField.value = page1LabFindings;
+        }
+        
+        const labDisplayContent = p2LabField.value || page1LabFindings;
+        document.getElementById('outP2LabReports').innerText = labDisplayContent ? "PATIENT LABORATORY REPORTS:\n" + labDisplayContent : "";
+
         document.getElementById('outMovements').innerText = document.getElementById('inMovements').value;
-        document.getElementById('outLabFindings').innerText = document.getElementById('inLabFindings').value;
 
         const outcomeVal = document.querySelector('input[name="outcomeOption"]:checked')?.value;
         document.getElementById('outOutcomeRecovered').innerText = (outcomeVal === 'Recovered') ? '✓' : '';
