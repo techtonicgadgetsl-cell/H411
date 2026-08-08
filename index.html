@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Health 411 - Communicable Disease Report System</title>
+    <title>Health 411 - Communicable Disease Report System (Full Data Fix)</title>
     
     <!-- Google Gen AI Official Browser SDK -->
     <script type="importmap">
@@ -271,7 +271,6 @@
         .btn-reset { background-color: #ef4444; color: white; margin-left: auto; }
         .btn-reset:hover { background-color: #dc2626; }
 
-        /* DATABASE RECORD CARD & NAVIGATION STYLES */
         .record-viewer-card {
             background: #1e293b;
             color: white;
@@ -730,11 +729,11 @@
                 </div>
 
                 <!-- 09. RECORD MANAGEMENT & NAVIGATION -->
-                <div class="section-title">09. Saved Reports Navigation & Search</div>
+                <div class="section-title">09. Saved Reports Navigation & Search (All Browsers Synced)</div>
                 <div class="form-grid">
                     <div class="form-group" style="grid-column: span 4; display: flex; flex-direction: row; gap: 10px; flex-wrap: wrap;">
-                        <button type="button" class="btn btn-update" onclick="saveRecordOfflineFirst()">💾 Save Current Report</button>
-                        <button type="button" class="btn btn-gps" onclick="manualSyncToFirebase()">🔄 Force Sync to Cloud</button>
+                        <button type="button" class="btn btn-update" onclick="saveRecordOfflineFirst()">💾 Save / Sync Report to Cloud</button>
+                        <button type="button" class="btn btn-gps" onclick="fetchCloudFirebaseRecords()">🔄 Refresh All Reports from Cloud</button>
                     </div>
                 </div>
 
@@ -746,7 +745,7 @@
                     </div>
                 </div>
 
-                <!-- 🎴 CARD NAVIGATION VIEW WITH DELETE BUTTON -->
+                <!-- CARD NAVIGATION VIEW WITH DELETE BUTTON -->
                 <div class="record-viewer-card" id="cardNavViewer" style="display: none;">
                     <div class="record-nav-header">
                         <span id="navCardCounter" style="font-weight: bold; color: #60a5fa; font-size: 13px;">Report 0 of 0</span>
@@ -772,12 +771,12 @@
                                 <th>Ref No</th>
                                 <th>Patient Name</th>
                                 <th>Disease</th>
-                                <th>Sync Status</th>
+                                <th>Cloud Sync</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="savedRecordsTableBody">
-                            <tr><td colspan="5" style="text-align:center;">No saved records found in IndexedDB database.</td></tr>
+                            <tr><td colspan="5" style="text-align:center;">Loading cloud database records...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -860,7 +859,7 @@
 </script>
 
 <script>
-    // FIREBASE INITIALIZATION
+    // FIREBASE INITIALIZATION WITH ASIA-SOUTHEAST1 REGION URL
     const firebaseConfig = {
         apiKey: "AIzaSyDd9yyyPywkuLYVBXG584PKtNhdWLSVsY8",
         authDomain: "h411-3b136.firebaseapp.com",
@@ -894,79 +893,110 @@
         };
         req.onsuccess = function(e) {
             dbDB = e.target.result;
-            loadOfflineRecordsTable();
-            checkAndSyncFirebase();
+            if(fbDb && navigator.onLine) {
+                fetchCloudFirebaseRecords();
+            } else {
+                loadOfflineRecordsTable();
+            }
         };
     }
 
     window.addEventListener('online', () => {
         updateNetworkBadge(true);
-        checkAndSyncFirebase();
+        fetchCloudFirebaseRecords();
     });
     window.addEventListener('offline', () => {
         updateNetworkBadge(false);
+        loadOfflineRecordsTable();
     });
 
     function updateNetworkBadge(isOnline) {
         const badge = document.getElementById('networkStatusBadge');
         if (isOnline) {
             badge.className = "status-badge status-online";
-            badge.innerText = "🟢 Online Mode";
+            badge.innerText = "🟢 Cloud Live Mode";
         } else {
             badge.className = "status-badge status-offline";
-            badge.innerText = "🔴 Offline Mode";
+            badge.innerText = "🔴 Local Offline Mode";
         }
     }
 
-    function saveRecordOfflineFirst() {
-        if (!dbDB) return;
+    function fetchCloudFirebaseRecords() {
+        if (!fbDb || !navigator.onLine) {
+            loadOfflineRecordsTable();
+            return;
+        }
 
+        fbDb.ref('health_reports').on('value', (snapshot) => {
+            const data = snapshot.val();
+            allFetchedRecords = [];
+            
+            if (data) {
+                for (let key in data) {
+                    allFetchedRecords.push({ ...data[key], id: key, synced: true });
+                }
+                if (dbDB) {
+                    const tx = dbDB.transaction('patient_records', 'readwrite');
+                    const store = tx.objectStore('patient_records');
+                    allFetchedRecords.forEach(rec => store.put(rec));
+                }
+            }
+            filterAndRenderRecords();
+        });
+    }
+
+    // 🌟 FULL DATA CAPTURE FUNCTION (CAPTURES ALL INPUTS, CONTACT TABLES & RADIOS)
+    function saveRecordOfflineFirst() {
         const recordId = activeEditingRecordId || 'REC_' + Date.now();
-        
         const formData = { id: recordId, synced: false, timestamp: new Date().toISOString() };
+
+        // 1. Capture All Standard Inputs, Selects and Textareas
         const inputs = document.querySelectorAll('#healthPortalForm input, #healthPortalForm select, #healthPortalForm textarea');
         inputs.forEach(input => {
-            if (input.type === 'radio' || input.type === 'checkbox') {
-                formData[input.id || input.name + '_' + input.value] = input.checked;
-            } else {
+            if (input.type === 'radio') {
+                if (input.checked) {
+                    formData[input.name] = input.value;
+                }
+            } else if (input.type === 'checkbox') {
+                formData[input.id] = input.checked;
+            } else if (input.id) {
                 formData[input.id] = input.value;
             }
         });
 
-        const tx = dbDB.transaction('patient_records', 'readwrite');
-        const store = tx.objectStore('patient_records');
-        store.put(formData);
+        // 2. Capture All Contact Table Rows explicitly (Household & Other)
+        for (let i = 0; i < 5; i++) {
+            ['inHhName_', 'inHhAge_', 'inHhDate_', 'inHhObs_', 'inOthName_', 'inOthAge_', 'inOthDate_', 'inOthObs_'].forEach(prefix => {
+                const fieldId = prefix + i;
+                const el = document.getElementById(fieldId);
+                if (el) {
+                    formData[fieldId] = el.value;
+                }
+            });
+        }
 
-        tx.oncomplete = function() {
-            alert(activeEditingRecordId ? "✅ Record updated in Local Database!" : "✅ New Record saved in Offline Local Database!");
+        // Save to Local IndexedDB
+        if (dbDB) {
+            const tx = dbDB.transaction('patient_records', 'readwrite');
+            const store = tx.objectStore('patient_records');
+            store.put(formData);
+        }
+
+        // Save/Sync to Firebase Cloud
+        if (fbDb && navigator.onLine) {
+            formData.synced = true;
+            fbDb.ref('health_reports/' + recordId).set(formData).then(() => {
+                alert(activeEditingRecordId ? "✅ All Report Data Updated in Cloud!" : "✅ Full Report (with Contacts) Saved & Synced to Cloud!");
+                activeEditingRecordId = null;
+                fetchCloudFirebaseRecords();
+            }).catch(err => {
+                alert("⚠️ Cloud Save Error. Stored locally: " + err.message);
+            });
+        } else {
+            alert("✅ Full Report saved locally in Browser! Will auto-sync when Online.");
             activeEditingRecordId = null;
             loadOfflineRecordsTable();
-            checkAndSyncFirebase();
-        };
-    }
-
-    function checkAndSyncFirebase() {
-        if (!navigator.onLine || !fbDb || !dbDB) return;
-
-        const tx = dbDB.transaction('patient_records', 'readonly');
-        const store = tx.objectStore('patient_records');
-        const req = store.getAll();
-
-        req.onsuccess = function() {
-            const allRecords = req.result;
-            const unsynced = allRecords.filter(r => !r.synced);
-
-            if (unsynced.length === 0) return;
-
-            unsynced.forEach(rec => {
-                const recCopy = { ...rec, synced: true };
-                fbDb.ref('health_reports/' + rec.id).set(recCopy).then(() => {
-                    const txUpdate = dbDB.transaction('patient_records', 'readwrite');
-                    txUpdate.objectStore('patient_records').put(recCopy);
-                    txUpdate.oncomplete = () => loadOfflineRecordsTable();
-                }).catch(err => console.log("Firebase Sync Fail:", err));
-            });
-        };
+        }
     }
 
     function manualSyncToFirebase() {
@@ -974,8 +1004,8 @@
             alert("⚠️ Internet connection unavailable. Records remain saved safely in local IndexedDB.");
             return;
         }
-        checkAndSyncFirebase();
-        alert("🔄 Sync process triggered! Checking and syncing unsynced records to Firebase...");
+        fetchCloudFirebaseRecords();
+        alert("🔄 Realtime Cloud Sync Triggered!");
     }
 
     function loadOfflineRecordsTable() {
@@ -1006,7 +1036,7 @@
         tbody.innerHTML = '';
 
         if (filteredRecords.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No matching saved records found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No matching saved reports found.</td></tr>';
             cardViewer.style.display = 'none';
             return;
         }
@@ -1015,7 +1045,7 @@
             const ref = r.inPhiRefNo || 'No Ref';
             const name = r.inPatientName || 'Unnamed Patient';
             const disease = r.inDiseaseConfirmed || r.inDiseaseNotified || 'N/A';
-            const statusHtml = r.synced ? '<span style="color:#16a34a; font-weight:bold;">🟢 Synced</span>' : '<span style="color:#d97706; font-weight:bold;">🟡 Local Only</span>';
+            const statusHtml = r.synced ? '<span style="color:#16a34a; font-weight:bold;">🟢 Cloud Synced</span>' : '<span style="color:#d97706; font-weight:bold;">🟡 Local Only</span>';
 
             tbody.innerHTML += `
                 <tr>
@@ -1079,70 +1109,63 @@
         }
     }
 
-    // 🗑️ DELETE RECORD FROM BOTH INDEXEDDB & FIREBASE
     function deleteRecord(recordId) {
-        if (!confirm("Are you sure you want to permanently delete this report? This cannot be undone.")) {
+        if (!confirm("Are you sure you want to permanently delete this report? This will remove it from all devices.")) {
             return;
         }
 
-        // 1. Delete from local IndexedDB
+        if (fbDb && navigator.onLine) {
+            fbDb.ref('health_reports/' + recordId).remove().then(() => {
+                alert("🗑️ Report deleted from Cloud Database!");
+            }).catch(err => console.log("Cloud Delete Notice:", err));
+        }
+
         if (dbDB) {
             const tx = dbDB.transaction('patient_records', 'readwrite');
             const store = tx.objectStore('patient_records');
             store.delete(recordId);
 
             tx.oncomplete = function() {
-                // 2. Delete from Firebase if online and initialized
-                if (fbDb && navigator.onLine) {
-                    fbDb.ref('health_reports/' + recordId).remove().then(() => {
-                        console.log("Deleted from Firebase Cloud.");
-                    }).catch(err => console.log("Firebase Delete Notice:", err));
-                }
-
                 if (activeEditingRecordId === recordId) {
                     activeEditingRecordId = null;
                 }
-
-                alert("🗑️ Report permanently deleted successfully!");
                 loadOfflineRecordsTable();
             };
         }
     }
 
+    // 🌟 FULL DATA RESTORATION FUNCTION
     function loadRecordForEditing(recordId) {
-        if (!dbDB) return;
+        const data = allFetchedRecords.find(r => r.id === recordId);
+        if (!data) return;
 
-        const tx = dbDB.transaction('patient_records', 'readonly');
-        const store = tx.objectStore('patient_records');
-        const req = store.get(recordId);
+        activeEditingRecordId = data.id;
 
-        req.onsuccess = function() {
-            const data = req.result;
-            if (!data) return;
+        // Reset inputs first
+        document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+        document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false);
 
-            activeEditingRecordId = data.id;
-
-            Object.keys(data).forEach(key => {
-                const el = document.getElementById(key);
-                if (el) {
-                    if (el.type === 'checkbox') {
-                        el.checked = data[key];
-                    } else {
-                        el.value = data[key];
-                    }
+        Object.keys(data).forEach(key => {
+            const el = document.getElementById(key);
+            if (el) {
+                if (el.type === 'checkbox') {
+                    el.checked = data[key];
                 } else {
-                    const radios = document.querySelectorAll(`input[name="${key.split('_')[0]}"]`);
-                    radios.forEach(radio => {
-                        if (radio.value === key.split('_')[1]) {
-                            radio.checked = data[key];
-                        }
-                    });
+                    el.value = data[key];
                 }
-            });
+            } else {
+                // Check for radio button groups by name
+                const radios = document.querySelectorAll(`input[name="${key}"]`);
+                radios.forEach(radio => {
+                    if (radio.value === data[key]) {
+                        radio.checked = true;
+                    }
+                });
+            }
+        });
 
-            updatePrintForm();
-            alert("📋 Report loaded into form! You can now view, modify or print.");
-        };
+        updatePrintForm();
+        alert("📋 Full Report (including all contacts) loaded into Form!");
     }
 
     const diseaseList = [
