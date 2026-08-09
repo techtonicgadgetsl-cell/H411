@@ -20,24 +20,27 @@
 
     <style>
         * { box-sizing: border-box; }
+        
+        /* 📱 FIXED MOBILE LOCK ISSUE IN BODY */
         body {
             font-family: Arial, sans-serif;
             background-color: #0f172a;
             margin: 0;
             padding: 0;
-            height: 100vh;
-            overflow: hidden;
+            min-height: 100vh;
+            overflow-x: hidden;
+            overflow-y: auto;
         }
 
         .dashboard-container {
             display: flex;
             width: 100vw;
-            height: 100vh;
+            min-height: 100vh;
         }
 
         .preview-panel {
             width: 50%;
-            height: 100%;
+            height: 100vh;
             background-color: #1e293b;
             padding: 20px;
             overflow-y: auto;
@@ -106,7 +109,7 @@
 
         .portal-panel {
             width: 50%;
-            height: 100%;
+            height: 100vh;
             background-color: #f8fafc;
             padding: 25px;
             overflow-y: auto;
@@ -366,12 +369,40 @@
             gap: 10px;
         }
 
+        /* 📱 FULLY UNLOCKED MOBILE SCROLLING & RESPONSIVENESS */
         @media screen and (max-width: 900px) {
-            html, body { width: 100%; min-width: 0; overflow-x: hidden; }
+            html, body { 
+                width: 100%; 
+                min-width: 0; 
+                height: auto !important; 
+                overflow-x: hidden; 
+                overflow-y: auto !important; 
+            }
             input, select, textarea, button { font-size: 16px !important; }
-            .dashboard-container { flex-direction: column; height: auto; }
-            .portal-panel { width: 100%; height: auto; order: 1; padding: 10px; box-sizing: border-box; }
-            .preview-panel { width: 100%; height: auto; order: 2; border-right: none; border-top: 4px solid #0f172a; padding: 10px 4px; box-sizing: border-box; overflow-x: auto; }
+            .dashboard-container { 
+                flex-direction: column; 
+                height: auto !important; 
+                min-height: 100vh;
+            }
+            .portal-panel { 
+                width: 100%; 
+                height: auto !important; 
+                order: 1; 
+                padding: 10px; 
+                box-sizing: border-box; 
+                overflow-y: visible !important; 
+            }
+            .preview-panel { 
+                width: 100%; 
+                height: auto !important; 
+                order: 2; 
+                border-right: none; 
+                border-top: 4px solid #0f172a; 
+                padding: 10px 4px; 
+                box-sizing: border-box; 
+                overflow-x: auto; 
+                overflow-y: visible !important; 
+            }
             .portal-card { padding: 12px; }
             .form-grid { grid-template-columns: 1fr; gap: 10px; }
             .form-group { min-width: 0; }
@@ -384,6 +415,14 @@
             .record-nav-header { gap: 8px; }
             .record-nav-header .btn { width: auto; flex: 1; }
             .preview-scale-wrapper { transform: scale(0.42); transform-origin: top left; margin-bottom: -260px; width: 238%; }
+        }
+
+        @media screen and (max-width: 480px) {
+            .portal-panel { padding: 6px; }
+            .portal-card { padding: 9px; }
+            .section-title { font-size: 13px; }
+            .btn-group { gap: 7px; }
+            .preview-scale-wrapper { transform: scale(0.30); width: 333%; margin-bottom: -330px; }
         }
 
         @media print {
@@ -469,14 +508,14 @@
                 <span class="data-overlay" id="outP2Date1" style="top: 155px; left: 140px; width: 110px;"></span>
                 <div class="data-overlay-textarea" id="outP2Content1" style="top: 155px; left: 270px; width: 780px; height: 110px; font-size: 11px; line-height: 15px;"></div>
 
-                <!-- TABLE 02 (DYNAMIC EXPANDING NO OVERLAP FIX) -->
+                <!-- TABLE 02 -->
                 <span class="data-overlay" id="outP2Date2" style="top: 275px; left: 140px; width: 110px;"></span>
                 <div class="data-overlay-textarea" id="outP2Content2" style="top: 275px; left: 270px; width: 780px; height: 265px; font-size: 11px; line-height: 15px;"></div>
 
                 <!-- LAB REPORTS AREA -->
                 <div class="data-overlay-textarea" id="outP2LabReports" style="top: 550px; left: 270px; width: 780px; height: 135px; font-size: 11px; line-height: 15px; color: #000080; border-top: 1px dashed #2563eb; padding-top: 4px; white-space: pre-wrap; overflow: hidden; overflow-wrap: anywhere; word-break: break-word;"></div>
 
-                <!-- GPS LOCATION MOVED DOWNWARDS -->
+                <!-- GPS LOCATION -->
                 <div class="data-overlay" id="outP2GpsBlock" style="top: 718px; left: 270px; width: 790px; font-size: 14px; color: #000080; font-weight: 900;"></div>
             </div>
         </div>
