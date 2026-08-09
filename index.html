@@ -739,7 +739,7 @@
 
                 <div class="section-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                     <span>08. PAGE 2 - INVESTIGATION NOTES</span>
-                    <button type="button" class="btn btn-ai" onclick="generatePage2FromPage1()">✨ Gemini Generate Table 02</button>
+                    <button type="button" class="btn btn-ai" onclick="openNoteConfirmModal()">✨ Gemini Generate Table 02</button>
                 </div>
 
                 <!-- TABLE 01: USER ENTERS DATE + NOTE MANUALLY -->
@@ -842,7 +842,7 @@
 <div class="modal-overlay" id="noteConfirmModal">
     <div class="modal-card">
         <div class="modal-header">
-            <h4>📋 Confirm Investigation Details for Page 2 AI Note</h4>
+            <h4>📋 Confirm Basic Investigation Data Before AI Generation</h4>
             <button type="button" style="background:none; border:none; color:white; font-size:18px; cursor:pointer;" onclick="closeNoteConfirmModal()">✖</button>
         </div>
         <div class="modal-body">
@@ -852,12 +852,12 @@
             </div>
 
             <div class="form-group">
-                <label>2. Probable Infection Source / High-Risk Spot (Extracted from Movements)</label>
+                <label>2. Probable Source / Relevant Exposure</label>
                 <input type="text" id="modalSource" placeholder="e.g. Workplace, Local School, Travelled area, Residence neighbourhood">
             </div>
 
             <div class="form-group">
-                <label>3. Patient Case Classification (Chain / Index Case)</label>
+                <label>3. Case Classification</label>
                 <select id="modalCaseIndex">
                     <option value="INDEX_CASE">1st Primary Patient in MOH Area (Index Case)</option>
                     <option value="SUBSEQUENT_CASE" selected>Secondary / Subsequent Patient in Known Transmission Chain</option>
@@ -865,7 +865,7 @@
             </div>
 
             <div class="form-group">
-                <label>4. Outbreak Status in Local Area</label>
+                <label>4. Outbreak Status</label>
                 <select id="modalOutbreakStatus">
                     <option value="NO_OUTBREAK">No active local outbreak reported (Isolated Case)</option>
                     <option value="ACTIVE_OUTBREAK">Active Local Disease Outbreak Ongoing</option>
@@ -873,17 +873,17 @@
             </div>
 
             <div class="form-group">
-                <label>5. Control Actions Taken (Vector/Sanitation/Quarantine)</label>
+                <label>5. Actions Taken</label>
                 <input type="text" id="modalActionTaken" value="Fogging, larviciding, premises inspection, and vector breeding site destruction conducted.">
             </div>
 
             <div class="form-group">
-                <label>6. Health Advice & Directives Issued</label>
+                <label>6. Advice Given</label>
                 <input type="text" id="modalAdviceGiven" value="Strict isolation advised. Health education and disease prevention directives given to household contacts.">
             </div>
 
             <div class="form-group">
-                <label>7. Patient Current Situation / Outcome Status</label>
+                <label>7. Patient Outcome / Isolation</label>
                 <select id="modalPatientCondition">
                     <option value="Recovering / Stable at Home or Hospital">Recovering / Stable Condition</option>
                     <option value="Under Strict Hospital Isolation">Under Active Hospital Care & Isolation</option>
@@ -1569,7 +1569,7 @@
         const apiKey = document.getElementById('inAiApiKey').value.trim();
         const provider = document.getElementById('inAiEngineProvider').value;
         if (provider !== 'GEMINI_AI') {
-            alert('Please select Google Gemini AI in Section 00 to generate Page 2 Table 02.');
+            alert('Please select Google Gemini AI in Section 00 before generating Page 2 Table 02.');
             return;
         }
         if (!apiKey) {
@@ -1580,76 +1580,91 @@
         const get = id => document.getElementById(id)?.value?.trim() || '';
         const checked = name => document.querySelector(`input[name="${name}"]:checked`)?.value || '';
         const checkedBox = id => document.getElementById(id)?.checked ? 'Yes' : 'No';
+
         const patient = {
             name: get('inPatientName'), address: get('inPatientAddress'), phone: get('inPatientPhone'),
-            dob: get('inPatientDob'), age: get('inPatientAge'), sex: checked('sexOption'),
-            diseaseNotified: get('inDiseaseNotified'), dateNotified: get('inDateNotified'),
-            diseaseConfirmed: get('inDiseaseConfirmed'), dateConfirmed: get('inDateConfirmed'),
-            movements: get('inMovements'), onset: get('inDateOnset'), hospitalized: get('inDateHospitalized'),
-            discharged: get('inDateDischarged'), hospital: get('inHospitalName'), lab: get('inLabFindings'),
+            age: get('inPatientAge'), sex: checked('sexOption'),
+            diseaseConfirmed: get('inDiseaseConfirmed') || get('inDiseaseNotified'),
+            dateConfirmed: get('inDateConfirmed'), movements: get('inMovements'),
+            onset: get('inDateOnset'), hospitalized: get('inDateHospitalized'),
+            discharged: get('inDateDischarged'), hospital: get('inHospitalName'),
             outcome: checked('outcomeOption'), isolation: checked('isolatedOption'),
             isolatedCase: checkedBox('inNatureIsolatedCase'), outbreakReportNeeded: checkedBox('inOutbreakReportNeeded')
+        };
+
+        // Values explicitly confirmed/edited by the PHI in the popup.
+        const confirmed = {
+            source: get('modalSource'),
+            classification: get('modalCaseIndex'),
+            outbreak: get('modalOutbreakStatus'),
+            actions: get('modalActionTaken'),
+            advice: get('modalAdviceGiven'),
+            outcomeIsolation: get('modalPatientCondition')
         };
 
         const button = document.querySelector('.section-title button.btn-ai');
         const oldText = button ? button.innerText : '';
         try {
-            if (button) { button.disabled = true; button.innerText = '⏳ Gemini analysing Page 1...'; }
+            closeNoteConfirmModal();
+            if (button) { button.disabled = true; button.innerText = '⏳ Gemini preparing professional Page 2 note...'; }
             const GoogleGenAI = window.GoogleGenAIReady ? await window.GoogleGenAIReady : window.GoogleGenAI;
             if (!GoogleGenAI) throw new Error('Gemini SDK is not loaded. Please reload the page and try again.');
             const ai = new GoogleGenAI({ apiKey });
 
-            const prompt = `You are assisting a Sri Lankan Public Health Inspector to complete ONLY PAGE 2, TABLE 02 of an official communicable disease investigation report.
+            const prompt = `You are an experienced Sri Lankan Public Health Inspector preparing a professional field investigation entry for PAGE 2, TABLE 02 of an official communicable disease report.
 
-Use ONLY the information supplied from PAGE 1 below. Do not invent, assume, diagnose, or add facts. If a requested item is not present in Page 1, write "Not documented". Do not claim the patient was discharged, recovered, isolated, died, or is in an outbreak unless Page 1 supports it.
+Use the PAGE 1 information and the PHI-CONFIRMED BASIC DATA below. Do not invent clinical, epidemiological, laboratory, treatment, outbreak, or patient-status facts.
 
-Generate a concise official field-investigation entry containing EXACTLY these sections in this order:
-Patient details
-1. Confirmed disease
-2. Movements
-3. Probable source
-4. Case classification
-5. Outbreak status
-6. Actions taken
-7. Advice given
-8. Patient outcome/isolation
-9. Laboratory findings
+Create ONE concise, professional, factual investigation note with EXACTLY this structure and order:
 
-Rules:
-- Patient details: use available name, age, sex, address, hospital and contact number only when present.
-- Confirmed disease: use the confirmed disease field exactly.
-- Movements: summarize the recorded movements only; do not invent locations.
-- Probable source: infer ONLY from the recorded movements/location information; if unsupported, say "Not documented".
-- Case classification: use only explicit Page 1 evidence such as the case nature/isolation/outbreak fields; otherwise "Not documented".
-- Outbreak status: use only the Page 1 outbreak/report-needed information; otherwise "Not documented".
-- Actions taken: use only actions explicitly documented on Page 1. Do not invent fogging, larviciding, quarantine, inspection or treatment.
-- Advice given: use only advice explicitly documented on Page 1. If none exists, say "Not documented".
-- Patient outcome/isolation: use the recorded outcome and isolation fields plus hospital/discharge information.
-- Laboratory findings: reproduce only the laboratory findings actually entered/scanned on Page 1. Do not interpret them.
-- Keep each item short and suitable for one printed table cell.
-- Return plain text only. No markdown bullets, no extra introduction, no quotation marks.
+PATIENT DETAILS / CONFIRMED DISEASE
+- Patient: [name], [age], [sex]
+- Address: [address]
+- Hospital: [hospital, if documented]
+- Confirmed disease: [confirmed disease]
+- Date confirmed: [date, if documented]
 
-PAGE 1 DATA:
+1. Movements: [brief chronological summary of recorded movements/exposures only]
+2. Probable source: [PHI-confirmed source; if not supported, state Not documented]
+3. Case classification: [PHI-confirmed classification]
+4. Outbreak status: [PHI-confirmed status]
+5. Actions taken: [PHI-confirmed actions only]
+6. Advice given: [PHI-confirmed advice only]
+7. Patient outcome/isolation: [PHI-confirmed current status, including hospital/isolation information where documented]
+
+Important:
+- DO NOT include laboratory findings in this generated note. Laboratory findings are printed separately below Table 02.
+- Keep the wording formal, professional and suitable for an official PHI field-investigation record.
+- Do not use markdown bullets such as *, •, or #. Use the numbered headings exactly as requested.
+- Do not write a long narrative. Keep each section compact enough for a printed A4 table.
+- If Page 1 does not support a fact, write “Not documented” rather than guessing.
+
+PAGE 1 DATA
 Patient name: ${patient.name || 'Not documented'}
-Address: ${patient.address || 'Not documented'}
-Phone: ${patient.phone || 'Not documented'}
-DOB: ${patient.dob || 'Not documented'}
 Age: ${patient.age || 'Not documented'}
 Sex: ${patient.sex || 'Not documented'}
-Disease notified: ${patient.diseaseNotified || 'Not documented'}
-Date notified: ${patient.dateNotified || 'Not documented'}
+Address: ${patient.address || 'Not documented'}
+Phone: ${patient.phone || 'Not documented'}
 Confirmed disease: ${patient.diseaseConfirmed || 'Not documented'}
 Date confirmed: ${patient.dateConfirmed || 'Not documented'}
-Patient movements: ${patient.movements || 'Not documented'}
+Recorded movements: ${patient.movements || 'Not documented'}
 Date of onset: ${patient.onset || 'Not documented'}
 Date hospitalized: ${patient.hospitalized || 'Not documented'}
 Date discharged: ${patient.discharged || 'Not documented'}
 Hospital: ${patient.hospital || 'Not documented'}
-Outcome: ${patient.outcome || 'Not documented'}
-Isolation: ${patient.isolation || 'Not documented'}
+Outcome recorded on Page 1: ${patient.outcome || 'Not documented'}
+Isolation recorded on Page 1: ${patient.isolation || 'Not documented'}
 Isolated case checkbox: ${patient.isolatedCase}
 Outbreak/report-needed checkbox: ${patient.outbreakReportNeeded}
-Laboratory findings: ${patient.lab || 'Not documented'}`;
+
+PHI-CONFIRMED BASIC DATA FROM POPUP
+Confirmed disease: ${patient.diseaseConfirmed || 'Not documented'}
+Probable source: ${confirmed.source || 'Not documented'}
+Case classification: ${confirmed.classification || 'Not documented'}
+Outbreak status: ${confirmed.outbreak || 'Not documented'}
+Actions taken: ${confirmed.actions || 'Not documented'}
+Advice given: ${confirmed.advice || 'Not documented'}
+Patient outcome/isolation: ${confirmed.outcomeIsolation || 'Not documented'}`;
 
             const response = await ai.models.generateContent({
                 model: 'gemini-3.5-flash',
@@ -1662,8 +1677,7 @@ Laboratory findings: ${patient.lab || 'Not documented'}`;
             updatePrintForm();
         } catch (e) {
             console.error('Gemini Page 2 error:', e);
-            const message = e?.message || String(e);
-            alert('Gemini Page 2 Error:\n\n' + message);
+            alert('Gemini Page 2 Error:\n\n' + (e?.message || String(e)));
         } finally {
             if (button) { button.disabled = false; button.innerText = oldText || '✨ Gemini Generate Table 02'; }
         }
