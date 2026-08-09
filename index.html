@@ -413,6 +413,7 @@
 
                 <span class="data-overlay" id="outPatientName" style="top: 260px; left: 250px; width: 290px;"></span>
                 <span class="data-overlay" id="outPatientAddress" style="top: 280px; left: 190px; width: 330px;"></span>
+                <span class="data-overlay" id="outPatientPhone" style="top: 300px; left: 190px; width: 330px; font-size: 13px;"></span>
 
                 <span class="data-overlay" id="outPatientDobAge" style="top: 325px; left: 180px; width: 180px;"></span>
 
@@ -454,6 +455,7 @@
 
         <div class="preview-scale-wrapper">
             <div class="page-container" id="page-2">
+                <span class="data-overlay" id="outP2PatientPhone" style="top: 105px; left: 820px; width: 230px; font-size: 12px; text-align: right;"></span>
                 <span class="data-overlay" id="outP2Date1" style="top: 155px; left: 140px; width: 110px;"></span>
                 <div class="data-overlay-textarea" id="outP2Content1" style="top: 155px; left: 270px; width: 780px; height: 130px; font-size: 12px; line-height: 18px;"></div>
 
@@ -546,6 +548,14 @@
                     <div class="form-group" style="grid-column: span 2;">
                         <label>ලිපිනය / Address</label>
                         <input type="text" id="inPatientAddress" placeholder="Address" oninput="updatePrintForm()">
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>දුරකථන අංකය / Patient Contact Number</label>
+                        <div style="display:flex; gap:8px; align-items:stretch;">
+                            <input type="tel" id="inPatientPhone" inputmode="tel" autocomplete="tel" placeholder="07XXXXXXXX" oninput="updatePrintForm()" style="flex:1; min-width:0;">
+                            <button type="button" class="btn btn-gps" onclick="callPatient()" style="white-space:nowrap; padding:8px 12px;">📞 Call Patient</button>
+                        </div>
+                        <small style="display:block; margin-top:4px; color:#64748b;">Enter a valid Sri Lankan mobile number (e.g. 0712345678).</small>
                     </div>
                 </div>
 
@@ -1107,13 +1117,15 @@
         const address = rec.inPatientAddress || 'No Address';
         const disease = rec.inDiseaseConfirmed || rec.inDiseaseNotified || 'N/A';
         const hospital = rec.inHospitalName || 'N/A';
+        const phone = rec.inPatientPhone || 'Not provided';
         const syncStr = rec.synced ? '🟢 Synced to Cloud' : '🟡 Offline Local Only';
 
         document.getElementById('navCardBody').innerHTML = `
             <div><b>👤 Patient:</b> ${name}</div>
             <div><b>🏷️ PHI Ref No:</b> ${ref} | <b>🦠 Disease:</b> ${disease}</div>
             <div><b>📍 Address:</b> ${address}</div>
-            <div><b>🏥 Hospital:</b> ${hospital} | <b>Status:</b> ${syncStr}</div>
+            <div><b>📞 Contact:</b> ${phone} | <b>🏥 Hospital:</b> ${hospital}</div>
+            <div><b>Status:</b> ${syncStr}</div>
         `;
     }
 
@@ -1601,6 +1613,9 @@
 
         document.getElementById('outPatientName').innerText = document.getElementById('inPatientName').value;
         document.getElementById('outPatientAddress').innerText = document.getElementById('inPatientAddress').value;
+        const patientPhone = document.getElementById('inPatientPhone')?.value.trim() || '';
+        document.getElementById('outPatientPhone').innerText = patientPhone ? 'Tel: ' + patientPhone : '';
+        document.getElementById('outP2PatientPhone').innerText = patientPhone ? 'Patient Contact: ' + patientPhone : '';
 
         const dob = document.getElementById('inPatientDob').value;
         const age = document.getElementById('inPatientAge').value;
@@ -1718,7 +1733,45 @@
         saveFormData();
     }
 
-    function saveFormData() {
+    function normalizeSriLankanPhone(raw) {
+        const value = (raw || '').trim();
+        if (!value) return '';
+
+        // Keep only digits, while allowing a leading + for +94 numbers.
+        let cleaned = value.replace(/[^0-9+]/g, '');
+
+        if (cleaned.startsWith('+94')) {
+            const digits = '+94' + cleaned.slice(3).replace(/\D/g, '');
+            return /^\+947\d{8}$/.test(digits) ? digits : '';
+        }
+
+        cleaned = cleaned.replace(/\D/g, '');
+
+        // Accept local Sri Lankan mobile format: 07XXXXXXXX.
+        if (/^07\d{8}$/.test(cleaned)) return '+94' + cleaned.slice(1);
+
+        // Also accept international format without '+': 947XXXXXXXX.
+        if (/^947\d{8}$/.test(cleaned)) return '+' + cleaned;
+
+        return '';
+    }
+
+    function callPatient() {
+        const input = document.getElementById('inPatientPhone');
+        const raw = input?.value || '';
+        const phone = normalizeSriLankanPhone(raw);
+
+        if (!phone) {
+            alert('📞 Please add a valid patient contact number first.\n\nExample: 0712345678');
+            input?.focus();
+            return;
+        }
+
+        // tel: opens the device dialer on supported mobile browsers.
+        window.location.href = 'tel:' + phone;
+    }
+
+        function saveFormData() {
         const formData = {};
         const inputs = document.querySelectorAll('#healthPortalForm input, #healthPortalForm select, #healthPortalForm textarea');
         inputs.forEach(input => {
