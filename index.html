@@ -488,7 +488,7 @@
                     </div>
                     <div class="form-group" style="grid-column: span 3;">
                         <label id="lblAiKey">API Key Active</label>
-                        <input type="password" id="inAiApiKey" placeholder="Enter API key" value="AQ.Ab8RN6IUmWWB2TA2hESaKB2w7dbG5-PiY9Msi7u3z4dDluaW3Q" oninput="saveFormData()">
+                        <input type="password" id="inAiApiKey" placeholder="Enter API key" value="" oninput="saveFormData()">
                     </div>
                 </div>
 
@@ -868,8 +868,16 @@
 
 <!-- Google Gen AI Official SDK Module -->
 <script type="module">
-    import { GoogleGenAI } from '@google/genai';
-    window.GoogleGenAI = GoogleGenAI;
+    // Keep a promise so the UI can safely wait for the SDK to finish loading.
+    window.GoogleGenAIReady = import('@google/genai')
+        .then(({ GoogleGenAI }) => {
+            window.GoogleGenAI = GoogleGenAI;
+            return GoogleGenAI;
+        })
+        .catch((error) => {
+            console.error('Gemini SDK load failed:', error);
+            throw new Error('Gemini SDK could not be loaded. Check your internet connection and reload the page.');
+        });
 </script>
 
 <script>
@@ -1242,8 +1250,8 @@
         const lblKey = document.getElementById('lblAiKey');
 
         if (provider === 'GEMINI_AI') {
-            lblKey.innerText = "Google Gemini API Key (AQ.Ab8RN... Active)";
-            if(!keyInput.value) keyInput.value = "AQ.Ab8RN6IUmWWB2TA2hESaKB2w7dbG5-PiY9Msi7u3z4dDluaW3Q";
+            lblKey.innerText = "Google Gemini API Key";
+            if (!keyInput.value) keyInput.placeholder = "Paste a valid Gemini API key";
         } else if (provider === 'OCR_SPACE') {
             lblKey.innerText = "Free OCR.space API Key";
             keyInput.value = "K88879688888957";
@@ -1298,7 +1306,7 @@
         const noticeEl = document.getElementById('ocrStatusNotice');
 
         if (!apiKey) {
-            alert("Please enter a valid API key!");
+            alert('Please enter a valid Gemini API key in Section 00.');
             return;
         }
 
@@ -1308,63 +1316,110 @@
         }
 
         if (provider === 'GEMINI_AI') {
-            const reader = new FileReader();
-            reader.onloadend = async function () {
-                const base64Image = reader.result.split(',')[1];
-                try {
-                    if (window.GoogleGenAI) {
-                        const ai = new window.GoogleGenAI({ apiKey: apiKey });
-                        const response = await ai.models.generateContent({
-                            model: 'gemini-2.5-flash',
-                            contents: [
-                                {
-                                    inlineData: {
-                                        mimeType: file.type || 'image/jpeg',
-                                        data: base64Image
-                                    }
-                                },
-                                { text: "Extract medical findings line by line (WBC, HCT, Hb, Creatinine, AST, ALT, CRP values and arrows)." }
-                            ]
-                        });
-                        if (response.text) {
-                            appendParsedLabText(response.text);
-                        } else {
-                            throw new Error("Empty AI text response");
+            try {
+                // Convert the selected image to base64 for Gemini inlineData.
+                const base64Image = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        const result = String(reader.result || '');
+                        const commaIndex = result.indexOf(',');
+                        if (commaIndex === -1) {
+                            reject(new Error('Could not read the selected image.'));
+                            return;
                         }
-                    } else {
-                        throw new Error("SDK Module loading... Please try again in 2 seconds.");
-                    }
-                } catch (e) {
-                    alert("Gemini AI Engine Note: " + e.message + "\n\nTip: You can switch to 'Free OCR.space API' in Section 00 for instant keyless extraction!");
-                } finally {
-                    if (noticeEl) noticeEl.style.display = 'none';
+                        resolve(result.slice(commaIndex + 1));
+                    };
+                    reader.onerror = () => reject(new Error('Could not read the selected image file.'));
+                    reader.readAsDataURL(file);
+                });
+
+                // Wait for the official @google/genai browser SDK to be ready.
+                const GoogleGenAI = window.GoogleGenAIReady
+                    ? await window.GoogleGenAIReady
+                    : window.GoogleGenAI;
+
+                if (!GoogleGenAI) {
+                    throw new Error('Gemini SDK is not loaded. Please reload the page and try again.');
                 }
-            };
-            reader.readAsDataURL(file);
+
+                const ai = new GoogleGenAI({ apiKey });
+
+                // Gemini 3.5 Flash is a current stable multimodal model and is
+                // suitable for image/document extraction.
+                const response = await ai.models.generateContent({
+                    model: 'gemini-3.5-flash',
+                    contents: [
+                        {
+                            inlineData: {
+                                mimeType: file.type || 'image/jpeg',
+                                data: base64Image
+                            }
+                        },
+                        {
+                            text: [
+                                'Read this handwritten/printed medical laboratory report carefully.',
+                                'Extract only the laboratory findings that are actually visible in the image.',
+                                'Return one finding per line.',
+                                'Prioritize WBC, HCT, Hb, Creatinine, AST, ALT and CRP.',
+                                'Preserve the numeric value, unit when visible, and any H/L/↑/↓ indicator.',
+                                'Do not invent or estimate values that are unclear.',
+                                'If a requested value cannot be read, omit it rather than guessing.'
+                            ].join(' ')
+                        }
+                    ]
+                });
+
+                const text = response?.text?.trim();
+                if (!text) {
+                    throw new Error('Gemini returned an empty response. Try a clearer or higher-resolution photo.');
+                }
+
+                appendParsedLabText(text);
+
+            } catch (e) {
+                console.error('Gemini AI error:', e);
+                const message = e?.message || String(e);
+                let help = '';
+
+                if (/404|NOT_FOUND|no longer available|model/i.test(message)) {
+                    help = '\n\nModel error: this page now uses the current stable gemini-3.5-flash model. If the error persists, check that your API key has Gemini API access.';
+                } else if (/401|403|API key|permission|PERMISSION_DENIED|UNAUTHENTICATED/i.test(message)) {
+                    help = '\n\nAPI key error: create a new Gemini API key in Google AI Studio and paste it into Section 00.';
+                } else if (/429|quota|RESOURCE_EXHAUSTED/i.test(message)) {
+                    help = '\n\nQuota/rate-limit error: wait a little and try again, or check the API key quota/billing settings.';
+                }
+
+                alert('Gemini AI Engine Error:\n\n' + message + help);
+            } finally {
+                if (noticeEl) noticeEl.style.display = 'none';
+                // Allow the same file to be selected again after an error/success.
+                event.target.value = '';
+            }
 
         } else if (provider === 'OCR_SPACE') {
             const formData = new FormData();
-            formData.append("file", file);
-            formData.append("apikey", apiKey);
-            formData.append("language", "eng");
-            formData.append("isTable", "true");
-            formData.append("OCREngine", "2");
+            formData.append('file', file);
+            formData.append('apikey', apiKey);
+            formData.append('language', 'eng');
+            formData.append('isTable', 'true');
+            formData.append('OCREngine', '2');
 
             try {
-                const res = await fetch("https://api.ocr.space/parse/image", {
-                    method: "POST",
+                const res = await fetch('https://api.ocr.space/parse/image', {
+                    method: 'POST',
                     body: formData
                 });
                 const data = await res.json();
                 if (data.ParsedResults && data.ParsedResults[0]) {
                     appendParsedLabText(data.ParsedResults[0].ParsedText);
                 } else {
-                    throw new Error("OCR.space parse failed. Try another image.");
+                    throw new Error('OCR.space parse failed. Try another image.');
                 }
             } catch (err) {
-                alert("OCR.Space Error: " + err.message);
+                alert('OCR.Space Error: ' + err.message);
             } finally {
                 if (noticeEl) noticeEl.style.display = 'none';
+                event.target.value = '';
             }
         }
     }
