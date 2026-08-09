@@ -493,9 +493,9 @@
                 <div class="data-overlay-textarea" id="outP2Content2" style="top: 295px; left: 270px; width: 780px; height: 210px; font-size: 12px; line-height: 18px;"></div>
 
                 <!-- LABORATORY REPORTS BELOW TABLE 02 -->
-                <div class="data-overlay-textarea" id="outP2LabReports" style="top: 515px; left: 270px; width: 780px; height: 125px; font-size: 12px; color: #000080; border-top: 1px dashed #2563eb; padding-top: 4px;"></div>
+                <div class="data-overlay-textarea" id="outP2LabReports" style="top: 515px; left: 270px; width: 780px; height: 125px; font-size: 11px; line-height: 16px; color: #000080; border-top: 1px dashed #2563eb; padding-top: 4px; white-space: pre-wrap; overflow: hidden; overflow-wrap: anywhere; word-break: normal;"></div>
 
-                <div class="data-overlay" id="outP2GpsBlock" style="top: 650px; left: 270px; width: 780px; font-size: 15px; color: #000080; font-weight: 900;"></div>
+                <div class="data-overlay" id="outP2GpsBlock" style="top: 680px; left: 270px; width: 780px; font-size: 15px; color: #000080; font-weight: 900;"></div>
             </div>
         </div>
     </div>
@@ -739,7 +739,7 @@
 
                 <div class="section-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                     <span>08. PAGE 2 - INVESTIGATION NOTES</span>
-                    <button type="button" class="btn btn-ai" onclick="openNoteConfirmModal()">✨ Gemini Generate Table 02</button>
+                    <button type="button" class="btn btn-ai" onclick="generatePage2FromPage1()">✨ Gemini Generate Table 02</button>
                 </div>
 
                 <!-- TABLE 01: USER ENTERS DATE + NOTE MANUALLY -->
@@ -1565,112 +1565,113 @@
         document.getElementById('noteConfirmModal').style.display = 'none';
     }
 
-    async function submitAndGeneratePage2Note() {
-        // Table 01 is intentionally manual. Gemini must never overwrite it.
-        const patientName = document.getElementById('inPatientName').value || 'Patient';
-        const disease = document.getElementById('modalDisease').value || document.getElementById('inDiseaseConfirmed').value || document.getElementById('inDiseaseNotified').value || 'Communicable Disease';
-        const address = document.getElementById('inPatientAddress').value || 'Premises';
-        const hospital = document.getElementById('inHospitalName').value || 'Not stated';
-        const source = document.getElementById('modalSource').value || 'Not stated';
-        const isIndexCase = document.getElementById('modalCaseIndex').value === 'INDEX_CASE';
-        const isOutbreak = document.getElementById('modalOutbreakStatus').value === 'ACTIVE_OUTBREAK';
-        const actionTaken = document.getElementById('modalActionTaken').value || 'Not stated';
-        const adviceGiven = document.getElementById('modalAdviceGiven').value || 'Not stated';
-        const patientCondition = document.getElementById('modalPatientCondition').value || 'Not stated';
-        const movements = document.getElementById('inMovements').value || 'Not stated';
-        const labFindings = document.getElementById('inLabFindings').value || document.getElementById('inP2LabReports').value || 'No laboratory findings entered';
-        const gps = document.getElementById('inGpsCoords').value || 'Not recorded';
-        const outcome = document.querySelector('input[name="outcomeOption"]:checked')?.value || 'Not stated';
-        const isolation = document.querySelector('input[name="isolatedOption"]:checked')?.value || 'Not stated';
-
+    async function generatePage2FromPage1() {
         const apiKey = document.getElementById('inAiApiKey').value.trim();
         const provider = document.getElementById('inAiEngineProvider').value;
-        const btn = document.querySelector('#noteConfirmModal .btn-update');
-        const oldText = btn ? btn.innerText : '';
-
         if (provider !== 'GEMINI_AI') {
-            alert('Please select Google Gemini AI in Section 00 to generate Table 02. Table 01 remains manual.');
+            alert('Please select Google Gemini AI in Section 00 to generate Page 2 Table 02.');
             return;
         }
         if (!apiKey) {
-            alert('Please enter your Gemini API key in Section 00 before generating Table 02.');
+            alert('Please enter your Gemini API key in Section 00 before generating Page 2 Table 02.');
             return;
         }
 
+        const get = id => document.getElementById(id)?.value?.trim() || '';
+        const checked = name => document.querySelector(`input[name="${name}"]:checked`)?.value || '';
+        const checkedBox = id => document.getElementById(id)?.checked ? 'Yes' : 'No';
+        const patient = {
+            name: get('inPatientName'), address: get('inPatientAddress'), phone: get('inPatientPhone'),
+            dob: get('inPatientDob'), age: get('inPatientAge'), sex: checked('sexOption'),
+            diseaseNotified: get('inDiseaseNotified'), dateNotified: get('inDateNotified'),
+            diseaseConfirmed: get('inDiseaseConfirmed'), dateConfirmed: get('inDateConfirmed'),
+            movements: get('inMovements'), onset: get('inDateOnset'), hospitalized: get('inDateHospitalized'),
+            discharged: get('inDateDischarged'), hospital: get('inHospitalName'), lab: get('inLabFindings'),
+            outcome: checked('outcomeOption'), isolation: checked('isolatedOption'),
+            isolatedCase: checkedBox('inNatureIsolatedCase'), outbreakReportNeeded: checkedBox('inOutbreakReportNeeded')
+        };
+
+        const button = document.querySelector('.section-title button.btn-ai');
+        const oldText = button ? button.innerText : '';
         try {
-            if (btn) {
-                btn.disabled = true;
-                btn.innerText = '⏳ Gemini is analysing Table 02...';
-            }
-
-            const GoogleGenAI = window.GoogleGenAIReady
-                ? await window.GoogleGenAIReady
-                : window.GoogleGenAI;
+            if (button) { button.disabled = true; button.innerText = '⏳ Gemini analysing Page 1...'; }
+            const GoogleGenAI = window.GoogleGenAIReady ? await window.GoogleGenAIReady : window.GoogleGenAI;
             if (!GoogleGenAI) throw new Error('Gemini SDK is not loaded. Please reload the page and try again.');
-
             const ai = new GoogleGenAI({ apiKey });
-            const prompt = `You are assisting a Sri Lankan Public Health Inspector to complete ONLY TABLE 02 of an official communicable disease investigation report.
 
-IMPORTANT RULES:
-- Generate ONE concise official note for TABLE 02 only.
-- TABLE 01 is manual and must NOT be generated, changed, or referenced as a generated entry.
-- Do NOT invent dates, laboratory results, diagnoses, treatment, actions, sources, contacts, outbreak facts, or patient facts.
-- Use only the supplied case information.
-- Do not make a medical diagnosis or add clinical conclusions that are not explicitly supplied.
-- Write in clear, formal English suitable for a Sri Lankan PHI field investigation record.
-- Focus on probable source/spread considerations and ACTION TAKEN, plus relevant advice/directives and case classification only when supported by the supplied data.
-- If the patient is still in hospital, state that fact exactly as supplied; do not claim discharge, recovery, or death.
-- Keep the note concise enough to fit one printed table cell.
+            const prompt = `You are assisting a Sri Lankan Public Health Inspector to complete ONLY PAGE 2, TABLE 02 of an official communicable disease investigation report.
 
-Return ONLY the note text. Do not include headings such as ENTRY2, TABLE 02, or quotation marks.
+Use ONLY the information supplied from PAGE 1 below. Do not invent, assume, diagnose, or add facts. If a requested item is not present in Page 1, write "Not documented". Do not claim the patient was discharged, recovered, isolated, died, or is in an outbreak unless Page 1 supports it.
 
-CASE DATA:
-Patient: ${patientName}
-Confirmed/Notified disease: ${disease}
-Address/premises: ${address}
-Hospital: ${hospital}
-Probable source/high-risk spot: ${source}
-Patient movements: ${movements}
-Case classification: ${isIndexCase ? 'Index case' : 'Subsequent case'}
-Local outbreak status: ${isOutbreak ? 'Active local outbreak reported' : 'No active local outbreak reported'}
-Actions actually recorded: ${actionTaken}
-Advice/directives actually recorded: ${adviceGiven}
-Patient current condition: ${patientCondition}
-Outcome: ${outcome}
-Isolation: ${isolation}
-Laboratory findings: ${labFindings}
-GPS: ${gps}`;
+Generate a concise official field-investigation entry containing EXACTLY these sections in this order:
+Patient details
+1. Confirmed disease
+2. Movements
+3. Probable source
+4. Case classification
+5. Outbreak status
+6. Actions taken
+7. Advice given
+8. Patient outcome/isolation
+9. Laboratory findings
+
+Rules:
+- Patient details: use available name, age, sex, address, hospital and contact number only when present.
+- Confirmed disease: use the confirmed disease field exactly.
+- Movements: summarize the recorded movements only; do not invent locations.
+- Probable source: infer ONLY from the recorded movements/location information; if unsupported, say "Not documented".
+- Case classification: use only explicit Page 1 evidence such as the case nature/isolation/outbreak fields; otherwise "Not documented".
+- Outbreak status: use only the Page 1 outbreak/report-needed information; otherwise "Not documented".
+- Actions taken: use only actions explicitly documented on Page 1. Do not invent fogging, larviciding, quarantine, inspection or treatment.
+- Advice given: use only advice explicitly documented on Page 1. If none exists, say "Not documented".
+- Patient outcome/isolation: use the recorded outcome and isolation fields plus hospital/discharge information.
+- Laboratory findings: reproduce only the laboratory findings actually entered/scanned on Page 1. Do not interpret them.
+- Keep each item short and suitable for one printed table cell.
+- Return plain text only. No markdown bullets, no extra introduction, no quotation marks.
+
+PAGE 1 DATA:
+Patient name: ${patient.name || 'Not documented'}
+Address: ${patient.address || 'Not documented'}
+Phone: ${patient.phone || 'Not documented'}
+DOB: ${patient.dob || 'Not documented'}
+Age: ${patient.age || 'Not documented'}
+Sex: ${patient.sex || 'Not documented'}
+Disease notified: ${patient.diseaseNotified || 'Not documented'}
+Date notified: ${patient.dateNotified || 'Not documented'}
+Confirmed disease: ${patient.diseaseConfirmed || 'Not documented'}
+Date confirmed: ${patient.dateConfirmed || 'Not documented'}
+Patient movements: ${patient.movements || 'Not documented'}
+Date of onset: ${patient.onset || 'Not documented'}
+Date hospitalized: ${patient.hospitalized || 'Not documented'}
+Date discharged: ${patient.discharged || 'Not documented'}
+Hospital: ${patient.hospital || 'Not documented'}
+Outcome: ${patient.outcome || 'Not documented'}
+Isolation: ${patient.isolation || 'Not documented'}
+Isolated case checkbox: ${patient.isolatedCase}
+Outbreak/report-needed checkbox: ${patient.outbreakReportNeeded}
+Laboratory findings: ${patient.lab || 'Not documented'}`;
 
             const response = await ai.models.generateContent({
                 model: 'gemini-3.5-flash',
                 contents: [{ text: prompt }]
             });
-
             const text = response?.text?.trim();
-            if (!text) throw new Error('Gemini returned an empty Table 02 note.');
+            if (!text) throw new Error('Gemini returned an empty Page 2 note.');
 
-            // Only Table 02 is updated. Table 01 stays exactly as entered by the user.
-            document.getElementById('inP2Content2').value = text.replace(/^TABLE\s*02\s*:\s*/i, '').replace(/^ENTRY\s*2\s*:\s*/i, '').trim();
-            closeNoteConfirmModal();
+            document.getElementById('inP2Content2').value = text;
             updatePrintForm();
         } catch (e) {
-            console.error('Gemini Table 02 error:', e);
+            console.error('Gemini Page 2 error:', e);
             const message = e?.message || String(e);
-            let help = '';
-            if (/404|NOT_FOUND|model/i.test(message)) {
-                help = '\n\nModel error: check that your Gemini API key has access to gemini-3.5-flash.';
-            } else if (/401|403|API key|permission|PERMISSION_DENIED|UNAUTHENTICATED/i.test(message)) {
-                help = '\n\nAPI key/permission error: create a new Gemini API key and paste it into Section 00.';
-            } else if (/429|quota|RESOURCE_EXHAUSTED/i.test(message)) {
-                help = '\n\nGemini quota/rate-limit reached. Please wait and try again.';
-            }
-            alert('Gemini Table 02 Error:\n\n' + message + help);
+            alert('Gemini Page 2 Error:\n\n' + message);
         } finally {
-            if (btn) {
-                btn.disabled = false;
-                btn.innerText = oldText || '✨ Gemini Generate Table 02';
-            }
+            if (button) { button.disabled = false; button.innerText = oldText || '✨ Gemini Generate Table 02'; }
         }
+    }
+
+    // Kept for compatibility with older saved pages/buttons.
+    async function submitAndGeneratePage2Note() {
+        return generatePage2FromPage1();
     }
 
     function updatePrintForm() {
@@ -1715,7 +1716,7 @@ GPS: ${gps}`;
         }
         
         const labDisplayContent = p2LabField.value || page1LabFindings;
-        document.getElementById('outP2LabReports').innerText = labDisplayContent ? "PATIENT LABORATORY REPORTS:\n" + labDisplayContent : "";
+        document.getElementById('outP2LabReports').innerText = labDisplayContent ? 'LABORATORY REPORTS: ' + labDisplayContent.replace(/\s*[\r\n]+\s*/g, ' | ') : '';
 
         document.getElementById('outMovements').innerText = document.getElementById('inMovements').value;
 
