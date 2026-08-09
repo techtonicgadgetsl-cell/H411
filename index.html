@@ -380,12 +380,13 @@
 
         @media print {
             @page { size: A4 landscape; margin: 0; }
-            body { background: none; overflow: visible; }
-            .dashboard-container { display: block; width: 100%; height: auto; }
+            html, body { width: 297mm; margin: 0 !important; padding: 0 !important; background: #fff !important; overflow: visible !important; }
+            .dashboard-container { display: block !important; width: 297mm !important; height: auto !important; margin: 0 !important; padding: 0 !important; }
             .portal-panel { display: none !important; }
-            .preview-panel { width: 100%; height: auto; background: none; padding: 0; overflow: visible; border: none; }
-            .preview-scale-wrapper { transform: none !important; margin-bottom: 0 !important; }
-            .page-container { box-shadow: none !important; page-break-after: always; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .preview-panel { width: 297mm !important; height: auto !important; background: none !important; padding: 0 !important; overflow: visible !important; border: none !important; display: block !important; }
+            .preview-scale-wrapper { transform: none !important; transform-origin: top left !important; margin: 0 !important; padding: 0 !important; display: block !important; }
+            .page-container { width: 297mm !important; height: 210mm !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; page-break-after: always !important; break-after: page !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .page-container:last-child { page-break-after: auto !important; break-after: auto !important; }
         }
     </style>
 </head>
@@ -454,13 +455,13 @@
         <div class="preview-scale-wrapper">
             <div class="page-container" id="page-2">
                 <span class="data-overlay" id="outP2Date1" style="top: 155px; left: 140px; width: 110px;"></span>
-                <div class="data-overlay-textarea" id="outP2Content1" style="top: 155px; left: 270px; width: 780px; height: 130px;"></div>
+                <div class="data-overlay-textarea" id="outP2Content1" style="top: 155px; left: 270px; width: 780px; height: 130px; font-size: 12px; line-height: 18px;"></div>
 
                 <span class="data-overlay" id="outP2Date2" style="top: 310px; left: 140px; width: 110px;"></span>
-                <div class="data-overlay-textarea" id="outP2Content2" style="top: 310px; left: 270px; width: 780px; height: 190px;"></div>
+                <div class="data-overlay-textarea" id="outP2Content2" style="top: 310px; left: 270px; width: 780px; height: 190px; font-size: 12px; line-height: 18px;"></div>
 
                 <span class="data-overlay" id="outP2Date3" style="top: 520px; left: 140px; width: 110px;"></span>
-                <div class="data-overlay-textarea" id="outP2Content3" style="top: 520px; left: 270px; width: 780px; height: 130px;"></div>
+                <div class="data-overlay-textarea" id="outP2Content3" style="top: 520px; left: 270px; width: 780px; height: 130px; font-size: 12px; line-height: 18px;"></div>
 
                 <div class="data-overlay-textarea" id="outP2LabReports" style="top: 580px; left: 270px; width: 780px; height: 85px; font-size: 12px; color: #000080; border-top: 1px dashed #2563eb; padding-top: 4px;"></div>
 
@@ -737,7 +738,7 @@
 
                 <div class="form-grid">
                     <div class="form-group" style="grid-column: span 4;">
-                        <label>PAGE 2 REPEAT LABORATORY REPORTS (Auto Synced from Page 1)</label>
+                        <label>PAGE 2 REPEAT LABORATORY REPORTS (Auto Synced from Page 1 + Gemini-readable findings)</label>
                         <textarea id="inP2LabReports" rows="3" placeholder="Auto Synced Laboratory Findings..." oninput="updatePrintForm()"></textarea>
                     </div>
                 </div>
@@ -861,7 +862,7 @@
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-reset" onclick="closeNoteConfirmModal()">Cancel</button>
-            <button type="button" class="btn btn-update" onclick="submitAndGeneratePage2Note()">✨ Generate Official Note</button>
+            <button type="button" class="btn btn-update" onclick="submitAndGeneratePage2Note()">✨ Gemini Analyze & Generate Page 2</button>
         </div>
     </div>
 </div>
@@ -1470,36 +1471,120 @@
         document.getElementById('noteConfirmModal').style.display = 'none';
     }
 
-    function submitAndGeneratePage2Note() {
+    async function submitAndGeneratePage2Note() {
         const patientName = document.getElementById('inPatientName').value || 'Patient';
-        const disease = document.getElementById('modalDisease').value;
+        const disease = document.getElementById('modalDisease').value || document.getElementById('inDiseaseConfirmed').value || document.getElementById('inDiseaseNotified').value || 'Communicable Disease';
         const address = document.getElementById('inPatientAddress').value || 'Premises';
-        const hospital = document.getElementById('inHospitalName').value || 'Hospital';
-        const todayDate = new Date().toISOString().split('T')[0];
-
-        const source = document.getElementById('modalSource').value || 'Local vicinity';
+        const hospital = document.getElementById('inHospitalName').value || 'Not stated';
+        const source = document.getElementById('modalSource').value || 'Not stated';
         const isIndexCase = document.getElementById('modalCaseIndex').value === 'INDEX_CASE';
         const isOutbreak = document.getElementById('modalOutbreakStatus').value === 'ACTIVE_OUTBREAK';
-        const actionTaken = document.getElementById('modalActionTaken').value;
-        const adviceGiven = document.getElementById('modalAdviceGiven').value;
-        const patientCondition = document.getElementById('modalPatientCondition').value;
+        const actionTaken = document.getElementById('modalActionTaken').value || 'Not stated';
+        const adviceGiven = document.getElementById('modalAdviceGiven').value || 'Not stated';
+        const patientCondition = document.getElementById('modalPatientCondition').value || 'Not stated';
+        const movements = document.getElementById('inMovements').value || 'Not stated';
+        const labFindings = document.getElementById('inLabFindings').value || document.getElementById('inP2LabReports').value || 'No laboratory findings entered';
+        const gps = document.getElementById('inGpsCoords').value || 'Not recorded';
+        const outcome = document.querySelector('input[name="outcomeOption"]:checked')?.value || 'Not stated';
+        const isolation = document.querySelector('input[name="isolatedOption"]:checked')?.value || 'Not stated';
 
+        const todayDate = new Date().toISOString().split('T')[0];
         if (!document.getElementById('inP2Date1').value) document.getElementById('inP2Date1').value = todayDate;
         if (!document.getElementById('inP2Date2').value) document.getElementById('inP2Date2').value = todayDate;
         if (!document.getElementById('inP2Date3').value) document.getElementById('inP2Date3').value = todayDate;
 
-        document.getElementById('inP2Content1').value = 
-            `Epidemiological field investigation conducted for ${patientName} diagnosed with confirmed ${disease}. ` +
-            `Evaluated potential source of infection at: ${source}. Case classified as ${isIndexCase ? "Primary Index Case in MOH Area" : "Subsequent case reported in established transmission chain"}. Residence premises (${address}) thoroughly inspected.`;
+        const apiKey = document.getElementById('inAiApiKey').value.trim();
+        const provider = document.getElementById('inAiEngineProvider').value;
+        const btn = document.querySelector('#noteConfirmModal .btn-update');
+        const oldText = btn ? btn.innerText : '';
 
-        document.getElementById('inP2Content2').value = 
-            `ACTION TAKEN: ${actionTaken} ${isOutbreak ? "Active local outbreak reported in area; enhanced surveillance initiated." : "No active disease outbreak reported in immediate neighbourhood."} ${adviceGiven} Patient advised strict isolation protocols at ${hospital}.`;
+        if (provider !== 'GEMINI_AI') {
+            // Keep a deterministic non-AI fallback when OCR.space is selected.
+            document.getElementById('inP2Content1').value = `Epidemiological field investigation conducted for ${patientName}, confirmed ${disease}. Potential source recorded as: ${source}. Residence/premises at ${address} inspected.`;
+            document.getElementById('inP2Content2').value = `ACTION TAKEN: ${actionTaken}. ${adviceGiven}. Case classification: ${isIndexCase ? 'Index case' : 'Subsequent case'}. Outbreak status: ${isOutbreak ? 'Active local outbreak' : 'No active local outbreak reported'}.`;
+            document.getElementById('inP2Content3').value = `PATIENT STATUS: ${patientCondition}. Outcome: ${outcome}. Isolation: ${isolation}. Follow-up and MOH surveillance to continue as appropriate.`;
+            closeNoteConfirmModal();
+            updatePrintForm();
+            return;
+        }
 
-        document.getElementById('inP2Content3').value = 
-            `PATIENT STATUS: ${patientCondition}. Routine 7-day follow-up visit scheduled. Local MOH office notified for continuous disease surveillance and tracking.`;
+        if (!apiKey) {
+            alert('Please enter your Gemini API key in Section 00 before generating the Page 2 note.');
+            return;
+        }
 
-        closeNoteConfirmModal();
-        updatePrintForm();
+        try {
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = '⏳ Gemini is analysing...';
+            }
+
+            const GoogleGenAI = window.GoogleGenAIReady
+                ? await window.GoogleGenAIReady
+                : window.GoogleGenAI;
+            if (!GoogleGenAI) throw new Error('Gemini SDK is not loaded. Please reload the page and try again.');
+
+            const ai = new GoogleGenAI({ apiKey });
+            const prompt = `You are assisting a Sri Lankan Public Health Inspector to complete Page 2 of an official communicable disease investigation report.\n\nWrite THREE concise official note entries that fit the three dated note areas on Page 2. Use ONLY the supplied case information. Do NOT invent laboratory results, dates, sources, contacts, outbreak facts, diagnoses, treatment, or actions that are not supplied. Do not make a medical diagnosis. Keep wording factual, professional and suitable for an official PHI record.\n\nENTRY 1 should cover: field investigation, confirmed disease, patient/residence assessment and recorded probable source.\nENTRY 2 should cover: source/spread considerations and ACTION TAKEN, including only actions actually supplied.\nENTRY 3 should cover: patient status/outcome/isolation, laboratory findings if relevant, and follow-up/surveillance only if supported by the supplied information.\n\nReturn EXACTLY this format:\nENTRY1: ...\nENTRY2: ...\nENTRY3: ...\n\nCASE DATA:\nPatient: ${patientName}\nConfirmed/Notified disease: ${disease}\nAddress/premises: ${address}\nHospital: ${hospital}\nProbable source/high-risk spot: ${source}\nPatient movements: ${movements}\nCase classification: ${isIndexCase ? 'Index case' : 'Subsequent case'}\nLocal outbreak status: ${isOutbreak ? 'Active local outbreak reported' : 'No active local outbreak reported'}\nActions taken: ${actionTaken}\nAdvice/directives: ${adviceGiven}\nPatient condition: ${patientCondition}\nOutcome: ${outcome}\nIsolation: ${isolation}\nLaboratory findings: ${labFindings}\nGPS: ${gps}`;
+
+            const response = await ai.models.generateContent({
+                model: 'gemini-3.5-flash',
+                contents: [{ text: prompt }]
+            });
+
+            const text = response?.text?.trim();
+            if (!text) throw new Error('Gemini returned an empty Page 2 note.');
+
+            const getEntry = (label, nextLabel) => {
+                const re = nextLabel
+                    ? new RegExp(label + '\\s*:\\s*([\\s\\S]*?)(?=' + nextLabel + '\\s*:)', 'i')
+                    : new RegExp(label + '\\s*:\\s*([\\s\\S]*)$', 'i');
+                const m = text.match(re);
+                return m ? m[1].trim().replace(/^[-*]\s*/, '') : '';
+            };
+
+            let entry1 = getEntry('ENTRY1', 'ENTRY2');
+            let entry2 = getEntry('ENTRY2', 'ENTRY3');
+            let entry3 = getEntry('ENTRY3');
+
+            // Fallback if Gemini returns headings in a slightly different format.
+            if (!entry1 || !entry2 || !entry3) {
+                const lines = text.split(/\n+/).map(x => x.trim()).filter(Boolean);
+                const entries = lines.filter(x => /^ENTRY\s*[123]\s*:/i.test(x));
+                if (entries.length >= 3) {
+                    entry1 = entries[0].replace(/^ENTRY\s*1\s*:\s*/i, '');
+                    entry2 = entries[1].replace(/^ENTRY\s*2\s*:\s*/i, '');
+                    entry3 = entries[2].replace(/^ENTRY\s*3\s*:\s*/i, '');
+                }
+            }
+
+            if (!entry1 || !entry2 || !entry3) {
+                throw new Error('Gemini response could not be mapped safely into the three Page 2 note boxes. Please try again.');
+            }
+
+            document.getElementById('inP2Content1').value = entry1;
+            document.getElementById('inP2Content2').value = entry2;
+            document.getElementById('inP2Content3').value = entry3;
+            closeNoteConfirmModal();
+            updatePrintForm();
+        } catch (e) {
+            console.error('Gemini Page 2 error:', e);
+            const message = e?.message || String(e);
+            let help = '';
+            if (/404|NOT_FOUND|model/i.test(message)) {
+                help = '\n\nModel error: this build uses the stable gemini-3.5-flash model. Check that your key has Gemini API access.';
+            } else if (/401|403|API key|permission|PERMISSION_DENIED|UNAUTHENTICATED/i.test(message)) {
+                help = '\n\nAPI key/permission error: create a new Gemini API key and paste it into Section 00.';
+            } else if (/429|quota|RESOURCE_EXHAUSTED/i.test(message)) {
+                help = '\n\nQuota/rate-limit error: wait and try again or check your Gemini quota.';
+            }
+            alert('Gemini Page 2 Error:\n\n' + message + help);
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerText = oldText || '✨ Gemini Analyze & Generate Page 2';
+            }
+        }
     }
 
     function updatePrintForm() {
