@@ -663,8 +663,9 @@
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
                             <label style="margin-bottom: 0;">රසායනාගාරයේදී සොයාගත් දේ / Laboratory findings</label>
                             <div>
-                                <input type="file" id="labPhotoFileInput" accept="image/*" capture="environment" style="display: none;" onchange="processLabPhotoAI(event)">
-                                <button type="button" class="btn btn-scan" onclick="document.getElementById('labPhotoFileInput').click()">📷 Scan Handwritten Lab Photo</button>
+                                <input type="file" id="labPhotoCameraInput" accept="image/*" capture="environment" style="display: none;" onchange="processLabPhotoAI(event)">
+                                <input type="file" id="labPhotoGalleryInput" accept="image/*" style="display: none;" onchange="processLabPhotoAI(event)">
+                                <button type="button" class="btn btn-scan" onclick="openLabPhotoChooser()">📷 Scan / Upload Handwritten Lab Photo</button>
                             </div>
                         </div>
                         <span id="ocrStatusNotice" style="font-size: 11px; color: #d97706; font-weight: bold; display: none; margin-bottom: 5px;">⏳ AI scanning handwritten report... Please wait.</span>
@@ -1353,6 +1354,50 @@
                 noticeEl.style.display = 'block';
             }
         }
+    }
+
+    function openLabPhotoChooser() {
+        // Desktop: use the normal file picker.
+        // Mobile: explicitly offer Camera or Gallery instead of opening the camera automatically.
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        if (!isMobile) {
+            document.getElementById('labPhotoGalleryInput').click();
+            return;
+        }
+
+        const existing = document.getElementById('labPhotoChoiceModal');
+        if (existing) existing.remove();
+
+        const modal = document.createElement('div');
+        modal.id = 'labPhotoChoiceModal';
+        modal.className = 'modal-overlay';
+        modal.style.cssText = 'display:flex;z-index:99999;align-items:center;justify-content:center;padding:18px;';
+        modal.innerHTML = `
+            <div class="modal-card" style="width:min(420px,94vw);padding:22px;border-radius:16px;background:#fff;box-shadow:0 20px 60px rgba(0,0,0,.28);">
+                <div style="font-size:20px;font-weight:800;margin-bottom:8px;">📷 Lab Report Photo</div>
+                <div style="color:#475569;margin-bottom:18px;line-height:1.45;">Choose how you want to add the handwritten laboratory report.</div>
+                <div style="display:grid;gap:10px;">
+                    <button type="button" class="btn btn-scan" style="width:100%;min-height:50px;" onclick="chooseLabCamera()">📷 Take Photo with Camera</button>
+                    <button type="button" class="btn" style="width:100%;min-height:50px;background:#2563eb;color:#fff;" onclick="chooseLabGallery()">🖼️ Choose from Gallery</button>
+                    <button type="button" class="btn" style="width:100%;min-height:46px;background:#e5e7eb;color:#111827;" onclick="closeLabPhotoChooser()">Cancel</button>
+                </div>
+            </div>`;
+        document.body.appendChild(modal);
+    }
+
+    function closeLabPhotoChooser() {
+        const modal = document.getElementById('labPhotoChoiceModal');
+        if (modal) modal.remove();
+    }
+
+    function chooseLabCamera() {
+        closeLabPhotoChooser();
+        document.getElementById('labPhotoCameraInput').click();
+    }
+
+    function chooseLabGallery() {
+        closeLabPhotoChooser();
+        document.getElementById('labPhotoGalleryInput').click();
     }
 
     async function processLabPhotoAI(event) {
