@@ -516,7 +516,7 @@
                 <div class="data-overlay-textarea" id="outP2LabReports" style="top: 550px; left: 230px; width: 780px; height: 135px; font-size: 11px; line-height: 15px; color: #000080; border-top: 1px dashed #2563eb; padding-top: 4px; white-space: pre-wrap; overflow: hidden; overflow-wrap: anywhere; word-break: break-word;"></div>
 
                 <!-- GPS LOCATION -->
-                <div class="data-overlay" id="outP2GpsBlock" style="top: 718px; left: 230px; width: 790px; font-size: 14px; color: #000080; font-weight: 900;"></div>
+                <div class="data-overlay" id="outP2GpsBlock" style="top: 710px; left: 230px; width: 790px; font-size: 14px; color: #000080; font-weight: 900;"></div>
             </div>
         </div>
     </div>
@@ -850,6 +850,7 @@
 
 </div>
 
+<!-- 📋 MODAL DIALOG POPUP (UPDATED WITH ALL CASE CLASSIFICATION OPTIONS) -->
 <div class="modal-overlay" id="noteConfirmModal">
     <div class="modal-card">
         <div class="modal-header">
@@ -868,10 +869,11 @@
             </div>
 
             <div class="form-group">
-                <label>3. Case Classification</label>
+                <label>3. Case Classification (Local vs Imported)</label>
                 <select id="modalCaseIndex">
-                    <option value="INDEX_CASE">1st Primary Patient in MOH Area (Index Case)</option>
-                    <option value="SUBSEQUENT_CASE" selected>Secondary / Subsequent Patient in Known Transmission Chain</option>
+                    <option value="PRIMARY_INDEX_LOCAL">Primary Index Case (Local Transmission)</option>
+                    <option value="SUBSEQUENT_LOCAL" selected>Subsequent Case (Local Transmission Chain)</option>
+                    <option value="IMPORTED_CASE">Imported Case (Infection Acquired from Outer Area / Foreign)</option>
                 </select>
             </div>
 
@@ -1566,6 +1568,7 @@
         document.getElementById('noteConfirmModal').style.display = 'none';
     }
 
+    // 🌟 DETAILED PAGE 02 NOTE GENERATOR WITH CASE CLASSIFICATION LOGIC
     async function generatePage2FromPage1() {
         const apiKey = document.getElementById('inAiApiKey').value.trim();
         const provider = document.getElementById('inAiEngineProvider').value;
@@ -1602,6 +1605,16 @@
             outcomeIsolation: get('modalPatientCondition')
         };
 
+        // Parse Case Classification Text for Gemini Prompt
+        let classificationText = "Subsequent Case (Acquired within local transmission chain)";
+        if (confirmed.classification === 'PRIMARY_INDEX_LOCAL') {
+            classificationText = "Primary Index Case (Local transmission within MOH area)";
+        } else if (confirmed.classification === 'SUBSEQUENT_LOCAL') {
+            classificationText = "Subsequent Case (Acquired within local transmission chain)";
+        } else if (confirmed.classification === 'IMPORTED_CASE') {
+            classificationText = "Imported Case (Infection acquired outside local MOH boundary / outer area)";
+        }
+
         const button = document.querySelector('.section-title button.btn-ai');
         const oldText = button ? button.innerText : '';
         try {
@@ -1625,7 +1638,7 @@ PATIENT DETAILS / CONFIRMED DISEASE
 
 1. Movements & Exposures: Summarize movements prior to onset (${patient.onset || 'N/A'}). Recorded: ${patient.movements || 'Not documented'}.
 2. Infection Source: ${confirmed.source || 'Not documented'}.
-3. Case Classification: ${confirmed.classification || 'Not documented'}.
+3. Case Classification: ${classificationText}.
 4. Outbreak Status: ${confirmed.outbreak || 'Not documented'}.
 5. Control Actions Initiated: ${confirmed.actions || 'Not documented'}.
 6. Health Education & Directives: ${confirmed.advice || 'Not documented'}.
