@@ -83,11 +83,12 @@
             position: absolute;
             font-family: 'Courier New', Courier, monospace;
             font-weight: bold;
-            font-size: 13px;
+            font-size: 11px;
             color: #000080;
-            line-height: 22px;
+            line-height: 15px;
             white-space: pre-wrap;
             word-wrap: break-word;
+            overflow-wrap: anywhere;
             overflow: hidden;
         }
 
@@ -95,9 +96,9 @@
             position: absolute;
             font-family: 'Courier New', Courier, monospace;
             font-weight: 900 !important;
-            font-size: 14px !important;
+            font-size: 13px !important;
             color: #000066;
-            line-height: 22px;
+            line-height: 18px;
             white-space: pre-wrap;
             word-wrap: break-word;
             overflow: hidden;
@@ -286,9 +287,8 @@
             margin-bottom: 10px;
         }
 
-        /* 📜 TABLE SCROLLABLE WRAPPER & STICKY HEADER FIX */
         .table-scroll-container {
-            max-height: 280px; /* Limits visible rows to ~5 */
+            max-height: 280px;
             overflow-y: auto;
             border: 1px solid #cbd5e0;
             border-radius: 6px;
@@ -368,7 +368,7 @@
 
         @media screen and (max-width: 900px) {
             html, body { width: 100%; min-width: 0; overflow-x: hidden; }
-            input, select, textarea, button { font-size: 16px !important; } /* prevents iOS auto-zoom */
+            input, select, textarea, button { font-size: 16px !important; }
             .dashboard-container { flex-direction: column; height: auto; }
             .portal-panel { width: 100%; height: auto; order: 1; padding: 10px; box-sizing: border-box; }
             .preview-panel { width: 100%; height: auto; order: 2; border-right: none; border-top: 4px solid #0f172a; padding: 10px 4px; box-sizing: border-box; overflow-x: auto; }
@@ -384,26 +384,6 @@
             .record-nav-header { gap: 8px; }
             .record-nav-header .btn { width: auto; flex: 1; }
             .preview-scale-wrapper { transform: scale(0.42); transform-origin: top left; margin-bottom: -260px; width: 238%; }
-        }
-
-        @media screen and (max-width: 480px) {
-            .portal-panel { padding: 6px; }
-            .portal-card { padding: 9px; }
-            .section-title { font-size: 13px; }
-            .btn-group { gap: 7px; }
-            .preview-scale-wrapper { transform: scale(0.30); width: 333%; margin-bottom: -330px; }
-        }
-
-        @media screen and (max-width: 900px) {
-            body { overflow: auto; }
-            .dashboard-container { flex-direction: column; height: auto; }
-            .portal-panel { width: 100%; height: auto; order: 1; padding: 15px; }
-            .preview-panel { width: 100%; height: auto; order: 2; border-right: none; border-top: 4px solid #0f172a; padding: 15px 5px; }
-            .preview-scale-wrapper { transform: scale(0.32); margin-bottom: -290px; }
-            .form-grid { grid-template-columns: 1fr; }
-            .portal-card { padding: 15px; }
-            .btn { width: 100%; text-align: center; }
-            .btn-reset { margin-left: 0; }
         }
 
         @media print {
@@ -484,18 +464,20 @@
         <div class="preview-scale-wrapper">
             <div class="page-container" id="page-2">
                 <span class="data-overlay" id="outP2PatientPhone" style="top: 105px; left: 820px; width: 230px; font-size: 12px; text-align: right;"></span>
-                <!-- PAGE 2 TABLE 01: MANUAL ENTRY ONLY -->
+                
+                <!-- TABLE 01 -->
                 <span class="data-overlay" id="outP2Date1" style="top: 155px; left: 140px; width: 110px;"></span>
-                <div class="data-overlay-textarea" id="outP2Content1" style="top: 155px; left: 270px; width: 780px; height: 130px; font-size: 12px; line-height: 18px;"></div>
+                <div class="data-overlay-textarea" id="outP2Content1" style="top: 155px; left: 270px; width: 780px; height: 110px; font-size: 11px; line-height: 15px;"></div>
 
-                <!-- PAGE 2 TABLE 02: GEMINI AI GENERATED -->
-                <span class="data-overlay" id="outP2Date2" style="top: 295px; left: 140px; width: 110px;"></span>
-                <div class="data-overlay-textarea" id="outP2Content2" style="top: 295px; left: 270px; width: 780px; height: 210px; font-size: 12px; line-height: 18px;"></div>
+                <!-- TABLE 02 (DYNAMIC EXPANDING NO OVERLAP FIX) -->
+                <span class="data-overlay" id="outP2Date2" style="top: 275px; left: 140px; width: 110px;"></span>
+                <div class="data-overlay-textarea" id="outP2Content2" style="top: 275px; left: 270px; width: 780px; height: 265px; font-size: 11px; line-height: 15px;"></div>
 
-                <!-- LABORATORY REPORTS BELOW TABLE 02 -->
-                <div class="data-overlay-textarea" id="outP2LabReports" style="top: 515px; left: 270px; width: 780px; height: 125px; font-size: 11px; line-height: 16px; color: #000080; border-top: 1px dashed #2563eb; padding-top: 4px; white-space: pre-wrap; overflow: hidden; overflow-wrap: anywhere; word-break: normal;"></div>
+                <!-- LAB REPORTS AREA -->
+                <div class="data-overlay-textarea" id="outP2LabReports" style="top: 550px; left: 270px; width: 780px; height: 135px; font-size: 11px; line-height: 15px; color: #000080; border-top: 1px dashed #2563eb; padding-top: 4px; white-space: pre-wrap; overflow: hidden; overflow-wrap: anywhere; word-break: break-word;"></div>
 
-                <div class="data-overlay" id="outP2GpsBlock" style="top: 680px; left: 270px; width: 810px; font-size: 15px; color: #000080; font-weight: 900;"></div>
+                <!-- GPS LOCATION MOVED DOWNWARDS -->
+                <div class="data-overlay" id="outP2GpsBlock" style="top: 710px; left: 270px; width: 790px; font-size: 14px; color: #000080; font-weight: 900;"></div>
             </div>
         </div>
     </div>
@@ -742,7 +724,6 @@
                     <button type="button" class="btn btn-ai" onclick="openNoteConfirmModal()">✨ Gemini Generate Table 02</button>
                 </div>
 
-                <!-- TABLE 01: USER ENTERS DATE + NOTE MANUALLY -->
                 <div class="form-grid">
                     <div class="form-group">
                         <label>TABLE 01 — DATE (Manual)</label>
@@ -750,11 +731,10 @@
                     </div>
                     <div class="form-group" style="grid-column: span 3;">
                         <label>TABLE 01 — MANUAL NOTE / PATIENT VISIT RECORD</label>
-                        <textarea id="inP2Content1" rows="4" placeholder="Type this note manually. Nothing in Table 01 will be auto-generated." oninput="updatePrintForm()"></textarea>
+                        <textarea id="inP2Content1" rows="3" placeholder="Type this note manually. Nothing in Table 01 will be auto-generated." oninput="updatePrintForm()"></textarea>
                     </div>
                 </div>
 
-                <!-- TABLE 02: DATE MANUAL, CONTENT GENERATED BY GEMINI -->
                 <div class="form-grid">
                     <div class="form-group">
                         <label>TABLE 02 — DATE (Manual)</label>
@@ -762,11 +742,10 @@
                     </div>
                     <div class="form-group" style="grid-column: span 3;">
                         <label>TABLE 02 — GEMINI AI NOTE / SOURCE, SPREAD & ACTION TAKEN</label>
-                        <textarea id="inP2Content2" rows="6" placeholder="Click 'Gemini Generate Table 02' to analyse the case information and generate this note. You may edit the generated text before printing." oninput="updatePrintForm()"></textarea>
+                        <textarea id="inP2Content2" rows="10" placeholder="Click 'Gemini Generate Table 02' to analyse the case information and generate this note. You may edit the generated text before printing." oninput="updatePrintForm()"></textarea>
                     </div>
                 </div>
 
-                <!-- LAB REPORTS -->
                 <div class="form-grid">
                     <div class="form-group" style="grid-column: span 4;">
                         <label>LABORATORY REPORTS</label>
@@ -774,16 +753,14 @@
                     </div>
                 </div>
 
-                <!-- 09. RECORD MANAGEMENT & NAVIGATION -->
                 <div class="section-title">09. Saved Reports Navigation & Search (All Browsers Synced)</div>
                 <div class="form-grid">
                     <div class="form-group" style="grid-column: span 4; display: flex; flex-direction: row; gap: 10px; flex-wrap: wrap;">
                         <button type="button" class="btn btn-update" onclick="saveRecordOfflineFirst()">💾 Save / Sync Report to Cloud</button>
-                        <button type="button" class="btn btn-gps" onclick="fetchCloudFirebaseRecords()">🔄 Refresh All Reports from Cloud</button>
+                        <button type="button" class="btn btn-gps" onclick="manualSyncToFirebase()">🔄 Refresh All Reports from Cloud</button>
                     </div>
                 </div>
 
-                <!-- SEARCH BAR FOR PATIENTS -->
                 <div class="form-grid">
                     <div class="form-group" style="grid-column: span 4;">
                         <label>🔍 Search Saved Reports by Patient Name, Ref No, or Disease</label>
@@ -791,7 +768,6 @@
                     </div>
                 </div>
 
-                <!-- CARD NAVIGATION VIEW -->
                 <div class="record-viewer-card" id="cardNavViewer" style="display: none;">
                     <div class="record-nav-header">
                         <span id="navCardCounter" style="font-weight: bold; color: #60a5fa; font-size: 13px;">Report 0 of 0</span>
@@ -800,16 +776,13 @@
                             <button type="button" class="btn btn-gps" style="padding: 4px 10px; font-size: 12px;" onclick="navigateRecord(1)">Next ⏭️</button>
                         </div>
                     </div>
-                    <div id="navCardBody" style="font-size: 13px; line-height: 1.6;">
-                        <!-- Auto-filled by JS -->
-                    </div>
+                    <div id="navCardBody" style="font-size: 13px; line-height: 1.6;"></div>
                     <div style="margin-top: 12px; display: flex; justify-content: flex-end; gap: 8px;">
                         <button type="button" class="btn btn-ai" style="font-size: 12px; padding: 6px 14px;" onclick="loadCurrentNavRecordToForm()">✏️ Load into Form to Edit / Print</button>
                         <button type="button" class="btn btn-delete" style="font-size: 12px; padding: 6px 14px;" onclick="deleteCurrentNavRecord()">🗑️ Delete Report</button>
                     </div>
                 </div>
 
-                <!-- 📜 SCROLLABLE FIXED TABLE WITH STICKY HEADER -->
                 <div class="table-scroll-container">
                     <table class="db-records-table">
                         <thead>
@@ -838,7 +811,6 @@
 
 </div>
 
-<!-- MODAL DIALOG POPUP -->
 <div class="modal-overlay" id="noteConfirmModal">
     <div class="modal-card">
         <div class="modal-header">
@@ -898,9 +870,7 @@
     </div>
 </div>
 
-<!-- Google Gen AI Official SDK Module -->
 <script type="module">
-    // Keep a promise so the UI can safely wait for the SDK to finish loading.
     window.GoogleGenAIReady = import('@google/genai')
         .then(({ GoogleGenAI }) => {
             window.GoogleGenAI = GoogleGenAI;
@@ -913,7 +883,6 @@
 </script>
 
 <script>
-    // FIREBASE INITIALIZATION WITH ASIA-SOUTHEAST1 REGION URL
     const firebaseConfig = {
         apiKey: "AIzaSyDd9yyyPywkuLYVBXG584PKtNhdWLSVsY8",
         authDomain: "h411-3b136.firebaseapp.com",
@@ -982,9 +951,6 @@
             return;
         }
 
-        // Attach the realtime listener only once. Re-attaching it on every save
-        // can create duplicate callbacks on mobile and make the record list feel
-        // inconsistent after repeated edits.
         if (firebaseListenerAttached) {
             return;
         }
@@ -992,29 +958,32 @@
 
         fbDb.ref('health_reports').on('value', (snapshot) => {
             const data = snapshot.val();
-            allFetchedRecords = [];
+            const recordMap = new Map();
             
             if (data) {
                 for (let key in data) {
-                    allFetchedRecords.push({ ...data[key], id: key, synced: true });
+                    recordMap.set(key, { ...data[key], id: key, synced: true });
                 }
+                
+                allFetchedRecords = Array.from(recordMap.values());
+
                 if (dbDB) {
                     const tx = dbDB.transaction('patient_records', 'readwrite');
                     const store = tx.objectStore('patient_records');
                     allFetchedRecords.forEach(rec => store.put(rec));
                 }
+            } else {
+                allFetchedRecords = [];
             }
             filterAndRenderRecords();
         });
     }
 
     function saveRecordOfflineFirst() {
-        // Recover the edit target on mobile too. sessionStorage survives
-        // orientation changes/navigation within the page, so an edit cannot
-        // accidentally turn into a brand-new record.
         const storedEditId = sessionStorage.getItem('h411_active_edit_id') || '';
         const recordId = activeEditingRecordId || storedEditId || 'REC_' + Date.now();
         const wasEditing = !!(activeEditingRecordId || storedEditId);
+        
         const formData = { id: recordId, synced: false, timestamp: new Date().toISOString(), updatedAt: new Date().toISOString() };
 
         const inputs = document.querySelectorAll('#healthPortalForm input, #healthPortalForm select, #healthPortalForm textarea');
@@ -1049,7 +1018,7 @@
         if (fbDb && navigator.onLine) {
             formData.synced = true;
             fbDb.ref('health_reports/' + recordId).set(formData).then(() => {
-                alert(wasEditing ? "✅ All Report Data Updated in Cloud!" : "✅ Full Report Saved & Synced to Cloud!");
+                alert(wasEditing ? "✅ Record Updated in Cloud Database!" : "✅ Full Report Saved & Synced to Cloud!");
                 activeEditingRecordId = null;
                 sessionStorage.removeItem('h411_active_edit_id');
                 loadOfflineRecordsTable();
@@ -1081,16 +1050,15 @@
         const req = store.getAll();
 
         req.onsuccess = function() {
-            allFetchedRecords = req.result;
+            const map = new Map();
+            (req.result || []).forEach(r => map.set(r.id, r));
+            allFetchedRecords = Array.from(map.values());
             filterAndRenderRecords();
         };
     }
 
-    // 🌟 FILTER & RENDER FUNCTION WITH LATEST-FIRST REVERSE SORTING
     function filterAndRenderRecords() {
         const query = document.getElementById('inSearchQuery')?.value.toLowerCase().trim() || '';
-        
-        // Reverse array so latest reports appear on top
         const reversedRecords = [...allFetchedRecords].reverse();
 
         filteredRecords = reversedRecords.filter(r => {
@@ -1199,6 +1167,7 @@
             tx.oncomplete = function() {
                 if (activeEditingRecordId === recordId) {
                     activeEditingRecordId = null;
+                    sessionStorage.removeItem('h411_active_edit_id');
                 }
                 loadOfflineRecordsTable();
             };
@@ -1234,7 +1203,7 @@
         });
 
         updatePrintForm();
-        alert("📋 Full Report loaded into Form!");
+        alert("📋 Record " + (data.inPhiRefNo || recordId) + " loaded for editing! Any changes will update this existing record.");
     }
 
     const diseaseList = [
@@ -1349,8 +1318,6 @@
     }
 
     function openLabPhotoChooser() {
-        // Desktop: use the normal file picker.
-        // Mobile: explicitly offer Camera or Gallery instead of opening the camera automatically.
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         if (!isMobile) {
             document.getElementById('labPhotoGalleryInput').click();
@@ -1412,7 +1379,6 @@
 
         if (provider === 'GEMINI_AI') {
             try {
-                // Convert the selected image to base64 for Gemini inlineData.
                 const base64Image = await new Promise((resolve, reject) => {
                     const reader = new FileReader();
                     reader.onload = () => {
@@ -1428,7 +1394,6 @@
                     reader.readAsDataURL(file);
                 });
 
-                // Wait for the official @google/genai browser SDK to be ready.
                 const GoogleGenAI = window.GoogleGenAIReady
                     ? await window.GoogleGenAIReady
                     : window.GoogleGenAI;
@@ -1439,8 +1404,6 @@
 
                 const ai = new GoogleGenAI({ apiKey });
 
-                // Gemini 3.5 Flash is a current stable multimodal model and is
-                // suitable for image/document extraction.
                 const response = await ai.models.generateContent({
                     model: 'gemini-3.5-flash',
                     contents: [
@@ -1487,7 +1450,6 @@
                 alert('Gemini AI Engine Error:\n\n' + message + help);
             } finally {
                 if (noticeEl) noticeEl.style.display = 'none';
-                // Allow the same file to be selected again after an error/success.
                 event.target.value = '';
             }
 
@@ -1592,7 +1554,6 @@
             isolatedCase: checkedBox('inNatureIsolatedCase'), outbreakReportNeeded: checkedBox('inOutbreakReportNeeded')
         };
 
-        // Values explicitly confirmed/edited by the PHI in the popup.
         const confirmed = {
             source: get('modalSource'),
             classification: get('modalCaseIndex'),
@@ -1611,60 +1572,30 @@
             if (!GoogleGenAI) throw new Error('Gemini SDK is not loaded. Please reload the page and try again.');
             const ai = new GoogleGenAI({ apiKey });
 
-            const prompt = `You are an experienced Sri Lankan Public Health Inspector preparing a professional field investigation entry for PAGE 2, TABLE 02 of an official communicable disease report.
+            const prompt = `You are an experienced Sri Lankan Public Health Inspector preparing a concise, clear field investigation entry for PAGE 2, TABLE 02 of an official communicable disease report.
 
 Use the PAGE 1 information and the PHI-CONFIRMED BASIC DATA below. Do not invent clinical, epidemiological, laboratory, treatment, outbreak, or patient-status facts.
 
-Create ONE concise, professional, factual investigation note with EXACTLY this structure and order:
+Create a formal, compact epidemiological field report note that fits cleanly into Table 02 without overflowing using this exact format:
 
 PATIENT DETAILS / CONFIRMED DISEASE
-- Patient: [name], [age], [sex]
-- Address: [address]
-- Hospital: [hospital, if documented]
-- Confirmed disease: [confirmed disease]
-- Date confirmed: [date, if documented]
+- Patient Name: ${patient.name || 'Not documented'} (${patient.age || 'Age N/A'}, ${patient.sex || 'Sex N/A'})
+- Address: ${patient.address || 'Not documented'}
+- Hospital: ${patient.hospital || 'Not documented'}
+- Disease: ${patient.diseaseConfirmed || 'Not documented'} (Confirmed Date: ${patient.dateConfirmed || 'Not documented'})
 
-1. Movements: [brief chronological summary of recorded movements/exposures only]
-2. Probable source: [PHI-confirmed source; if not supported, state Not documented]
-3. Case classification: [PHI-confirmed classification]
-4. Outbreak status: [PHI-confirmed status]
-5. Actions taken: [PHI-confirmed actions only]
-6. Advice given: [PHI-confirmed advice only]
-7. Patient outcome/isolation: [PHI-confirmed current status, including hospital/isolation information where documented]
+1. Movements & Exposures: Summarize movements prior to onset (${patient.onset || 'N/A'}). Recorded: ${patient.movements || 'Not documented'}.
+2. Infection Source: ${confirmed.source || 'Not documented'}.
+3. Case Classification: ${confirmed.classification || 'Not documented'}.
+4. Outbreak Status: ${confirmed.outbreak || 'Not documented'}.
+5. Control Actions Initiated: ${confirmed.actions || 'Not documented'}.
+6. Health Education & Directives: ${confirmed.advice || 'Not documented'}.
+7. Outcome & Follow-up: ${confirmed.outcomeIsolation || 'Not documented'}. Isolation: ${patient.isolation || 'N/A'}.
 
 Important:
-- DO NOT include laboratory findings in this generated note. Laboratory findings are printed separately below Table 02.
-- Keep the wording formal, professional and suitable for an official PHI field-investigation record.
-- Do not use markdown bullets such as *, •, or #. Use the numbered headings exactly as requested.
-- Do not write a long narrative. Keep each section compact enough for a printed A4 table.
-- If Page 1 does not support a fact, write “Not documented” rather than guessing.
-
-PAGE 1 DATA
-Patient name: ${patient.name || 'Not documented'}
-Age: ${patient.age || 'Not documented'}
-Sex: ${patient.sex || 'Not documented'}
-Address: ${patient.address || 'Not documented'}
-Phone: ${patient.phone || 'Not documented'}
-Confirmed disease: ${patient.diseaseConfirmed || 'Not documented'}
-Date confirmed: ${patient.dateConfirmed || 'Not documented'}
-Recorded movements: ${patient.movements || 'Not documented'}
-Date of onset: ${patient.onset || 'Not documented'}
-Date hospitalized: ${patient.hospitalized || 'Not documented'}
-Date discharged: ${patient.discharged || 'Not documented'}
-Hospital: ${patient.hospital || 'Not documented'}
-Outcome recorded on Page 1: ${patient.outcome || 'Not documented'}
-Isolation recorded on Page 1: ${patient.isolation || 'Not documented'}
-Isolated case checkbox: ${patient.isolatedCase}
-Outbreak/report-needed checkbox: ${patient.outbreakReportNeeded}
-
-PHI-CONFIRMED BASIC DATA FROM POPUP
-Confirmed disease: ${patient.diseaseConfirmed || 'Not documented'}
-Probable source: ${confirmed.source || 'Not documented'}
-Case classification: ${confirmed.classification || 'Not documented'}
-Outbreak status: ${confirmed.outbreak || 'Not documented'}
-Actions taken: ${confirmed.actions || 'Not documented'}
-Advice given: ${confirmed.advice || 'Not documented'}
-Patient outcome/isolation: ${confirmed.outcomeIsolation || 'Not documented'}`;
+- DO NOT include laboratory findings in this generated note.
+- Keep the wording formal and concise to fit Table 02 cleanly.
+- Do not use markdown bolding (**) or bullets (*).`;
 
             const response = await ai.models.generateContent({
                 model: 'gemini-3.5-flash',
@@ -1683,7 +1614,6 @@ Patient outcome/isolation: ${confirmed.outcomeIsolation || 'Not documented'}`;
         }
     }
 
-    // Kept for compatibility with older saved pages/buttons.
     async function submitAndGeneratePage2Note() {
         return generatePage2FromPage1();
     }
@@ -1804,7 +1734,6 @@ Patient outcome/isolation: ${confirmed.outcomeIsolation || 'Not documented'}`;
         document.getElementById('outP2Date2').innerText = document.getElementById('inP2Date2').value;
         document.getElementById('outP2Content2').innerText = document.getElementById('inP2Content2').value;
 
-
         const gpsVal = document.getElementById('inGpsCoords').value;
         
         const mapBtn = document.getElementById('btnMapPinLink');
@@ -1824,7 +1753,6 @@ Patient outcome/isolation: ${confirmed.outcomeIsolation || 'Not documented'}`;
         const value = (raw || '').trim();
         if (!value) return '';
 
-        // Keep only digits, while allowing a leading + for +94 numbers.
         let cleaned = value.replace(/[^0-9+]/g, '');
 
         if (cleaned.startsWith('+94')) {
@@ -1834,10 +1762,7 @@ Patient outcome/isolation: ${confirmed.outcomeIsolation || 'Not documented'}`;
 
         cleaned = cleaned.replace(/\D/g, '');
 
-        // Accept local Sri Lankan mobile format: 07XXXXXXXX.
         if (/^07\d{8}$/.test(cleaned)) return '+94' + cleaned.slice(1);
-
-        // Also accept international format without '+': 947XXXXXXXX.
         if (/^947\d{8}$/.test(cleaned)) return '+' + cleaned;
 
         return '';
@@ -1854,11 +1779,10 @@ Patient outcome/isolation: ${confirmed.outcomeIsolation || 'Not documented'}`;
             return;
         }
 
-        // tel: opens the device dialer on supported mobile browsers.
         window.location.href = 'tel:' + phone;
     }
 
-        function saveFormData() {
+    function saveFormData() {
         const formData = {};
         const inputs = document.querySelectorAll('#healthPortalForm input, #healthPortalForm select, #healthPortalForm textarea');
         inputs.forEach(input => {
