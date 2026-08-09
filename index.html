@@ -367,6 +367,34 @@
         }
 
         @media screen and (max-width: 900px) {
+            html, body { width: 100%; min-width: 0; overflow-x: hidden; }
+            input, select, textarea, button { font-size: 16px !important; } /* prevents iOS auto-zoom */
+            .dashboard-container { flex-direction: column; height: auto; }
+            .portal-panel { width: 100%; height: auto; order: 1; padding: 10px; box-sizing: border-box; }
+            .preview-panel { width: 100%; height: auto; order: 2; border-right: none; border-top: 4px solid #0f172a; padding: 10px 4px; box-sizing: border-box; overflow-x: auto; }
+            .portal-card { padding: 12px; }
+            .form-grid { grid-template-columns: 1fr; gap: 10px; }
+            .form-group { min-width: 0; }
+            .btn { width: 100%; min-height: 44px; text-align: center; }
+            .btn-reset { margin-left: 0; }
+            .table-scroll-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            .db-records-table { min-width: 620px; }
+            .db-records-table .btn { width: auto; min-height: 36px; font-size: 13px !important; }
+            .record-viewer-card { overflow-wrap: anywhere; }
+            .record-nav-header { gap: 8px; }
+            .record-nav-header .btn { width: auto; flex: 1; }
+            .preview-scale-wrapper { transform: scale(0.42); transform-origin: top left; margin-bottom: -260px; width: 238%; }
+        }
+
+        @media screen and (max-width: 480px) {
+            .portal-panel { padding: 6px; }
+            .portal-card { padding: 9px; }
+            .section-title { font-size: 13px; }
+            .btn-group { gap: 7px; }
+            .preview-scale-wrapper { transform: scale(0.30); width: 333%; margin-bottom: -330px; }
+        }
+
+        @media screen and (max-width: 900px) {
             body { overflow: auto; }
             .dashboard-container { flex-direction: column; height: auto; }
             .portal-panel { width: 100%; height: auto; order: 1; padding: 15px; }
@@ -915,6 +943,7 @@
     let allFetchedRecords = [];
     let filteredRecords = [];
     let currentNavIndex = 0;
+    let firebaseListenerAttached = false;
 
     function initIndexedDB() {
         const req = indexedDB.open('Health411OfflineDB', 1);
@@ -960,6 +989,14 @@
             return;
         }
 
+        // Attach the realtime listener only once. Re-attaching it on every save
+        // can create duplicate callbacks on mobile and make the record list feel
+        // inconsistent after repeated edits.
+        if (firebaseListenerAttached) {
+            return;
+        }
+        firebaseListenerAttached = true;
+
         fbDb.ref('health_reports').on('value', (snapshot) => {
             const data = snapshot.val();
             allFetchedRecords = [];
@@ -979,8 +1016,13 @@
     }
 
     function saveRecordOfflineFirst() {
-        const recordId = activeEditingRecordId || 'REC_' + Date.now();
-        const formData = { id: recordId, synced: false, timestamp: new Date().toISOString() };
+        // Recover the edit target on mobile too. sessionStorage survives
+        // orientation changes/navigation within the page, so an edit cannot
+        // accidentally turn into a brand-new record.
+        const storedEditId = sessionStorage.getItem('h411_active_edit_id') || '';
+        const recordId = activeEditingRecordId || storedEditId || 'REC_' + Date.now();
+        const wasEditing = !!(activeEditingRecordId || storedEditId);
+        const formData = { id: recordId, synced: false, timestamp: new Date().toISOString(), updatedAt: new Date().toISOString() };
 
         const inputs = document.querySelectorAll('#healthPortalForm input, #healthPortalForm select, #healthPortalForm textarea');
         inputs.forEach(input => {
@@ -1014,15 +1056,17 @@
         if (fbDb && navigator.onLine) {
             formData.synced = true;
             fbDb.ref('health_reports/' + recordId).set(formData).then(() => {
-                alert(activeEditingRecordId ? "✅ All Report Data Updated in Cloud!" : "✅ Full Report Saved & Synced to Cloud!");
+                alert(wasEditing ? "✅ All Report Data Updated in Cloud!" : "✅ Full Report Saved & Synced to Cloud!");
                 activeEditingRecordId = null;
-                fetchCloudFirebaseRecords();
+                sessionStorage.removeItem('h411_active_edit_id');
+                loadOfflineRecordsTable();
             }).catch(err => {
                 alert("⚠️ Cloud Save Error. Stored locally: " + err.message);
             });
         } else {
             alert("✅ Full Report saved locally in Browser! Will auto-sync when Online.");
             activeEditingRecordId = null;
+            sessionStorage.removeItem('h411_active_edit_id');
             loadOfflineRecordsTable();
         }
     }
@@ -1173,6 +1217,7 @@
         if (!data) return;
 
         activeEditingRecordId = data.id;
+        sessionStorage.setItem('h411_active_edit_id', data.id);
 
         document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
         document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false);
@@ -1814,6 +1859,7 @@
             document.getElementById('healthPortalForm').reset();
             localStorage.removeItem('h411_form_data');
             activeEditingRecordId = null;
+            sessionStorage.removeItem('h411_active_edit_id');
             updatePrintForm();
         }
     }
