@@ -502,7 +502,8 @@
 
         <div class="preview-scale-wrapper">
             <div class="page-container" id="page-2">
-                <span class="data-overlay" id="outP2PatientPhone" style="top: 105px; left: 820px; width: 230px; font-size: 12px; text-align: right;"></span>
+                <!-- 🆕 PATIENT EXTRA INFO TABLE (Replaces old phone text) -->
+                <div class="data-overlay" id="outP2ExtraInfo" style="top: 160px; left: 750px; width: 310px; font-size: 11px;"></div>
                 
                 <!-- TABLE 01 -->
                 <span class="data-overlay" id="outP2Date1" style="top: 155px; left: 90px; width: 110px;"></span>
@@ -604,7 +605,7 @@
                             <input type="tel" id="inPatientPhone" inputmode="tel" autocomplete="tel" placeholder="07XXXXXXXX" oninput="updatePrintForm()" style="flex:1; min-width:0;">
                             <button type="button" class="btn btn-gps" onclick="callPatient()" style="white-space:nowrap; padding:8px 12px;">📞 Call Patient</button>
                         </div>
-                        <small style="display:block; margin-top:4px; color:#64748b;">Enter a valid Sri Lankan mobile number (e.g. 0712345678).</small>
+                        <small style="display:block; margin-top:4px; color:#64748b;">Enter a valid Sri Lankan mobile number.</small>
                     </div>
                 </div>
 
@@ -656,6 +657,53 @@
                     <div class="form-group" style="grid-column: span 4;">
                         <label>රෝගය වැළඳීමට පෙර සති තුන ඇතුළත රෝගියාගේ සැම ගමනක්ම / Patient's movements</label>
                         <textarea id="inMovements" rows="3" placeholder="Enter movements..." oninput="updatePrintForm()"></textarea>
+                    </div>
+                </div>
+
+                <!-- 🆕 03.3 NEW AREA AND DEMOGRAPHICS SECTION -->
+                <div class="section-title">03.3 Additional Area & Demographics (Page 02 Table)</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>GN Area</label>
+                        <select id="inGNArea" onchange="updatePHMArea()">
+                            <option value="">-- Select GN Area --</option>
+                            <option value="Amunupura">Amunupura</option>
+                            <option value="Madiligama">Madiligama</option>
+                            <option value="Gondeniya">Gondeniya</option>
+                            <option value="Pahala Rathmeewala">Pahala Rathmeewala</option>
+                            <option value="Uda Rathmeewala">Uda Rathmeewala</option>
+                            <option value="Deldeniya">Deldeniya</option>
+                            <option value="Godigamuwa">Godigamuwa</option>
+                            <option value="Alagalla Ihala">Alagalla Ihala</option>
+                            <option value="Poththepitiya">Poththepitiya</option>
+                            <option value="Alagalla Waththa">Alagalla Waththa</option>
+                            <option value="Kirimetiya">Kirimetiya</option>
+                            <option value="Pahala Yatigammana">Pahala Yatigammana</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>PHM Area (Auto Selected)</label>
+                        <input type="text" id="inPHMArea" readonly placeholder="Auto generated" style="background-color: #f1f5f9;">
+                    </div>
+                    <div class="form-group">
+                        <label>Village</label>
+                        <input type="text" id="inVillage" placeholder="Village name" oninput="updatePrintForm()">
+                    </div>
+                    <div class="form-group">
+                        <label>Occupation</label>
+                        <input type="text" id="inOccupation" placeholder="Occupation" oninput="updatePrintForm()">
+                    </div>
+                    <div class="form-group">
+                        <label>Religion</label>
+                        <select id="inReligion" onchange="updatePrintForm()">
+                            <option value="">-- Select Religion --</option>
+                            <option value="Buddhism">Buddhism</option>
+                            <option value="Hinduism">Hinduism</option>
+                            <option value="Islam">Islam</option>
+                            <option value="Christianity">Christianity</option>
+                            <option value="Catholic">Catholic</option>
+                            <option value="Other">Other</option>
+                        </select>
                     </div>
                 </div>
 
@@ -850,63 +898,56 @@
 
 </div>
 
-<!-- 📋 MODAL DIALOG POPUP (UPDATED WITH ALL CASE CLASSIFICATION OPTIONS) -->
+<!-- 📋 MODAL DIALOG POPUP (STATUTORY DIRECTIVE COMPLIANT) -->
 <div class="modal-overlay" id="noteConfirmModal">
     <div class="modal-card">
         <div class="modal-header">
-            <h4>📋 Confirm Basic Investigation Data Before AI Generation</h4>
+            <h4>📋 Notes on Source of Infection, Spread of Disease and Action Taken</h4>
             <button type="button" style="background:none; border:none; color:white; font-size:18px; cursor:pointer;" onclick="closeNoteConfirmModal()">✖</button>
         </div>
         <div class="modal-body">
             <div class="form-group">
-                <label>1. Confirmed Disease (First Page)</label>
+                <label>Disease Confirmed / Notified</label>
                 <input type="text" id="modalDisease" readonly style="background-color: #f1f5f9;">
             </div>
 
             <div class="form-group">
-                <label>2. Probable Source / Relevant Exposure</label>
-                <input type="text" id="modalSource" placeholder="e.g. Workplace, Local School, Travelled area, Residence neighbourhood">
+                <label>1. Source of Infection (බෝවීමේ ප්‍රමය පිළිබඳ සටහන්)</label>
+                <input type="text" id="modalSource" placeholder="e.g. Workplace exposure, local vector breeding site, residence neighbourhood">
             </div>
 
             <div class="form-group">
-                <label>3. Case Classification (Local vs Imported)</label>
+                <label>2. Spread of Disease (රෝගය පැතිරීම)</label>
                 <select id="modalCaseIndex">
-                    <option value="PRIMARY_INDEX_LOCAL">Primary Index Case (Local Transmission)</option>
-                    <option value="SUBSEQUENT_LOCAL" selected>Subsequent Case (Local Transmission Chain)</option>
-                    <option value="IMPORTED_CASE">Imported Case (Infection Acquired from Outer Area / Foreign)</option>
+                    <option value="PRIMARY_INDEX_LOCAL">Primary Index Case (Local transmission)</option>
+                    <option value="SUBSEQUENT_LOCAL" selected>Subsequent Case (Local transmission chain)</option>
+                    <option value="IMPORTED_CASE">Imported Case (Acquired outside area / abroad)</option>
                 </select>
             </div>
 
             <div class="form-group">
-                <label>4. Outbreak Status</label>
-                <select id="modalOutbreakStatus">
-                    <option value="NO_OUTBREAK">No active local outbreak reported (Isolated Case)</option>
-                    <option value="ACTIVE_OUTBREAK">Active Local Disease Outbreak Ongoing</option>
+                <label>2.1 Outbreak Information (වසංගත තත්ත්වය පිළිබඳ නියෝගය)</label>
+                <select id="modalOutbreakStatus" onchange="toggleOutbreakRefInput()">
+                    <option value="NO_OUTBREAK">Isolated Case (No active outbreak in the area)</option>
+                    <option value="FIRST_CASE_OUTBREAK">First case of an outbreak (Enter full information on report card)</option>
+                    <option value="SUBSEQUENT_OUTBREAK_CASE">Subsequent case of an outbreak (Covered by same information/action)</option>
                 </select>
             </div>
 
-            <div class="form-group">
-                <label>5. Actions Taken</label>
-                <input type="text" id="modalActionTaken" value="Fogging, larviciding, premises inspection, and vector breeding site destruction conducted.">
+            <div class="form-group" id="outbreakRefGroup" style="display: none;">
+                <label>Reference Number in Infectious Diseases Register</label>
+                <input type="text" id="modalOutbreakRefNo" placeholder="e.g. IDR/2026/DEN/042">
+                <small style="color: #64748b;">Give reference number in infectious diseases register on cards of subsequent cases covered by same action.</small>
             </div>
 
             <div class="form-group">
-                <label>6. Advice Given</label>
-                <input type="text" id="modalAdviceGiven" value="Strict isolation advised. Health education and disease prevention directives given to household contacts.">
-            </div>
-
-            <div class="form-group">
-                <label>7. Patient Outcome / Isolation</label>
-                <select id="modalPatientCondition">
-                    <option value="Recovering / Stable at Home or Hospital">Recovering / Stable Condition</option>
-                    <option value="Under Strict Hospital Isolation">Under Active Hospital Care & Isolation</option>
-                    <option value="Fatal Outcome / Deceased">Fatal Outcome (Deceased)</option>
-                </select>
+                <label>3. Action Taken (ගෙන ඇති ක්‍රියා මාර්ගය)</label>
+                <textarea id="modalActionTaken" rows="3">Premises inspection, vector source reduction/fogging conducted, patient isolation ensured, and health education directives given.</textarea>
             </div>
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-reset" onclick="closeNoteConfirmModal()">Cancel</button>
-            <button type="button" class="btn btn-update" onclick="submitAndGeneratePage2Note()">✨ Gemini Analyze & Generate Page 2</button>
+            <button type="button" class="btn btn-update" onclick="submitAndGeneratePage2Note()">✨ Gemini Analyze & Generate</button>
         </div>
     </div>
 </div>
@@ -1243,6 +1284,9 @@
             }
         });
 
+        // Add special handling for PHM Area auto-update just in case
+        updatePHMArea();
+        
         updatePrintForm();
         alert("📋 Record " + (data.inPhiRefNo || recordId) + " loaded for editing! Any changes will update this existing record.");
     }
@@ -1285,6 +1329,30 @@
                 </tr>
             `;
         }
+    }
+
+    // 🆕 Auto update PHM Area based on GN Area
+    function updatePHMArea() {
+        const gnArea = document.getElementById('inGNArea').value;
+        const phmInput = document.getElementById('inPHMArea');
+        
+        const phmMapping = {
+            "Amunupura": "Amunupura",
+            "Madiligama": "Amunupura",
+            "Gondeniya": "Amunupura",
+            "Pahala Rathmeewala": "Rathmeewala",
+            "Uda Rathmeewala": "Rathmeewala",
+            "Deldeniya": "Rathmeewala",
+            "Godigamuwa": "Godigamuwa",
+            "Alagalla Ihala": "Godigamuwa",
+            "Poththepitiya": "Godigamuwa",
+            "Alagalla Waththa": "Yatigammana",
+            "Kirimetiya": "Yatigammana",
+            "Pahala Yatigammana": "Yatigammana"
+        };
+        
+        phmInput.value = phmMapping[gnArea] || '';
+        updatePrintForm();
     }
 
     window.onload = function() {
@@ -1446,7 +1514,7 @@
                 const ai = new GoogleGenAI({ apiKey });
 
                 const response = await ai.models.generateContent({
-                    model: 'gemini-3.5-flash',
+                    model: 'gemini-2.5-flash',
                     contents: [
                         {
                             inlineData: {
@@ -1481,7 +1549,7 @@
                 let help = '';
 
                 if (/404|NOT_FOUND|no longer available|model/i.test(message)) {
-                    help = '\n\nModel error: this page now uses the current stable gemini-3.5-flash model. If the error persists, check that your API key has Gemini API access.';
+                    help = '\n\nModel error: this page now uses the current stable gemini-2.5-flash model. If the error persists, check that your API key has Gemini API access.';
                 } else if (/401|403|API key|permission|PERMISSION_DENIED|UNAUTHENTICATED/i.test(message)) {
                     help = '\n\nAPI key error: create a new Gemini API key in Google AI Studio and paste it into Section 00.';
                 } else if (/429|quota|RESOURCE_EXHAUSTED/i.test(message)) {
@@ -1542,25 +1610,29 @@
         return dateStr;
     }
 
+    function toggleOutbreakRefInput() {
+        const outbreakVal = document.getElementById('modalOutbreakStatus').value;
+        const refGroup = document.getElementById('outbreakRefGroup');
+        if (outbreakVal === 'SUBSEQUENT_OUTBREAK_CASE') {
+            refGroup.style.display = 'flex';
+        } else {
+            refGroup.style.display = 'none';
+        }
+    }
+
     function openNoteConfirmModal() {
         const confirmedDis = document.getElementById('inDiseaseConfirmed').value || document.getElementById('inDiseaseNotified').value || 'Communicable Disease';
         const movements = document.getElementById('inMovements').value || '';
         
         document.getElementById('modalDisease').value = confirmedDis;
         
-        if(movements) {
+        if (movements) {
             document.getElementById('modalSource').value = movements.split('\n')[0];
         } else {
-            document.getElementById('modalSource').value = "Residential neighbourhood & local environment";
+            document.getElementById('modalSource').value = "Residential premises / local working environment";
         }
 
-        const outcomeVal = document.querySelector('input[name="outcomeOption"]:checked')?.value;
-        if(outcomeVal === 'Recovered') {
-            document.getElementById('modalPatientCondition').value = "Recovering / Stable at Home or Hospital";
-        } else if (outcomeVal === 'Died') {
-            document.getElementById('modalPatientCondition').value = "Fatal Outcome / Deceased";
-        }
-
+        toggleOutbreakRefInput();
         document.getElementById('noteConfirmModal').style.display = 'flex';
     }
 
@@ -1568,7 +1640,7 @@
         document.getElementById('noteConfirmModal').style.display = 'none';
     }
 
-    // 🌟 DETAILED PAGE 02 NOTE GENERATOR WITH CASE CLASSIFICATION LOGIC
+    // 🌟 OFFICIAL STATUTORY COMPLIANT PAGE 02 NOTE GENERATOR (STRICT POINT-WISE ANALYSIS)
     async function generatePage2FromPage1() {
         const apiKey = document.getElementById('inAiApiKey').value.trim();
         const provider = document.getElementById('inAiEngineProvider').value;
@@ -1583,74 +1655,67 @@
 
         const get = id => document.getElementById(id)?.value?.trim() || '';
         const checked = name => document.querySelector(`input[name="${name}"]:checked`)?.value || '';
-        const checkedBox = id => document.getElementById(id)?.checked ? 'Yes' : 'No';
 
         const patient = {
-            name: get('inPatientName'), address: get('inPatientAddress'), phone: get('inPatientPhone'),
-            age: get('inPatientAge'), sex: checked('sexOption'),
-            diseaseConfirmed: get('inDiseaseConfirmed') || get('inDiseaseNotified'),
-            dateConfirmed: get('inDateConfirmed'), movements: get('inMovements'),
-            onset: get('inDateOnset'), hospitalized: get('inDateHospitalized'),
-            discharged: get('inDateDischarged'), hospital: get('inHospitalName'),
-            outcome: checked('outcomeOption'), isolation: checked('isolatedOption'),
-            isolatedCase: checkedBox('inNatureIsolatedCase'), outbreakReportNeeded: checkedBox('inOutbreakReportNeeded')
+            movements: get('inMovements')
         };
 
         const confirmed = {
             source: get('modalSource'),
             classification: get('modalCaseIndex'),
             outbreak: get('modalOutbreakStatus'),
-            actions: get('modalActionTaken'),
-            advice: get('modalAdviceGiven'),
-            outcomeIsolation: get('modalPatientCondition')
+            outbreakRefNo: get('modalOutbreakRefNo'),
+            actions: get('modalActionTaken')
         };
 
-        // Parse Case Classification Text for Gemini Prompt
-        let classificationText = "Subsequent Case (Acquired within local transmission chain)";
+        let spreadDescription = "Subsequent Case acquired through local transmission chain.";
         if (confirmed.classification === 'PRIMARY_INDEX_LOCAL') {
-            classificationText = "Primary Index Case (Local transmission within MOH area)";
-        } else if (confirmed.classification === 'SUBSEQUENT_LOCAL') {
-            classificationText = "Subsequent Case (Acquired within local transmission chain)";
+            spreadDescription = "Primary Index Case in the local MOH/PHI area (Local transmission).";
         } else if (confirmed.classification === 'IMPORTED_CASE') {
-            classificationText = "Imported Case (Infection acquired outside local MOH boundary / outer area)";
+            spreadDescription = "Imported Case (Infection acquired from outside MOH boundary or overseas).";
         }
 
         const button = document.querySelector('.section-title button.btn-ai');
         const oldText = button ? button.innerText : '';
         try {
             closeNoteConfirmModal();
-            if (button) { button.disabled = true; button.innerText = '⏳ Gemini preparing professional Page 2 note...'; }
+            if (button) { button.disabled = true; button.innerText = '⏳ Gemini preparing statutory investigation note...'; }
             const GoogleGenAI = window.GoogleGenAIReady ? await window.GoogleGenAIReady : window.GoogleGenAI;
             if (!GoogleGenAI) throw new Error('Gemini SDK is not loaded. Please reload the page and try again.');
             const ai = new GoogleGenAI({ apiKey });
 
-            const prompt = `You are an experienced Sri Lankan Public Health Inspector preparing a concise, clear field investigation entry for PAGE 2, TABLE 02 of an official communicable disease report.
+            const prompt = `You are a Sri Lankan Public Health Inspector (PHI). Write the investigation note for PAGE 2, TABLE 02 strictly analyzing and responding to this exact statutory directive:
+"Notes on source of infection, spread of disease and ACTION TAKEN. If case was one of an outbreak enter information on report card first case only and give reference number in infectious diseases register on the cards of all other cases covered by the same information and/or action."
 
-Use the PAGE 1 information and the PHI-CONFIRMED BASIC DATA below. Do not invent clinical, epidemiological, laboratory, treatment, outbreak, or patient-status facts.
+Input Data for Analysis:
+- Prior Movements: ${patient.movements || 'Not documented'}
+- Source of Infection: ${confirmed.source || 'Not documented'}
+- Spread of Disease: ${spreadDescription}
+- Outbreak Status: ${confirmed.outbreak}
+- ID Register Ref No: ${confirmed.outbreakRefNo || 'N/A'}
+- Action Taken: ${confirmed.actions || 'Not documented'}
 
-Create a formal, compact epidemiological field report note that fits cleanly into Table 02 without overflowing using this exact format:
+CRITICAL RULES:
+- DO NOT INCLUDE ANY PATIENT DETAILS (No Name, Address, Age, Sex, or Disease Header).
+- Do NOT use markdown bolding (**) or asterisks (*).
+- Analyze the data and provide the output strictly in the 4 points below.
 
-PATIENT DETAILS / CONFIRMED DISEASE
-- Patient Name: ${patient.name || 'Not documented'} (${patient.age || 'Age N/A'}, ${patient.sex || 'Sex N/A'})
-- Address: ${patient.address || 'Not documented'}
-- Hospital: ${patient.hospital || 'Not documented'}
-- Disease: ${patient.diseaseConfirmed || 'Not documented'} (Confirmed Date: ${patient.dateConfirmed || 'Not documented'})
+Required Output Structure:
 
-1. Movements & Exposures: Summarize movements prior to onset (${patient.onset || 'N/A'}). Recorded: ${patient.movements || 'Not documented'}.
-2. Infection Source: ${confirmed.source || 'Not documented'}.
-3. Case Classification: ${classificationText}.
-4. Outbreak Status: ${confirmed.outbreak || 'Not documented'}.
-5. Control Actions Initiated: ${confirmed.actions || 'Not documented'}.
-6. Health Education & Directives: ${confirmed.advice || 'Not documented'}.
-7. Outcome & Follow-up: ${confirmed.outcomeIsolation || 'Not documented'}. Isolation: ${patient.isolation || 'N/A'}.
+1. Source of infection:
+[Analyze and detail the probable source based on movements and exposure]
 
-Important:
-- DO NOT include laboratory findings in this generated note.
-- Keep the wording formal and concise to fit Table 02 cleanly.
-- Do not use markdown bolding (**) or bullets (*).`;
+2. Spread of disease:
+[Analyze and detail the case classification and transmission chain]
+
+3. Action taken:
+[Analyze and detail the control measures, isolation, and directives given]
+
+4. Outbreak recording directive:
+[Analyze the outbreak status based on the rule. If ${confirmed.outbreak} is 'FIRST_CASE_OUTBREAK', state: "First case of an outbreak: Full information entered on this report card." If ${confirmed.outbreak} is 'SUBSEQUENT_OUTBREAK_CASE', state: "Subsequent case of an outbreak: Covered by the same action. Refer to Infectious Diseases Register Reference Number: ${confirmed.outbreakRefNo || 'N/A'}." If ${confirmed.outbreak} is 'NO_OUTBREAK', state: "Isolated case: Not part of an active outbreak."]`;
 
             const response = await ai.models.generateContent({
-                model: 'gemini-3.5-flash',
+                model: 'gemini-2.5-flash',
                 contents: [{ text: prompt }]
             });
             const text = response?.text?.trim();
@@ -1684,9 +1749,10 @@ Important:
 
         document.getElementById('outPatientName').innerText = document.getElementById('inPatientName').value;
         document.getElementById('outPatientAddress').innerText = document.getElementById('inPatientAddress').value;
+        
+        // Page 1 phone text
         const patientPhone = document.getElementById('inPatientPhone')?.value.trim() || '';
         document.getElementById('outPatientPhone').innerText = patientPhone ? 'Tel: ' + patientPhone : '';
-        document.getElementById('outP2PatientPhone').innerText = patientPhone ? 'Patient Contact: ' + patientPhone : '';
 
         const dob = document.getElementById('inPatientDob').value;
         const age = document.getElementById('inPatientAge').value;
@@ -1798,6 +1864,25 @@ Important:
         document.getElementById('outP2GpsBlock').innerText = gpsVal ? "PATIENT LOCATION GPS - " + gpsVal : "";
         document.getElementById('outGpsCoordsPage1').innerText = gpsVal ? "PATIENT HOME / LOCATION GPS COORDINATE - " + gpsVal : "";
 
+        // 🆕 NEW: Generate the Extra Info Table dynamically
+        const phone = patientPhone || '-';
+        const gn = document.getElementById('inGNArea')?.value || '-';
+        const phm = document.getElementById('inPHMArea')?.value || '-';
+        const village = document.getElementById('inVillage')?.value || '-';
+        const occ = document.getElementById('inOccupation')?.value || '-';
+        const religion = document.getElementById('inReligion')?.value || '-';
+
+        document.getElementById('outP2ExtraInfo').innerHTML = `
+            <table style="width:100%; border-collapse: collapse; font-family:'Courier New', Courier, monospace; color:#000080; text-align:left; background:rgba(255,255,255,0.9);">
+                <tr><td style="border:1px solid #000080; padding:2px 5px; font-weight:bold; width:45%;">Patient TP Number</td><td style="border:1px solid #000080; padding:2px 5px; font-weight:bold;">${phone}</td></tr>
+                <tr><td style="border:1px solid #000080; padding:2px 5px; font-weight:bold;">GN Area</td><td style="border:1px solid #000080; padding:2px 5px;">${gn}</td></tr>
+                <tr><td style="border:1px solid #000080; padding:2px 5px; font-weight:bold;">PHM Area</td><td style="border:1px solid #000080; padding:2px 5px;">${phm}</td></tr>
+                <tr><td style="border:1px solid #000080; padding:2px 5px; font-weight:bold;">Village</td><td style="border:1px solid #000080; padding:2px 5px;">${village}</td></tr>
+                <tr><td style="border:1px solid #000080; padding:2px 5px; font-weight:bold;">Occupation</td><td style="border:1px solid #000080; padding:2px 5px;">${occ}</td></tr>
+                <tr><td style="border:1px solid #000080; padding:2px 5px; font-weight:bold;">Religion</td><td style="border:1px solid #000080; padding:2px 5px;">${religion}</td></tr>
+            </table>
+        `;
+
         saveFormData();
     }
 
@@ -1869,6 +1954,8 @@ Important:
                 });
             }
         });
+        
+        updatePHMArea();
         updatePrintForm();
     }
 
