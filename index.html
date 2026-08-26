@@ -1539,7 +1539,7 @@
                 const ai = new GoogleGenAI({ apiKey });
 
                 const response = await ai.models.generateContent({
-                    model: 'gemini-2.5-flash',
+                    model: 'gemini-3.6-flash',
                     contents: [
                         {
                             inlineData: {
@@ -1574,7 +1574,7 @@
                 let help = '';
 
                 if (/404|NOT_FOUND|no longer available|model/i.test(message)) {
-                    help = '\n\nModel error: this page now uses the current stable gemini-2.5-flash model. If the error persists, check that your API key has Gemini API access.';
+                    help = '\n\nModel error: this page now uses the current stable gemini-3.6-flash model. If the error persists, check that your API key has Gemini API access.';
                 } else if (/401|403|API key|permission|PERMISSION_DENIED|UNAUTHENTICATED/i.test(message)) {
                     help = '\n\nAPI key error: create a new Gemini API key in Google AI Studio and paste it into Section 00.';
                 } else if (/429|quota|RESOURCE_EXHAUSTED/i.test(message)) {
@@ -1740,7 +1740,7 @@ Required Output Structure:
 [Analyze the outbreak status based on the rule. If ${confirmed.outbreak} is 'FIRST_CASE_OUTBREAK', state: "First case of an outbreak: Full information entered on this report card." If ${confirmed.outbreak} is 'SUBSEQUENT_OUTBREAK_CASE', state: "Subsequent case of an outbreak: Covered by the same action. Refer to Infectious Diseases Register Reference Number: ${confirmed.outbreakRefNo || 'N/A'}." If ${confirmed.outbreak} is 'NO_OUTBREAK', state: "Isolated case: Not part of an active outbreak."]`;
 
             const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
+                model: 'gemini-3.6-flash',
                 contents: [{ text: prompt }]
             });
             const text = response?.text?.trim();
