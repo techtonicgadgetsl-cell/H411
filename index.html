@@ -1062,9 +1062,34 @@
     }
 
     function saveRecordOfflineFirst() {
+        const phiRefInput = document.getElementById('inPhiRefNo').value.trim();
+        
+        if (!phiRefInput) {
+            alert("⚠️ කරුණාකර 'P.H.I. Reference No.' ඇතුළත් කරන්න. Record එක duplicate වීම වැළැක්වීමට මෙය අත්‍යවශ්‍ය වේ.");
+            document.getElementById('inPhiRefNo').focus();
+            return;
+        }
+
         const storedEditId = sessionStorage.getItem('h411_active_edit_id') || '';
-        const recordId = activeEditingRecordId || storedEditId || 'REC_' + Date.now();
-        const wasEditing = !!(activeEditingRecordId || storedEditId);
+        let recordId = activeEditingRecordId || storedEditId;
+        let wasEditing = !!recordId;
+
+        if (!wasEditing) {
+            const existingRecord = allFetchedRecords.find(r => r.inPhiRefNo && r.inPhiRefNo.trim() === phiRefInput);
+            
+            if (existingRecord) {
+                const userConfirmed = confirm(`⚠️ Warning: "${phiRefInput}" කියන Ref No එකෙන් දැනටමත් Record එකක් Cloud එකේ තියෙනවා!\n\nඔයාට අලුත් Record එකක් හදනවා වෙනුවට දැනට තියෙන එකම Update (Overwrite) කරන්න අවශ්‍යද?`);
+                
+                if (userConfirmed) {
+                    recordId = existingRecord.id;
+                    wasEditing = true;
+                } else {
+                    return;
+                }
+            } else {
+                recordId = 'REC_' + Date.now();
+            }
+        }
         
         const formData = { id: recordId, synced: false, timestamp: new Date().toISOString(), updatedAt: new Date().toISOString() };
 
