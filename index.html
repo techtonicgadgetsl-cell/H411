@@ -1416,12 +1416,16 @@
         if (!dobStr) return;
         const birthDate = new Date(dobStr);
         const today = new Date();
-        let age = today.getFullYear() - birthDate.getFullYear();
-        const m = today.getMonth() - birthDate.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-            age--;
+        let years = today.getFullYear() - birthDate.getFullYear();
+        let months = today.getMonth() - birthDate.getMonth();
+        if (today.getDate() < birthDate.getDate()) {
+            months--;
         }
-        document.getElementById('inPatientAge').value = age + " Yrs";
+        if (months < 0) {
+            years--;
+            months += 12;
+        }
+        document.getElementById('inPatientAge').value = years + "Y / " + months + "M";
         updatePrintForm();
     }
 
