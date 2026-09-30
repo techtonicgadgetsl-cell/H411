@@ -494,6 +494,17 @@
             .preview-scale-wrapper { transform: none !important; transform-origin: top left !important; margin: 0 !important; padding: 0 !important; height: auto !important; overflow-y: visible !important; display: block !important; }
             .page-container { width: 297mm !important; height: 210mm !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; page-break-after: always !important; break-after: page !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             .page-container:last-child { page-break-after: auto !important; break-after: auto !important; }
+
+            /* FIX: screen-preview eke scale(0.55) print ekata apply wenna epa — full A4 size ekata */
+            .preview-scale-wrapper .page-container {
+                transform: none !important;
+                transform-origin: top left !important;
+                width: 297mm !important;
+                height: 210mm !important;
+                overflow: hidden !important;
+            }
+            .preview-scale-wrapper { width: 297mm !important; }
+            .preview-panel { gap: 0 !important; }
         }
     </style>
 </head>
