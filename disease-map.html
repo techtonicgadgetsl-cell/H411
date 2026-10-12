@@ -156,13 +156,33 @@ function recDate(r) {
 
 /* ---------- map ---------- */
 const map = L.map('map');
-L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri', maxZoom: 19 }).addTo(map);
+const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/';
+const esri = (name, o) => L.tileLayer(ESRI + name + '/MapServer/tile/{z}/{y}/{x}', Object.assign({ attribution: 'Tiles &copy; Esri', maxZoom: 19 }, o || {}));
+const baseTopo = esri('World_Topo_Map');
+const baseStreet = esri('World_Street_Map');
+const baseSat = esri('World_Imagery', { maxNativeZoom: 18 });
+const baseHybrid = L.layerGroup([
+  esri('World_Imagery', { maxNativeZoom: 18 }),
+  esri('Reference/World_Transportation', { maxNativeZoom: 18 }),
+  esri('Reference/World_Boundaries_and_Places', { maxNativeZoom: 18 })
+]);
+const BASES = { '🗺️ Topo': baseTopo, '🛣️ Street': baseStreet, '🛰️ Satellite': baseSat, '🛰️ Satellite + Labels': baseHybrid };
+let savedBase = 'Topo'; try { savedBase = localStorage.getItem('dm_base') || 'Topo'; } catch (e) {}
+(Object.keys(BASES).find(k => k.endsWith(savedBase)) ? BASES[Object.keys(BASES).find(k => k.endsWith(savedBase))] : baseTopo).addTo(map);
+L.control.layers(BASES, null, { position: 'topright', collapsed: true }).addTo(map);
 map.createPane('pts').style.zIndex = 650;
+const GN_STYLE_MAP = { color: '#334155', weight: 1.5, fillColor: '#94a3b8', fillOpacity: 0.08 };
+const GN_STYLE_SAT = { color: '#ffffff', weight: 2.5, fillColor: '#ffffff', fillOpacity: 0.04 };
 const gnLayer = L.geoJSON(PHI_GEOJSON, {
-  style: { color: '#334155', weight: 1.5, fillColor: '#94a3b8', fillOpacity: 0.08 },
+  style: GN_STYLE_MAP,
   onEachFeature: (f, l) => l.bindTooltip(f.properties.GND_N, { permanent: true, direction: 'center', className: 'gn-label' })
 }).addTo(map);
 const areaBounds = gnLayer.getBounds();
+map.on('baselayerchange', e => {
+  const sat = /Satellite/.test(e.name);
+  gnLayer.setStyle(sat ? GN_STYLE_SAT : GN_STYLE_MAP);
+  try { localStorage.setItem('dm_base', e.name.replace(/^\S+\s/, '')); } catch (x) {}
+});
 map.fitBounds(areaBounds);
 const ptLayer = L.layerGroup().addTo(map);
 
@@ -205,7 +225,9 @@ function render() {
     L.circleMarker(p, { pane: 'pts', radius: 9, className: 'dg-pt', fillColor: cat.color, fillOpacity: 0.95, color: '#fff', weight: 2 })
       .bindPopup(`<div class="pop"><b class="d" style="background:${cat.color};${cat.key === 'chickenpox' ? 'color:#000' : ''}">${esc(disease)}</b><br>`
         + `Ref No: <b>${esc(r.inPhiRefNo || '-')}</b><br>Date: ${esc(recDate(r))}<br>GN: ${esc(r.inGNArea || '-')}${age}<br>`
-        + `<span style="color:#64748b">${p[0].toFixed(5)}, ${p[1].toFixed(5)}</span></div>`)
+        + `<span style="color:#64748b">${p[0].toFixed(5)}, ${p[1].toFixed(5)}</span><br>`
+        + `<a href="https://www.google.com/maps/@?api=1&amp;map_action=pano&amp;viewpoint=${p[0]},${p[1]}" target="_blank" rel="noopener">🚶 Google Street View</a><br>`
+        + `<a href="https://www.google.com/maps/@?api=1&amp;map_action=map&amp;center=${p[0]},${p[1]}&amp;zoom=19&amp;basemap=satellite" target="_blank" rel="noopener">🛰️ Google Satellite</a></div>`)
       .addTo(ptLayer);
   });
 
