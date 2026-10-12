@@ -40,6 +40,12 @@
   .note { font-size: 12px; color: #64748b; margin-top: 10px; line-height: 1.45; }
   .fit { margin-top: 10px; width: 100%; padding: 8px; border: 0; background: #2563eb; color: #fff; font-weight: bold; border-radius: 6px; cursor: pointer; }
 
+  .box { margin-top: 14px; padding-top: 12px; border-top: 2px solid #e2e8f0; }
+  .box select, .box input[type=number] { width: 100%; padding: 8px; font-size: 14px; border: 1px solid #94a3b8; border-radius: 6px; background: #f8fafc; margin-bottom: 6px; }
+  .box label.chk { display: flex; gap: 6px; align-items: center; font-size: 13px; cursor: pointer; margin: 4px 0 8px; }
+  .crow { padding: 7px 8px; margin-bottom: 5px; border-radius: 6px; background: #f1f5f9; border-left: 6px solid #64748b; font-size: 13px; cursor: pointer; line-height: 1.4; }
+  .crow:hover { background: #e2e8f0; } .crow small { color: #475569; }
+  .cbadge { width: 26px; height: 26px; border-radius: 50%; color: #fff; font-weight: bold; font-size: 13px; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; box-shadow: 0 0 4px rgba(0,0,0,.7); text-shadow: 0 0 2px #000; }
   .leaflet-overlay-pane path.dg-pt { filter: drop-shadow(0 0 1.5px rgba(0,0,0,.85)); }
   .gn-label { background: rgba(255,255,255,.75); border: 0; box-shadow: none; font-size: 11px; font-weight: bold; color: #334155; padding: 0 4px; }
   .gn-label:before { display: none; }
@@ -91,6 +97,21 @@
     <h2>Disease colour index</h2>
     <div id="legend"></div>
     <button class="fit" id="fitPts">Zoom to points</button>
+
+    <div class="box">
+      <h2>Buffer radius &amp; clusters</h2>
+      <select id="bufSel">
+        <option value="0">Off (points only)</option>
+        <option value="100">100 m</option>
+        <option value="250">250 m</option>
+        <option value="500">500 m</option>
+        <option value="1000">1 km</option>
+        <option value="custom">Custom...</option>
+      </select>
+      <input type="number" id="bufCustom" min="10" max="5000" step="10" placeholder="Radius in metres (e.g. 300)" style="display:none">
+      <label class="chk"><input type="checkbox" id="sameDisease" checked> Cluster same disease only</label>
+      <div id="clusterList"></div>
+    </div>
     <div class="note" id="note"></div>
   </div>
 </div>
@@ -186,6 +207,75 @@ map.on('baselayerchange', e => {
 map.fitBounds(areaBounds);
 const ptLayer = L.layerGroup().addTo(map);
 
+/* ---------- buffer circles + cluster analysis ---------- */
+map.createPane('buf').style.zIndex = 450;
+map.createPane('clu').style.zIndex = 560;
+const bufLayer = L.layerGroup().addTo(map), cluLayer = L.layerGroup().addTo(map);
+let bufR = 0, clusters = [];
+const strokeOf = c => c.key === 'chickenpox' ? '#ca8a04' : c.color;
+function hav(a, b) {
+  const R = 6371000, t = Math.PI / 180, dLa = (b[0] - a[0]) * t, dLo = (b[1] - a[1]) * t;
+  const x = Math.sin(dLa / 2) ** 2 + Math.cos(a[0] * t) * Math.cos(b[0] * t) * Math.sin(dLo / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(x));
+}
+function hull(pts) {   // convex hull of [lat,lng] points
+  const P = pts.map(p => [p[1], p[0]]).sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const lo = [], up = [];
+  for (const p of P) { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
+  for (const p of P.slice().reverse()) { while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); }
+  lo.pop(); up.pop();
+  return lo.concat(up).map(p => [p[1], p[0]]);
+}
+function drawBuffers(vis) {
+  bufLayer.clearLayers(); cluLayer.clearLayers(); clusters = [];
+  const box = $('clusterList');
+  if (!bufR) { box.innerHTML = '<div class="note">Choose a radius to draw a boundary round every point and find clusters.</div>'; return; }
+  vis.forEach(v => L.circle(v.p, { pane: 'buf', radius: bufR, color: strokeOf(v.cat), weight: 1.5, dashArray: '5 4', fillColor: v.cat.color, fillOpacity: 0.14, interactive: false }).addTo(bufLayer));
+
+  const same = $('sameDisease').checked, par = vis.map((_, i) => i);
+  const find = i => { while (par[i] !== i) { par[i] = par[par[i]]; i = par[i]; } return i; };
+  for (let i = 0; i < vis.length; i++) for (let j = i + 1; j < vis.length; j++) {
+    if (same && vis[i].cat.key !== vis[j].cat.key) continue;
+    if (hav(vis[i].p, vis[j].p) <= 2 * bufR) par[find(i)] = find(j);   // buffers touch / overlap
+  }
+  const groups = {};
+  vis.forEach((v, i) => (groups[find(i)] = groups[find(i)] || []).push(v));
+  clusters = Object.values(groups).filter(g => g.length >= 2).sort((a, b) => b.length - a.length);
+
+  let inCl = 0, html = '';
+  clusters.forEach((g, i) => {
+    inCl += g.length;
+    const mix = {}; g.forEach(v => mix[v.cat.key] = (mix[v.cat.key] || 0) + 1);
+    const top = CATS.find(c => c.key === Object.keys(mix).sort((a, b) => mix[b] - mix[a])[0]);
+    let span = 0; for (let a = 0; a < g.length; a++) for (let b = a + 1; b < g.length; b++) span = Math.max(span, hav(g[a].p, g[b].p));
+    const mixTxt = CATS.filter(c => mix[c.key]).map(c => `${c.label} ${mix[c.key]}`).join(', ');
+    const pts = g.map(v => v.p), h = hull(pts), col = strokeOf(top);
+    const spanTxt = span >= 1000 ? (span / 1000).toFixed(2) + ' km' : Math.round(span) + ' m';
+    g.bounds = L.latLngBounds(pts); g.info = { mixTxt, spanTxt, top };
+    if (h.length >= 3) L.polygon(h, { pane: 'clu', color: col, weight: 3, fillColor: top.color, fillOpacity: 0.1, dashArray: '2 6', interactive: false }).addTo(cluLayer);
+    else L.polyline(pts, { pane: 'clu', color: col, weight: 3, dashArray: '2 6', interactive: false }).addTo(cluLayer);
+    const c = g.bounds.getCenter();
+    L.marker(c, { pane: 'clu', icon: L.divIcon({ className: '', html: `<div class="cbadge" style="background:${top.color}">${g.length}</div>`, iconSize: [26, 26], iconAnchor: [13, 13] }) })
+      .bindPopup(`<div class="pop"><b>Cluster ${i + 1}</b>: ${g.length} cases<br>${esc(mixTxt)}<br>Spread: ${spanTxt}</div>`).addTo(cluLayer);
+    html += `<div class="crow" data-i="${i}" style="border-left-color:${strokeOf(top)}"><b>Cluster ${i + 1}</b> · ${g.length} cases<br><small>${esc(mixTxt)} · spread ${spanTxt}</small></div>`;
+  });
+  const rTxt = bufR >= 1000 ? (bufR / 1000) + ' km' : bufR + ' m';
+  box.innerHTML = `<div class="note" style="margin:0 0 8px"><b>${clusters.length}</b> cluster${clusters.length === 1 ? '' : 's'} at ${rTxt} · ${inCl} of ${vis.length} cases inside clusters.</div>`
+    + (html || '<div class="note">No clusters: no two cases are close enough at this radius.</div>')
+    + `<div class="note">Cluster = 2 or more cases whose buffers touch/overlap (distance ≤ 2 × radius).</div>`;
+}
+$('clusterList').addEventListener('click', e => {
+  const r = e.target.closest('.crow'); if (r && clusters[+r.dataset.i]) map.fitBounds(clusters[+r.dataset.i].bounds.pad(0.6), { maxZoom: 18 });
+});
+function setRadius() {
+  const v = $('bufSel').value;
+  $('bufCustom').style.display = v === 'custom' ? '' : 'none';
+  bufR = v === 'custom' ? Math.max(0, Math.min(5000, parseFloat($('bufCustom').value) || 0)) : parseFloat(v);
+  render();
+}
+$('bufSel').onchange = setRadius; $('bufCustom').oninput = setRadius; $('sameDisease').onchange = render;
+
 /* ---------- filter state ---------- */
 let mode = 'week';
 let wk = mondayOf(new Date());
@@ -216,10 +306,10 @@ function render() {
   withGps.forEach(x => { x.cat = catOf(x.r.inDiseaseConfirmed || x.r.inDiseaseNotified); counts[x.cat.key]++; });
 
   ptLayer.clearLayers();
-  let shown = 0;
+  let shown = 0; const vis = [];
   withGps.forEach(({ r, p, cat }) => {
     if (!visible[cat.key]) return;
-    shown++;
+    shown++; vis.push({ p, cat });
     const disease = r.inDiseaseConfirmed || r.inDiseaseNotified || 'Not specified';
     const age = r.inPatientAge ? `<br>Age/Sex: ${esc(r.inPatientAge)}${r.sexOption ? ' / ' + esc(r.sexOption) : ''}` : '';
     L.circleMarker(p, { pane: 'pts', radius: 9, className: 'dg-pt', fillColor: cat.color, fillOpacity: 0.95, color: '#fff', weight: 2 })
@@ -231,6 +321,7 @@ function render() {
       .addTo(ptLayer);
   });
 
+  drawBuffers(vis);
   $('legend').innerHTML = CATS.map(c => `<label class="row"><input type="checkbox" data-k="${c.key}" ${visible[c.key] ? 'checked' : ''}>`
     + `<span class="dot" style="background:${c.color}"></span><span>${c.label}</span><span class="n">${counts[c.key]}</span></label>`).join('');
   $('summary').textContent = `${shown} point${shown === 1 ? '' : 's'} on map · ${inRange.length} record${inRange.length === 1 ? '' : 's'} in period`;
