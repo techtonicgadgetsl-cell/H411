@@ -307,18 +307,28 @@ function render() {
 
   ptLayer.clearLayers();
   let shown = 0; const vis = [];
+  const groups = {};   // cases with the same disease + same coordinates share one marker
   withGps.forEach(({ r, p, cat }) => {
     if (!visible[cat.key]) return;
     shown++; vis.push({ p, cat });
-    const disease = r.inDiseaseConfirmed || r.inDiseaseNotified || 'Not specified';
-    const age = r.inPatientAge ? `<br>Age/Sex: ${esc(r.inPatientAge)}${r.sexOption ? ' / ' + esc(r.sexOption) : ''}` : '';
-    L.circleMarker(p, { pane: 'pts', radius: 9, className: 'dg-pt', fillColor: cat.color, fillOpacity: 0.95, color: '#fff', weight: 2 })
-      .bindPopup(`<div class="pop"><b class="d" style="background:${cat.color};${cat.key === 'chickenpox' ? 'color:#000' : ''}">${esc(disease)}</b><br>`
-        + `Ref No: <b>${esc(r.inPhiRefNo || '-')}</b><br>Date: ${esc(recDate(r))}<br>GN: ${esc(r.inGNArea || '-')}${age}<br>`
-        + `<span style="color:#64748b">${p[0].toFixed(5)}, ${p[1].toFixed(5)}</span><br>`
-        + `<a href="https://www.google.com/maps/@?api=1&amp;map_action=pano&amp;viewpoint=${p[0]},${p[1]}" target="_blank" rel="noopener">🚶 Google Street View</a><br>`
-        + `<a href="https://www.google.com/maps/@?api=1&amp;map_action=map&amp;center=${p[0]},${p[1]}&amp;zoom=19&amp;basemap=satellite" target="_blank" rel="noopener">🛰️ Google Satellite</a></div>`)
+    (groups[cat.key + '|' + p[0].toFixed(5) + ',' + p[1].toFixed(5)] = groups[cat.key + '|' + p[0].toFixed(5) + ',' + p[1].toFixed(5)] || { p, cat, list: [] }).list.push(r);
+  });
+  Object.values(groups).forEach(({ p, cat, list }) => {
+    const cases = list.map(r => {
+      const disease = r.inDiseaseConfirmed || r.inDiseaseNotified || 'Not specified';
+      const age = r.inPatientAge ? `<br>Age/Sex: ${esc(r.inPatientAge)}${r.sexOption ? ' / ' + esc(r.sexOption) : ''}` : '';
+      return `<div style="${list.length > 1 ? 'border-top:1px solid #e2e8f0;padding-top:6px;margin-top:6px' : ''}"><b class="d" style="background:${cat.color};${cat.key === 'chickenpox' ? 'color:#000' : ''}">${esc(disease)}</b><br>`
+        + `Ref No: <b>${esc(r.inPhiRefNo || '-')}</b><br>Date: ${esc(recDate(r))}<br>GN: ${esc(r.inGNArea || '-')}${age}</div>`;
+    }).join('');
+    const head = list.length > 1 ? `<div style="font-weight:bold;margin-bottom:4px">${list.length} cases at this exact location</div>` : '';
+    const foot = `<div style="margin-top:6px"><span style="color:#64748b">${p[0].toFixed(5)}, ${p[1].toFixed(5)}</span><br>`
+      + `<a href="https://www.google.com/maps/@?api=1&amp;map_action=pano&amp;viewpoint=${p[0]},${p[1]}" target="_blank" rel="noopener">🚶 Google Street View</a><br>`
+      + `<a href="https://www.google.com/maps/@?api=1&amp;map_action=map&amp;center=${p[0]},${p[1]}&amp;zoom=19&amp;basemap=satellite" target="_blank" rel="noopener">🛰️ Google Satellite</a></div>`;
+    L.circleMarker(p, { pane: 'pts', radius: list.length > 1 ? 11 : 9, className: 'dg-pt', fillColor: cat.color, fillOpacity: 0.95, color: '#fff', weight: 2 })
+      .bindPopup(`<div class="pop" style="max-height:240px;overflow-y:auto">${head}${cases}${foot}</div>`, { maxHeight: 260 })
       .addTo(ptLayer);
+    if (list.length > 1) L.marker(p, { pane: 'pts', interactive: false, icon: L.divIcon({ className: '', iconSize: [22, 22], iconAnchor: [11, 11],
+      html: `<div style="width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:bold 12px Arial;color:${cat.key === 'chickenpox' ? '#000' : '#fff'};text-shadow:${cat.key === 'chickenpox' ? 'none' : '0 0 2px #000'}">${list.length}</div>` }) }).addTo(ptLayer);
   });
 
   drawBuffers(vis);
