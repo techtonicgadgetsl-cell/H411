@@ -506,6 +506,32 @@
             .preview-scale-wrapper { width: 297mm !important; }
             .preview-panel { gap: 0 !important; }
         }
+    
+        /* ===== ENTRY WIZARD POPUP ===== */
+        .wiz-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,.75); z-index:9000; align-items:center; justify-content:center; padding:12px; }
+        .wiz-overlay.open { display:flex; }
+        .wiz-card { background:#fff; width:min(1000px,100%); max-height:96vh; border-radius:12px; box-shadow:0 12px 40px rgba(0,0,0,.4); display:flex; flex-direction:column; overflow:hidden; }
+        .wiz-head { background:#2563eb; color:#fff; padding:12px 16px; display:flex; align-items:center; gap:10px; }
+        .wiz-head h4 { margin:0; font-size:16px; flex:1; min-width:0; }
+        .wiz-x { border:0; background:rgba(255,255,255,.2); color:#fff; width:32px; height:32px; border-radius:50%; font-size:16px; cursor:pointer; }
+        .wiz-chips { display:flex; gap:6px; padding:8px 12px; overflow-x:auto; background:#eff6ff; border-bottom:1px solid #dbeafe; }
+        .wiz-chip { flex:none; border:1px solid #93c5fd; background:#fff; color:#1d4ed8; border-radius:999px; padding:4px 11px; font-size:12px; font-weight:bold; cursor:pointer; white-space:nowrap; }
+        .wiz-chip.on { background:#2563eb; color:#fff; border-color:#2563eb; }
+        .wiz-chip.done { background:#dcfce7; border-color:#86efac; color:#166534; }
+        .wiz-bar { height:4px; background:#e2e8f0; } .wiz-bar div { height:100%; width:0; background:#16a34a; transition:width .25s; }
+        .wiz-body { padding:16px; overflow-y:auto; flex:1; -webkit-overflow-scrolling:touch; }
+        .wiz-step { display:none; } .wiz-step.on { display:block; }
+        .wiz-step > .section-title:first-child { margin-top:0; }
+        .wiz-foot { padding:12px 16px; background:#f1f5f9; display:flex; gap:10px; justify-content:space-between; align-items:center; flex-wrap:wrap; border-top:1px solid #e2e8f0; }
+        .wiz-foot .btn { min-width:110px; }
+        .wiz-foot .btn:disabled { opacity:.4; cursor:not-allowed; }
+        @media (max-width:700px) {
+            .wiz-overlay { padding:0; }
+            .wiz-card { width:100%; height:100%; max-height:100%; border-radius:0; }
+            .wiz-foot { padding:10px; gap:6px; flex-wrap:nowrap; }
+            .wiz-foot .btn { min-width:0; flex:1; padding:11px 6px; font-size:13px; }
+        }
+        @media print { .wiz-overlay { display:none !important; } }
     </style>
 </head>
 <body>
@@ -603,10 +629,25 @@
         <div class="portal-card">
             <div class="portal-header">
                 <h3>Communicable Disease Data Entry Portal</h3>
-                <span id="networkStatusBadge" class="status-badge status-online">🟢 Online Mode</span>
+                <span style="display:inline-flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                    <button type="button" class="btn btn-update" onclick="newReportEntry()" style="padding:6px 12px; border-radius:6px; font-size:13px; font-weight:bold;">➕ New Report</button>
+                    <a href="disease-map.html" target="_blank" class="btn btn-map" style="padding:6px 12px; border-radius:6px; font-size:13px; font-weight:bold;">🗺️ Disease Map</a>
+                    <span id="networkStatusBadge" class="status-badge status-online">🟢 Online Mode</span>
+                </span>
             </div>
             
             <form id="healthPortalForm">
+                <!-- ===== ENTRY WIZARD POPUP (sections shown step by step) ===== -->
+                <div class="wiz-overlay" id="entryWizard">
+                  <div class="wiz-card">
+                    <div class="wiz-head">
+                        <h4 id="wizTitle">New Report Entry</h4>
+                        <button type="button" class="wiz-x" onclick="closeWizard()" title="Close (data is kept)">✕</button>
+                    </div>
+                    <div class="wiz-chips" id="wizChips"></div>
+                    <div class="wiz-bar"><div id="wizBarFill"></div></div>
+                    <div class="wiz-body" id="wizBody">
+                    <div class="wiz-step" data-title="Setup & Office Details">
                 <div class="section-title">00. Vision AI Provider Engine Setup</div>
                 <div class="form-grid">
                     <div class="form-group">
@@ -646,6 +687,8 @@
                     </div>
                 </div>
 
+                    </div>
+                    <div class="wiz-step" data-title="Disease & Dates">
                 <div class="section-title">02. Disease Information & Notification Dates</div>
                 <div class="form-grid">
                     <div class="form-group">
@@ -666,6 +709,8 @@
                     </div>
                 </div>
 
+                    </div>
+                    <div class="wiz-step" data-title="Patient & Location">
                 <div class="section-title">03. Patient Details & Location Tagging</div>
                 <div class="form-grid">
                     <div class="form-group" style="grid-column: span 2;">
@@ -716,6 +761,8 @@
                     </div>
                 </div>
 
+                    </div>
+                    <div class="wiz-step" data-title="Ethnic Group & Movements">
                 <div class="section-title">03.1 ජාති අනුව වෙන් කිරීම / Ethnic Group</div>
                 <div class="form-grid">
                     <div class="form-group" style="grid-column: span 4;">
@@ -738,6 +785,8 @@
                 </div>
 
                 <!-- 🆕 03.3 NEW AREA AND DEMOGRAPHICS SECTION -->
+                    </div>
+                    <div class="wiz-step" data-title="Area & Demographics">
                 <div class="section-title">03.3 Additional Area & Demographics (Page 02 Table)</div>
                 <div class="form-grid">
                     <div class="form-group">
@@ -784,6 +833,8 @@
                     </div>
                 </div>
 
+                    </div>
+                    <div class="wiz-step" data-title="Hospital & Lab Findings">
                 <div class="section-title">04. Hospitalization Details & Lab Findings</div>
                 <div class="form-grid">
                     <div class="form-group">
@@ -819,6 +870,8 @@
                     </div>
                 </div>
 
+                    </div>
+                    <div class="wiz-step" data-title="Outcome & Isolation">
                 <div class="section-title">05. Outcome, Isolation & Case Nature</div>
                 <div class="form-grid">
                     <div class="form-group">
@@ -853,6 +906,8 @@
                     </div>
                 </div>
 
+                    </div>
+                    <div class="wiz-step" data-title="Contacts">
                 <div class="section-title">06. I. රෝගියාගේ නිවෙසේ පදිංචි අය / Patient's household Contacts</div>
                 <div style="overflow-x: auto;">
                     <table class="portal-table">
@@ -883,6 +938,8 @@
                     </table>
                 </div>
 
+                    </div>
+                    <div class="wiz-step" data-title="Investigation Notes">
                 <div class="section-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                     <span>08. PAGE 2 - INVESTIGATION NOTES</span>
                     <button type="button" class="btn btn-ai" onclick="openNoteConfirmModal()">✨ Gemini Generate Table 02</button>
@@ -915,6 +972,20 @@
                         <label>LABORATORY REPORTS</label>
                         <textarea id="inP2LabReports" rows="5" placeholder="Laboratory findings from Page 1 / Gemini scan. You may edit before printing." oninput="updatePrintForm()"></textarea>
                     </div>
+                </div>
+
+                    </div>
+                    </div>
+                    <div class="wiz-foot">
+                        <button type="button" class="btn btn-reset" id="wizBack" onclick="wizGo(-1)">⬅ Back</button>
+                        <button type="button" class="btn btn-update" id="wizSave" onclick="wizSave()">💾 Save</button>
+                        <button type="button" class="btn btn-ai" id="wizNext" onclick="wizGo(1)">Next ➡</button>
+                    </div>
+                  </div>
+                </div>
+                <!-- ===== END WIZARD ===== -->
+                <div class="btn-group" style="margin-bottom:12px;">
+                    <button type="button" class="btn btn-update" onclick="newReportEntry()">➕ New Report Entry</button>
                 </div>
 
                 <div class="section-title">09. Saved Reports Navigation & Search (All Browsers Synced)</div>
@@ -2113,5 +2184,55 @@ Required Output Structure:
     }
 </script>
 
+
+<script>
+/* ===== Entry wizard: sections as popup steps with Back / Next ===== */
+(function () {
+    let cur = 0, maxSeen = 0;
+    const ov = document.getElementById('entryWizard');
+    const steps = Array.from(ov.querySelectorAll('.wiz-step'));
+    const chips = document.getElementById('wizChips');
+    chips.innerHTML = steps.map((s, i) => `<button type="button" class="wiz-chip" data-i="${i}">${i + 1}. ${s.dataset.title}</button>`).join('');
+    chips.addEventListener('click', e => { const b = e.target.closest('.wiz-chip'); if (b) show(+b.dataset.i); });
+
+    function show(i) {
+        cur = Math.max(0, Math.min(steps.length - 1, i));
+        maxSeen = Math.max(maxSeen, cur);
+        steps.forEach((s, k) => s.classList.toggle('on', k === cur));
+        chips.querySelectorAll('.wiz-chip').forEach((c, k) => { c.classList.toggle('on', k === cur); c.classList.toggle('done', k < maxSeen && k !== cur); });
+        document.getElementById('wizTitle').textContent = `Step ${cur + 1} of ${steps.length} — ${steps[cur].dataset.title}`
+            + (activeEditingRecordId ? '  ✏️ (editing saved report)' : '');
+        document.getElementById('wizBarFill').style.width = ((cur + 1) / steps.length * 100) + '%';
+        document.getElementById('wizBack').disabled = cur === 0;
+        document.getElementById('wizNext').style.display = cur === steps.length - 1 ? 'none' : '';
+        document.getElementById('wizBody').scrollTop = 0;
+        const act = chips.querySelector('.wiz-chip.on'); if (act && act.scrollIntoView) act.scrollIntoView({ block: 'nearest', inline: 'center' });
+    }
+    window.openWizard = function (i) { ov.classList.add('open'); document.body.style.overflow = 'hidden'; maxSeen = 0; show(i || 0); };
+    window.closeWizard = function () { ov.classList.remove('open'); document.body.style.overflow = ''; };
+    window.wizGo = function (d) { show(cur + d); };
+    window.wizSave = function () { saveRecordOfflineFirst(); };
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && ov.classList.contains('open') && !document.querySelector('.modal-overlay[style*="flex"]')) closeWizard(); });
+
+    /* New report: if a saved report was being edited, start from a clean form first */
+    window.newReportEntry = function () {
+        if (activeEditingRecordId) {
+            document.getElementById('healthPortalForm').reset();
+            localStorage.removeItem('h411_form_data');
+            activeEditingRecordId = null; sessionStorage.removeItem('h411_active_edit_id');
+            updatePrintForm();
+        }
+        openWizard(0);
+    };
+
+    /* Editing a saved report opens it in the wizard */
+    const _load = loadRecordForEditing;
+    loadRecordForEditing = function (id) { _load(id); if (activeEditingRecordId === id) openWizard(0); };
+
+    /* After a successful save, close the popup */
+    const _alert = window.alert;
+    window.alert = function (m) { _alert(m); if (ov.classList.contains('open') && /^✅/.test(String(m))) closeWizard(); };
+})();
+</script>
 </body>
 </html>
