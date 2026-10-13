@@ -1206,8 +1206,23 @@
             } else {
                 allFetchedRecords = [];
             }
+            Object.values(pendingLocal).forEach(r => {
+                const inCloud = allFetchedRecords.some(c => c.id === r.id);
+                if (inCloud) delete pendingLocal[r.id]; else allFetchedRecords.push(r);
+            });
             filterAndRenderRecords();
         });
+    }
+
+    const pendingLocal = {};   // records saved here but not yet confirmed by the cloud listener
+    function upsertAndShow(rec) {
+        const copy = { ...rec };
+        pendingLocal[copy.id] = copy;
+        const i = allFetchedRecords.findIndex(r => r.id === copy.id);
+        if (i >= 0) allFetchedRecords[i] = copy; else allFetchedRecords.push(copy);
+        const sq = document.getElementById('inSearchQuery'); if (sq) sq.value = '';   // a leftover search word must not hide the new row
+        currentNavIndex = 0;
+        filterAndRenderRecords();
     }
 
     function saveRecordOfflineFirst() {
@@ -1265,11 +1280,11 @@
             });
         }
 
-        if (dbDB) {
-            const tx = dbDB.transaction('patient_records', 'readwrite');
-            const store = tx.objectStore('patient_records');
-            store.put(formData);
-        }
+        delete formData.inSearchQuery;
+        try {
+            if (dbDB) { dbDB.transaction('patient_records', 'readwrite').objectStore('patient_records').put(formData); }
+        } catch (e) { console.log('IndexedDB save notice:', e.message); }
+        upsertAndShow(formData);   // show the record in the table straight away
 
         if (fbDb && navigator.onLine) {
             formData.synced = true;
@@ -1277,7 +1292,9 @@
                 alert(wasEditing ? "✅ Record Updated in Cloud Database!" : "✅ Full Report Saved & Synced to Cloud!");
                 activeEditingRecordId = null;
                 sessionStorage.removeItem('h411_active_edit_id');
-                loadOfflineRecordsTable();
+                delete pendingLocal[recordId];
+                const m = allFetchedRecords.find(r => r.id === recordId); if (m) m.synced = true;
+                filterAndRenderRecords();
             }).catch(err => {
                 alert("⚠️ Cloud Save Error. Stored locally: " + err.message);
             });
@@ -1285,7 +1302,7 @@
             alert("✅ Full Report saved locally in Browser! Will auto-sync when Online.");
             activeEditingRecordId = null;
             sessionStorage.removeItem('h411_active_edit_id');
-            loadOfflineRecordsTable();
+            filterAndRenderRecords();
         }
     }
 
@@ -2110,6 +2127,7 @@ Required Output Structure:
         const formData = {};
         const inputs = document.querySelectorAll('#healthPortalForm input, #healthPortalForm select, #healthPortalForm textarea');
         inputs.forEach(input => {
+            if (input.id === 'inSearchQuery') return;   // the table search box must not be remembered
             if (input.type === 'radio' || input.type === 'checkbox') {
                 formData[input.id || input.name + '_' + input.value] = input.checked;
             } else {
@@ -2125,6 +2143,7 @@ Required Output Structure:
         const formData = JSON.parse(saved);
         
         Object.keys(formData).forEach(key => {
+            if (key === 'inSearchQuery') return;
             const el = document.getElementById(key);
             if (el) {
                 if (el.type === 'checkbox') {
@@ -2244,7 +2263,7 @@ Required Output Structure:
 
     /* After a successful save, close the popup */
     const _alert = window.alert;
-    window.alert = function (m) { _alert(m); if (ov.classList.contains('open') && /^✅/.test(String(m))) closeWizard(); };
+    window.alert = function (m) { _alert(m); if (ov.classList.contains('open') && /^✅/.test(String(m))) { closeWizard(); const t = document.getElementById('savedRecordsTableBody'); if (t) setTimeout(() => t.scrollIntoView({ behavior: 'smooth', block: 'center' }), 60); } };
 })();
 </script>
 </body>
