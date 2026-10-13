@@ -368,6 +368,7 @@ function setStatus(txt, cls) { const s = $('status'); s.textContent = txt; s.cla
 function loadLocal() {
   try {
     const req = indexedDB.open('Health411OfflineDB');
+    req.onupgradeneeded = e => e.target.transaction.abort();   // never create an empty DB (it would block the portal's own store)
     req.onsuccess = e => {
       const db = e.target.result;
       if (!db.objectStoreNames.contains('patient_records')) { setStatus('No data found', 'err'); return; }
