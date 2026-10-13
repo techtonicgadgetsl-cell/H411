@@ -2211,12 +2211,25 @@ Required Output Structure:
     window.openWizard = function (i) { ov.classList.add('open'); document.body.style.overflow = 'hidden'; maxSeen = 0; show(i || 0); };
     window.closeWizard = function () { ov.classList.remove('open'); document.body.style.overflow = ''; };
     window.wizGo = function (d) { show(cur + d); };
-    window.wizSave = function () { saveRecordOfflineFirst(); };
+    window.wizSave = function () {
+        const el = document.getElementById('inPhiRefNo');
+        if (el && !el.value.trim()) {   // Ref No missing: jump to the step that has it, then show the warning
+            const i = steps.indexOf(el.closest('.wiz-step'));
+            if (i >= 0) { show(i); setTimeout(saveRecordOfflineFirst, 80); return; }
+        }
+        saveRecordOfflineFirst();
+    };
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && ov.classList.contains('open') && !document.querySelector('.modal-overlay[style*="flex"]')) closeWizard(); });
 
-    /* New report: if a saved report was being edited, start from a clean form first */
+    /* New report: always start from a blank form (otherwise the old Ref No is still there and the save is treated as a duplicate / overwrite) */
     window.newReportEntry = function () {
-        if (activeEditingRecordId) {
+        const ref = (document.getElementById('inPhiRefNo').value || '').trim();
+        const stale = !!(activeEditingRecordId || sessionStorage.getItem('h411_active_edit_id'));
+        let blank = true;
+        if (ref || stale) {
+            blank = confirm('Start a NEW blank report?\n\nOK = clear the form and start fresh (saved reports are not deleted)\nCancel = keep the current form data and continue');
+        }
+        if (blank) {
             document.getElementById('healthPortalForm').reset();
             localStorage.removeItem('h411_form_data');
             activeEditingRecordId = null; sessionStorage.removeItem('h411_active_edit_id');
