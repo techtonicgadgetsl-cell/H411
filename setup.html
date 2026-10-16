@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Health 411 - Area Setup</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; background: #f1f5f9; margin: 0; color: #0f172a; }
+  header { background: #0f172a; color: #fff; padding: 14px 18px; }
+  header h1 { margin: 0; font-size: 18px; } header p { margin: 4px 0 0; font-size: 13px; color: #cbd5e1; }
+  main { max-width: 900px; margin: 0 auto; padding: 14px; }
+  .card { background: #fff; border-radius: 10px; box-shadow: 0 1px 6px rgba(0,0,0,.12); padding: 16px; margin-bottom: 14px; }
+  .card h2 { margin: 0 0 4px; font-size: 16px; color: #1d4ed8; }
+  .card .sub { font-size: 13px; color: #64748b; margin: 0 0 12px; }
+  label { display: block; font-size: 13px; font-weight: bold; margin: 10px 0 4px; }
+  input[type=text], select, textarea { width: 100%; padding: 9px; font-size: 14px; border: 1px solid #94a3b8; border-radius: 6px; background: #f8fafc; }
+  textarea { height: 150px; font-family: 'Courier New', monospace; font-size: 12px; }
+  .ok { color: #166534; font-weight: bold; font-size: 13px; margin-top: 6px; } .bad { color: #b91c1c; font-weight: bold; font-size: 13px; margin-top: 6px; }
+  .btn { border: 0; border-radius: 6px; padding: 11px 18px; font-size: 14px; font-weight: bold; cursor: pointer; color: #fff; background: #2563eb; }
+  .btn.green { background: #16a34a; } .btn:disabled { opacity: .4; cursor: not-allowed; }
+  details { margin-top: 10px; font-size: 13px; background: #eff6ff; border-radius: 6px; padding: 8px 12px; } details ol { margin: 8px 0 4px 18px; padding: 0; line-height: 1.6; }
+  #prevMap { height: 340px; border-radius: 8px; margin-top: 10px; display: none; }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
+  th, td { border: 1px solid #cbd5e1; padding: 5px 7px; text-align: left; } th { background: #e2e8f0; }
+  td input[type=text] { padding: 6px; font-size: 13px; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; } @media (max-width: 640px) { .row2 { grid-template-columns: 1fr; } }
+  pre { background: #0f172a; color: #e2e8f0; padding: 10px; border-radius: 6px; font-size: 12px; overflow-x: auto; }
+</style>
+</head>
+<body>
+<header>
+  <h1>⚙️ Health 411 — Area Setup</h1>
+  <p>Fill in the 4 steps, then save the two files it creates (<b>config.js</b> and <b>area-geo.js</b>) in the same folder as index.html.</p>
+</header>
+<main>
+
+  <div class="card">
+    <h2>Step 1 — Your area</h2>
+    <p class="sub">These are shown on the pages and pre-filled in the report form (you can leave the last two empty).</p>
+    <label for="areaName">PHI area name *</label>
+    <input type="text" id="areaName" placeholder="e.g. Pottapitiya">
+    <div class="row2">
+      <div><label for="mohArea">M.O.H. area (optional)</label><input type="text" id="mohArea" placeholder="e.g. Yatinuwara"></div>
+      <div><label for="phiRange">P.H.I. range (optional)</label><input type="text" id="phiRange" placeholder="e.g. Range 04"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Step 2 — Your own database (Firebase)</h2>
+    <p class="sub">Every PHI needs their <b>own</b> Firebase project, so your records stay separate from everybody else's.</p>
+    <details>
+      <summary><b>How to get the Firebase config</b></summary>
+      <ol>
+        <li>Open <b>console.firebase.google.com</b> → <b>Add project</b> (any name, Analytics not needed).</li>
+        <li>Left menu → <b>Build → Realtime Database → Create database</b> (choose Singapore, start in <i>locked mode</i>).</li>
+        <li>Project settings (⚙️) → <b>Your apps → Web (&lt;/&gt;)</b> → register app → copy the <code>firebaseConfig = {…}</code> block.</li>
+        <li>Paste it below. It must contain <b>databaseURL</b> (shown only after the Realtime Database is created; if missing, copy it from the Realtime Database page).</li>
+      </ol>
+    </details>
+    <label for="fbText">Paste the firebaseConfig here</label>
+    <textarea id="fbText" placeholder='const firebaseConfig = {
+  apiKey: "...",
+  authDomain: "...",
+  databaseURL: "https://....firebasedatabase.app",
+  projectId: "...",
+  storageBucket: "...",
+  messagingSenderId: "...",
+  appId: "..."
+};'></textarea>
+    <div id="fbMsg"></div>
+    <details>
+      <summary><b>Database rules (important — patient data!)</b></summary>
+      <ol>
+        <li>Realtime Database → <b>Rules</b>. Do <b>not</b> leave it open to everyone for long; open rules let anybody who has your link read and change patient data.</li>
+        <li>Do not share your page link publicly. Share it only with your own staff.</li>
+      </ol>
+    </details>
+  </div>
+
+  <div class="card">
+    <h2>Step 3 — Your area boundary (GeoJSON)</h2>
+    <p class="sub">Choose the GeoJSON file of your area (GN divisions as polygons). The coordinate system is detected automatically and converted to GPS (WGS84).</p>
+    <input type="file" id="geoFile" accept=".geojson,.json,application/json">
+    <div class="row2">
+      <div><label for="crsSel">Coordinate system</label>
+        <select id="crsSel">
+          <option value="auto">Auto-detect (recommended)</option>
+          <option value="wgs84">Already GPS lat/lng (WGS84)</option>
+          <option value="k34">Sri Lanka Grid – Kandawala (EPSG:5234)</option>
+          <option value="s99">Sri Lanka Grid 1999 – SLD99 (EPSG:5235)</option>
+        </select></div>
+      <div><label for="nameProp">Which property is the GN name?</label><select id="nameProp"></select></div>
+    </div>
+    <div id="geoMsg"></div>
+    <div id="prevMap"></div>
+    <p class="sub" style="margin-top:8px">Check the preview: the red outlines should sit on your area. If they are in the wrong place, change the coordinate system above.</p>
+  </div>
+
+  <div class="card">
+    <h2>Step 4 — GN divisions &amp; PHM areas</h2>
+    <p class="sub">Tick the GN divisions that belong to your area and type the PHM area of each (it is filled automatically in the report form). Names can be edited.</p>
+    <div class="row2">
+      <div><label for="phmAll">Set the same PHM area for all ticked rows</label>
+        <div style="display:flex;gap:6px"><input type="text" id="phmAll" placeholder="PHM area name"><button class="btn" type="button" id="phmAllBtn" style="padding:8px 12px">Apply</button></div></div>
+    </div>
+    <div style="overflow-x:auto"><table id="gnTable"><thead><tr><th style="width:40px">Use</th><th>GN division name</th><th>PHM area</th></tr></thead><tbody></tbody></table></div>
+    <div id="gnEmpty" class="sub">Load a GeoJSON file in Step 3 first.</div>
+    <datalist id="phmList"></datalist>
+  </div>
+
+  <div class="card">
+    <h2>Step 5 — Create the files</h2>
+    <div id="checkMsg"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
+      <button class="btn green" id="dlConfig" disabled>⬇ Save config.js</button>
+      <button class="btn green" id="dlGeo" disabled>⬇ Save area-geo.js</button>
+    </div>
+    <p class="sub" style="margin-top:12px">Put both files in the <b>same folder</b> as <b>index.html</b>, <b>disease-map.html</b>, <b>form-page1.jpg</b> and <b>form-page2.jpg</b>, then open <b>index.html</b>.</p>
+  </div>
+
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.2/proj4.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ---------- coordinate systems (checked against the official EPSG definitions) ---------- */
+const CRS = {
+  k34: '+proj=tmerc +lat_0=7.00048027777778 +lon_0=80.7717111111111 +k=0.9999238418 +x_0=200000 +y_0=200000 +ellps=evrst30 +towgs84=-97,787,86,0,0,0,0 +units=m +no_defs',
+  s99: '+proj=tmerc +lat_0=7.00047152777778 +lon_0=80.7717130833333 +k=0.9999238418 +x_0=500000 +y_0=500000 +ellps=evrst30 +towgs84=-0.293,766.95,87.713,0.195704,1.695068,3.473016,-0.039338 +units=m +no_defs'
+};
+const inSL = (lon, lat) => lon > 79.3 && lon < 82.2 && lat > 5.6 && lat < 10.1;
+
+function firstCoord(geom) { let c = geom.coordinates; while (Array.isArray(c[0])) c = c[0]; return c; }
+function detectCrs(fc) {
+  const f = fc.features.find(x => x.geometry);
+  if (!f) return null;
+  const [x, y] = firstCoord(f.geometry);
+  if (inSL(x, y)) return 'wgs84';
+  for (const k of ['k34', 's99']) { const [lon, lat] = proj4(CRS[k], 'WGS84', [x, y]); if (inSL(lon, lat)) return k; }
+  return null;
+}
+function convertCoords(c, tf) {
+  if (typeof c[0] === 'number') { const p = tf(c[0], c[1]); return [Math.round(p[0] * 1e5) / 1e5, Math.round(p[1] * 1e5) / 1e5]; }
+  return c.map(i => convertCoords(i, tf));
+}
+function convertGeo(fc, crs) {
+  const tf = crs === 'wgs84' ? (x, y) => [x, y] : (x, y) => proj4(CRS[crs], 'WGS84', [x, y]);
+  return fc.features.filter(f => f.geometry && /Polygon/.test(f.geometry.type)).map(f => ({
+    props: f.properties || {}, type: f.geometry.type, coordinates: convertCoords(f.geometry.coordinates, tf)
+  }));
+}
+
+/* ---------- Firebase config parser ---------- */
+function parseFirebase(text) {
+  const o = {};
+  (text || '').replace(/([A-Za-z]+)\s*:\s*["']([^"']+)["']/g, (m, k, v) => { o[k] = v; return m; });
+  const need = ['apiKey', 'projectId', 'databaseURL'];
+  const missing = need.filter(k => !o[k]);
+  return { cfg: o, missing };
+}
+
+/* ---------- state ---------- */
+let converted = [];          // [{props,type,coordinates}]
+let rawFc = null, usedCrs = null, prevMap = null, prevLayer = null;
+
+function guessNameProp(keys) {
+  const pref = ['GND_N', 'GN_NAME', 'GND_NAME', 'GN_DIV', 'GN', 'GND', 'NAME', 'Name', 'name', 'ADM4_EN', 'ADM3_EN'];
+  return pref.find(k => keys.includes(k)) || keys[0] || '';
+}
+
+function refreshFirebase() {
+  const { cfg, missing } = parseFirebase($('fbText').value);
+  const el = $('fbMsg');
+  if (!$('fbText').value.trim()) { el.innerHTML = ''; return null; }
+  if (missing.length) { el.innerHTML = `<div class="bad">✖ Missing: ${missing.join(', ')}. ${missing.includes('databaseURL') ? 'Create the Realtime Database first, then copy its URL.' : ''}</div>`; return null; }
+  if (!/^https:\/\/.+\.(firebasedatabase\.app|firebaseio\.com)/.test(cfg.databaseURL)) { el.innerHTML = '<div class="bad">✖ databaseURL does not look right (should end with firebasedatabase.app or firebaseio.com).</div>'; return null; }
+  el.innerHTML = `<div class="ok">✔ Firebase project: ${esc(cfg.projectId)}</div>`;
+  return cfg;
+}
+
+function loadGeo(text) {
+  try { rawFc = JSON.parse(text); } catch (e) { $('geoMsg').innerHTML = '<div class="bad">✖ This is not a valid GeoJSON / JSON file.</div>'; return; }
+  if (!rawFc || !Array.isArray(rawFc.features)) { $('geoMsg').innerHTML = '<div class="bad">✖ No "features" found. Please choose a GeoJSON FeatureCollection with polygons.</div>'; rawFc = null; return; }
+  const keys = Object.keys((rawFc.features.find(f => f.properties) || {}).properties || {});
+  $('nameProp').innerHTML = keys.map(k => `<option value="${esc(k)}">${esc(k)}</option>`).join('');
+  $('nameProp').value = guessNameProp(keys);
+  rebuildGeo();
+}
+
+function rebuildGeo() {
+  if (!rawFc) return;
+  const sel = $('crsSel').value;
+  usedCrs = sel === 'auto' ? detectCrs(rawFc) : sel;
+  if (!usedCrs) { $('geoMsg').innerHTML = '<div class="bad">✖ Could not place these coordinates inside Sri Lanka. Choose the coordinate system manually.</div>'; converted = []; renderTable(); drawPreview(); return; }
+  converted = convertGeo(rawFc, usedCrs);
+  const nice = { wgs84: 'GPS lat/lng (WGS84) – no conversion needed', k34: 'Sri Lanka Grid Kandawala (EPSG:5234) → converted to WGS84', s99: 'SLD99 Sri Lanka Grid 1999 (EPSG:5235) → converted to WGS84' }[usedCrs];
+  $('geoMsg').innerHTML = `<div class="ok">✔ ${converted.length} polygon(s) loaded. Detected: ${nice}</div>`;
+  renderTable(); drawPreview();
+}
+
+function drawPreview() {
+  const box = $('prevMap');
+  if (!window.L || !converted.length) { box.style.display = 'none'; return; }
+  box.style.display = 'block';
+  if (!prevMap) {
+    prevMap = L.map(box);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri', maxZoom: 19 }).addTo(prevMap);
+  }
+  if (prevLayer) prevMap.removeLayer(prevLayer);
+  prevLayer = L.geoJSON({ type: 'FeatureCollection', features: converted.map(c => ({ type: 'Feature', properties: c.props, geometry: { type: c.type, coordinates: c.coordinates } })) },
+    { style: { color: '#dc2626', weight: 2, fillOpacity: 0.08 } }).addTo(prevMap);
+  prevMap.invalidateSize(); prevMap.fitBounds(prevLayer.getBounds());
+}
+
+function renderTable() {
+  const tb = document.querySelector('#gnTable tbody'), prop = $('nameProp').value;
+  $('gnEmpty').style.display = converted.length ? 'none' : 'block';
+  tb.innerHTML = converted.map((c, i) => `<tr><td><input type="checkbox" class="use" data-i="${i}" checked></td>`
+    + `<td><input type="text" class="gnName" data-i="${i}" value="${esc(String(c.props[prop] == null ? '' : c.props[prop]).trim())}"></td>`
+    + `<td><input type="text" class="phm" data-i="${i}" list="phmList" placeholder="PHM area"></td></tr>`).join('') ;
+  refreshCheck();
+}
+
+function collect() {
+  const rows = [];
+  document.querySelectorAll('#gnTable tbody tr').forEach(tr => {
+    const i = +tr.querySelector('.use').dataset.i;
+    rows.push({ i, use: tr.querySelector('.use').checked, name: tr.querySelector('.gnName').value.trim(), phm: tr.querySelector('.phm').value.trim() });
+  });
+  return rows;
+}
+
+function buildFiles() {
+  const fb = refreshFirebase(), rows = collect().filter(r => r.use);
+  const errs = [];
+  if (!$('areaName').value.trim()) errs.push('Enter the PHI area name (Step 1).');
+  if (!fb) errs.push('Paste a valid Firebase config (Step 2).');
+  if (!converted.length) errs.push('Load the GeoJSON file (Step 3).');
+  else if (!rows.length) errs.push('Tick at least one GN division (Step 4).');
+  else {
+    if (rows.some(r => !r.name)) errs.push('Every ticked GN division needs a name.');
+    const names = rows.map(r => r.name.toLowerCase());
+    if (new Set(names).size !== names.length) errs.push('Two GN divisions have the same name – make them different.');
+    if (rows.some(r => !r.phm)) errs.push('Type a PHM area for every ticked GN division (Step 4).');
+  }
+  if (errs.length) return { errs };
+  const cfg = {
+    areaName: $('areaName').value.trim(),
+    defaults: { phiRange: $('phiRange').value.trim(), mohArea: $('mohArea').value.trim() },
+    firebase: fb,
+    gnAreas: rows.map(r => r.name),
+    phmMapping: Object.fromEntries(rows.map(r => [r.name, r.phm]))
+  };
+  const geo = { type: 'FeatureCollection', features: rows.map(r => ({ type: 'Feature', properties: { GND_N: r.name }, geometry: { type: converted[r.i].type, coordinates: converted[r.i].coordinates } })) };
+  const configJs = '/* Health 411 - area settings (created by setup.html). Replace this file to change the area. */\nwindow.APP_CONFIG = ' + JSON.stringify(cfg, null, 2) + ';\n';
+  const geoJs = '/* Area boundary, WGS84 lat/lng GeoJSON (created by setup.html). */\nwindow.AREA_GEOJSON = ' + JSON.stringify(geo) + ';\n';
+  return { errs: [], configJs, geoJs, cfg };
+}
+
+function refreshCheck() {
+  // PHM suggestions
+  const dl = document.getElementById('phmList');
+  if (dl) dl.innerHTML = [...new Set(collect().map(r => r.phm).filter(Boolean))].map(v => `<option value="${esc(v)}">`).join('');
+  const r = buildFiles();
+  $('dlConfig').disabled = $('dlGeo').disabled = r.errs.length > 0;
+  $('checkMsg').innerHTML = r.errs.length ? r.errs.map(e => `<div class="bad">• ${esc(e)}</div>`).join('') : `<div class="ok">✔ Everything is ready: ${r.cfg.gnAreas.length} GN divisions, area "${esc(r.cfg.areaName)}".</div>`;
+}
+
+function download(name, text) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type: 'text/javascript' }));
+  a.download = name; document.body.appendChild(a); a.click(); a.remove();
+}
+
+$('fbText').addEventListener('input', () => { refreshFirebase(); refreshCheck(); });
+['areaName', 'mohArea', 'phiRange'].forEach(id => $(id).addEventListener('input', refreshCheck));
+$('geoFile').addEventListener('change', e => { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => loadGeo(r.result); r.readAsText(f); });
+$('crsSel').addEventListener('change', rebuildGeo);
+$('nameProp').addEventListener('change', renderTable);
+document.querySelector('#gnTable').addEventListener('input', refreshCheck);
+document.querySelector('#gnTable').addEventListener('change', refreshCheck);
+$('phmAllBtn').addEventListener('click', () => {
+  const v = $('phmAll').value.trim(); if (!v) return;
+  document.querySelectorAll('#gnTable tbody tr').forEach(tr => { if (tr.querySelector('.use').checked) tr.querySelector('.phm').value = v; });
+  refreshCheck();
+});
+$('dlConfig').addEventListener('click', () => { const r = buildFiles(); if (!r.errs.length) download('config.js', r.configJs); });
+$('dlGeo').addEventListener('click', () => { const r = buildFiles(); if (!r.errs.length) download('area-geo.js', r.geoJs); });
+refreshCheck();
+window.__setup = { detectCrs, convertGeo, parseFirebase, loadGeo, buildFiles };
+</script>
+</body>
+</html>
