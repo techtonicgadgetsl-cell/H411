@@ -15,6 +15,7 @@ window.APP_CONFIG = {
     "messagingSenderId": "1096863942583",
     "appId": "1:1096863942583:web:f814fe2bb72fd0a3f30a32"
   },
+  "requireLogin": true,
   "gnAreas": [
     "Amunupura",
     "Madiligama",

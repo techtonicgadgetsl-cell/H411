@@ -70,13 +70,28 @@
   appId: "..."
 };'></textarea>
     <div id="fbMsg"></div>
-    <details>
-      <summary><b>Database rules (important — patient data!)</b></summary>
+  </div>
+
+  <div class="card">
+    <h2>Step 2b — Who can log in (patient data security)</h2>
+    <p class="sub">Only these e-mail addresses can read or change patient records. Everybody else is refused by the database itself, even if they find your page link.</p>
+    <label style="display:flex;gap:8px;align-items:center;font-weight:bold"><input type="checkbox" id="requireLogin" checked> Require login (strongly recommended)</label>
+    <label for="staffEmails">Staff e-mail addresses (one per line, small letters)</label>
+    <textarea id="staffEmails" style="height:90px" placeholder="you@gmail.com&#10;colleague@gmail.com"></textarea>
+    <div id="staffMsg"></div>
+    <details open>
+      <summary><b>Do this once in the Firebase console</b></summary>
       <ol>
-        <li>Realtime Database → <b>Rules</b>. Do <b>not</b> leave it open to everyone for long; open rules let anybody who has your link read and change patient data.</li>
-        <li>Do not share your page link publicly. Share it only with your own staff.</li>
+        <li><b>Build → Authentication → Get started → Sign-in method → Email/Password → Enable.</b></li>
+        <li><b>Authentication → Users → Add user</b>: create an account (e-mail + password) for each address above. Do this <u>before</u> publishing the rules.</li>
+        <li><b>Authentication → Settings → User actions</b>: if you see <i>Enable create (sign-up)</i>, turn it <b>off</b>, so nobody can register themselves.</li>
+        <li><b>Realtime Database → Rules</b>: paste the rules below and press <b>Publish</b>.</li>
+        <li>When a person leaves, delete the account <b>and</b> remove the e-mail from the rules.</li>
       </ol>
     </details>
+    <label>Rules to paste in Firebase → Realtime Database → Rules</label>
+    <pre id="rulesOut">Type the staff e-mail addresses above.</pre>
+    <button class="btn" type="button" id="copyRules">Copy rules</button>
   </div>
 
   <div class="card">
@@ -164,6 +179,27 @@ function parseFirebase(text) {
   return { cfg: o, missing };
 }
 
+
+/* ---------- staff e-mails -> database rules ---------- */
+const EMAIL_RE = /^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$/;
+function staffList() {
+  const raw = $('staffEmails').value.split(/[\n,; ]+/).map(x => x.trim().toLowerCase()).filter(Boolean);
+  return { ok: [...new Set(raw.filter(e => EMAIL_RE.test(e)))], bad: raw.filter(e => !EMAIL_RE.test(e)) };
+}
+function rulesFor(emails) {
+  const cond = 'auth != null && (' + emails.map(e => "auth.token.email == '" + e + "'").join(' || ') + ')';
+  return JSON.stringify({ rules: { '.read': false, '.write': false, health_reports: { '.read': cond, '.write': cond } } }, null, 2);
+}
+function refreshRules() {
+  const { ok, bad } = staffList(), on = $('requireLogin').checked;
+  $('staffMsg').innerHTML = bad.length ? `<div class="bad">✖ Not a valid e-mail: ${esc(bad.join(', '))}</div>` : (ok.length ? `<div class="ok">✔ ${ok.length} staff account(s)</div>` : '');
+  $('rulesOut').textContent = !on ? 'Login is switched off. Your database must NOT be left open: anybody with the link could read and change patient data.'
+    : ok.length ? rulesFor(ok) : 'Type the staff e-mail addresses above.';
+}
+$('staffEmails').addEventListener('input', () => { refreshRules(); refreshCheck(); });
+$('requireLogin').addEventListener('change', () => { refreshRules(); refreshCheck(); });
+$('copyRules').addEventListener('click', () => { const t = $('rulesOut').textContent; if (navigator.clipboard) navigator.clipboard.writeText(t); });
+
 /* ---------- state ---------- */
 let converted = [];          // [{props,type,coordinates}]
 let rawFc = null, usedCrs = null, prevMap = null, prevLayer = null;
@@ -240,6 +276,8 @@ function buildFiles() {
   const errs = [];
   if (!$('areaName').value.trim()) errs.push('Enter the PHI area name (Step 1).');
   if (!fb) errs.push('Paste a valid Firebase config (Step 2).');
+  if ($('requireLogin').checked && !staffList().ok.length) errs.push('Add at least one staff e-mail address (Step 2b), or untick "Require login".');
+  if (staffList().bad.length) errs.push('Fix the invalid e-mail address in Step 2b.');
   if (!converted.length) errs.push('Load the GeoJSON file (Step 3).');
   else if (!rows.length) errs.push('Tick at least one GN division (Step 4).');
   else {
@@ -253,6 +291,7 @@ function buildFiles() {
     areaName: $('areaName').value.trim(),
     defaults: { phiRange: $('phiRange').value.trim(), mohArea: $('mohArea').value.trim() },
     firebase: fb,
+    requireLogin: $('requireLogin').checked,
     gnAreas: rows.map(r => r.name),
     phmMapping: Object.fromEntries(rows.map(r => [r.name, r.phm]))
   };
@@ -292,7 +331,8 @@ $('phmAllBtn').addEventListener('click', () => {
 $('dlConfig').addEventListener('click', () => { const r = buildFiles(); if (!r.errs.length) download('config.js', r.configJs); });
 $('dlGeo').addEventListener('click', () => { const r = buildFiles(); if (!r.errs.length) download('area-geo.js', r.geoJs); });
 refreshCheck();
-window.__setup = { detectCrs, convertGeo, parseFirebase, loadGeo, buildFiles };
+refreshRules();
+window.__setup = { detectCrs, convertGeo, parseFirebase, loadGeo, buildFiles, rulesFor, staffList };
 </script>
 </body>
 </html>

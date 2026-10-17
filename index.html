@@ -19,10 +19,11 @@
     <!-- Firebase Compatibility SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script src="config.js"></script>   <!-- area settings: Firebase, GN list, PHM mapping (made by setup.html) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-    <script src="area-geo.js"></script>   <!-- area boundary (used by the map pin picker) -->
+    <script src="config.js"></script>   <!-- area settings: Firebase, GN list, PHM mapping (made by setup.html) -->
+    <script src="area-geo.js"></script>   <!-- area outline (optional; used by the location picker) -->
 
     <style>
         * { box-sizing: border-box; }
@@ -324,21 +325,6 @@
         .btn-map { background-color: #8b5cf6; color: white; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
         .btn-map:hover { background-color: #7c3aed; }
 
-        /* 🗺️ Map pin picker (blue dot + tap to place pin) */
-        #mapPickerModal { position: fixed; inset: 0; z-index: 100000; background: #0f172a; display: none; flex-direction: column; }
-        #mapPickerModal.open { display: flex; }
-        .mp-top { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #0f172a; color: #fff; font-weight: bold; font-size: 14px; }
-        .mp-top span { flex: 1; }
-        .mp-top button { border: 0; background: #334155; color: #fff; font-size: 14px; font-weight: bold; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
-        #mpMap { flex: 1; min-height: 0; background: #dbe4ee; }
-        .mp-bar { background: #fff; padding: 10px 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-        .mp-info { flex: 1 1 100%; font-size: 13px; color: #334155; line-height: 1.5; }
-        .mp-bar button { flex: 1 1 auto; padding: 12px 14px; border: 0; border-radius: 8px; font-weight: bold; font-size: 14px; color: #fff; cursor: pointer; }
-        .mp-me { position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; }
-        .mp-me i { position: relative; width: 18px; height: 18px; border-radius: 50%; background: #2563eb; border: 3px solid #fff; box-shadow: 0 0 5px rgba(0,0,0,.55); }
-        .mp-me i::after { content: ''; position: absolute; inset: -3px; border-radius: 50%; background: rgba(37,99,235,.5); animation: mpPulse 1.6s ease-out infinite; }
-        @keyframes mpPulse { 0% { transform: scale(1); opacity: .9; } 100% { transform: scale(3.4); opacity: 0; } }
-
         .btn-print { background-color: #0284c7; color: white; }
         .btn-print:hover { background-color: #0369a1; }
 
@@ -526,6 +512,30 @@
             .preview-panel { gap: 0 !important; }
         }
     
+
+
+        /* ===== LOGIN ===== */
+        .lg-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#0f172a; z-index:9800; align-items:center; justify-content:center; padding:14px; }
+        .lg-overlay.open { display:flex; }
+        .lg-card { background:#fff; width:min(380px,100%); border-radius:12px; padding:22px; box-shadow:0 12px 40px rgba(0,0,0,.5); }
+        .lg-card h3 { margin:0 0 6px; font-size:19px; } .lg-card p { margin:0 0 14px; font-size:13px; color:#64748b; }
+        .lg-card input { width:100%; padding:11px; font-size:15px; border:1px solid #94a3b8; border-radius:6px; margin-bottom:10px; }
+        .lg-card button { width:100%; padding:12px; font-size:15px; font-weight:bold; border:0; border-radius:6px; background:#2563eb; color:#fff; cursor:pointer; }
+        .lg-card button:disabled { opacity:.5; } #lgMsg { margin-top:10px; font-size:13px; font-weight:bold; color:#b91c1c; } .lg-card a { display:block; margin-top:12px; font-size:13px; text-align:center; }
+        /* ===== LOCATION PICKER ===== */
+        .gp-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,.8); z-index:9500; align-items:center; justify-content:center; padding:10px; }
+        .gp-overlay.open { display:flex; }
+        .gp-card { background:#fff; width:min(960px,100%); height:min(94vh,760px); border-radius:12px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 12px 40px rgba(0,0,0,.45); }
+        .gp-head { background:#0f172a; color:#fff; padding:10px 14px; display:flex; align-items:center; gap:10px; } .gp-head b { flex:1; font-size:15px; }
+        .gp-x { border:0; background:rgba(255,255,255,.2); color:#fff; width:30px; height:30px; border-radius:50%; cursor:pointer; font-size:15px; }
+        .gp-info { padding:8px 12px; font-size:13px; background:#eff6ff; border-bottom:1px solid #dbeafe; line-height:1.5; }
+        #gpMap { flex:1; min-height:200px; background:#dbe4ee; }
+        .gp-foot { padding:10px 12px; display:flex; gap:10px; background:#f1f5f9; border-top:1px solid #e2e8f0; } .gp-foot .btn { flex:1; }
+        .gp-foot .btn:disabled { opacity:.4; cursor:not-allowed; }
+        .gp-me { width:18px; height:18px; border-radius:50%; background:#2563eb; border:3px solid #fff; box-shadow:0 0 4px rgba(0,0,0,.6); position:relative; }
+        .gp-me:after { content:''; position:absolute; left:-3px; top:-3px; width:18px; height:18px; border-radius:50%; border:2px solid #2563eb; animation:gpPulse 1.6s ease-out infinite; }
+        @keyframes gpPulse { 0% { transform:scale(1); opacity:.9; } 100% { transform:scale(3.4); opacity:0; } }
+        .gp-pin { font-size:30px; line-height:30px; filter:drop-shadow(0 2px 2px rgba(0,0,0,.6)); }
         /* ===== ENTRY WIZARD POPUP ===== */
         .wiz-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,.75); z-index:9000; align-items:center; justify-content:center; padding:12px; }
         .wiz-overlay.open { display:flex; }
@@ -651,6 +661,7 @@
                 <span style="display:inline-flex; gap:8px; align-items:center; flex-wrap:wrap;">
                     <button type="button" class="btn btn-update" onclick="newReportEntry()" style="padding:6px 12px; border-radius:6px; font-size:13px; font-weight:bold;">➕ New Report</button>
                     <a href="disease-map.html" target="_blank" class="btn btn-map" style="padding:6px 12px; border-radius:6px; font-size:13px; font-weight:bold;">🗺️ Disease Map</a>
+                    <button type="button" id="btnSignOut" class="btn btn-reset" style="display:none; padding:6px 12px; border-radius:6px; font-size:13px; font-weight:bold;"></button>
                     <span id="networkStatusBadge" class="status-badge status-online">🟢 Online Mode</span>
                 </span>
             </div>
@@ -777,8 +788,8 @@
                 <div class="form-grid">
                     <div class="form-group" style="grid-column: span 4; display: flex; flex-direction: row; gap: 10px; flex-wrap: wrap;">
                         <button type="button" class="btn btn-gps" onclick="fetchGPS()">📍 Auto Pick Current GPS</button>
-                        <button type="button" class="btn btn-map" onclick="openMapPicker()">🗺️ Pick on Map (blue dot / tap)</button>
-                        <a id="btnMapPinLink" href="https://maps.google.com" target="_blank" class="btn btn-map" style="background:#475569;">↗ View in Google Maps</a>
+                        <button type="button" class="btn btn-update" onclick="openGpsPicker()">🎯 Pick on Map (tap exact spot)</button>
+                        <a id="btnMapPinLink" href="https://maps.google.com" target="_blank" class="btn btn-map">🗺️ Open Map Pin Selector</a>
                     </div>
                 </div>
 
@@ -1177,6 +1188,15 @@
         fbDb = firebase.database();
     } catch(e) { console.log("Firebase Init Notice:", e.message); }
 
+    /* ---- login: the database is only opened for signed-in staff (see rules in setup.html) ---- */
+    let fbAuth = null;
+    let fbUser = null;
+    if (fbDb) {
+        const wantLogin = !(APP && APP.requireLogin === false);
+        if (wantLogin && typeof firebase.auth === 'function') fbAuth = firebase.auth();
+        else fbUser = { open: true };      // login switched off in config.js
+    }
+
     let dbDB = null;
     let activeEditingRecordId = null;
     
@@ -1226,7 +1246,7 @@
     /* Upload reports that were saved offline / while the cloud was unreachable (synced:false) */
     let syncingPending = false;
     async function syncPendingToCloud() {
-        if (syncingPending || !fbDb || !navigator.onLine || !dbDB) return;
+        if (syncingPending || !fbDb || !fbUser || !navigator.onLine || !dbDB) return;
         syncingPending = true;
         try {
             const rows = await new Promise(res => {
@@ -1244,7 +1264,7 @@
     }
 
     function fetchCloudFirebaseRecords() {
-        if (!fbDb || !navigator.onLine) {
+        if (!fbDb || !fbUser || !navigator.onLine) {
             loadOfflineRecordsTable();
             return;
         }
@@ -1279,6 +1299,11 @@
                 if (inCloud) delete pendingLocal[r.id]; else allFetchedRecords.push(r);
             });
             filterAndRenderRecords();
+        }, (err) => {   // the database refused (not signed in / account not allowed in the rules)
+            firebaseListenerAttached = false;
+            console.log('Cloud read refused:', err && err.message);
+            loadOfflineRecordsTable();
+            if (err && /permission/i.test(err.message || err.code || '')) alert('🔒 This account is not allowed to open the cloud database.\nAsk the PHI / admin to add your email in the database rules (setup.html → Step 2b).');
         });
     }
 
@@ -1355,7 +1380,7 @@
         } catch (e) { console.log('IndexedDB save notice:', e.message); }
         upsertAndShow(formData);   // show the record in the table straight away
 
-        if (fbDb && navigator.onLine) {
+        if (fbDb && fbUser && navigator.onLine) {
             formData.synced = true;
             fbDb.ref('health_reports/' + recordId).set(formData).then(() => {
                 alert(wasEditing ? "✅ Record Updated in Cloud Database!" : "✅ Full Report Saved & Synced to Cloud!");
@@ -1495,7 +1520,7 @@
             return;
         }
 
-        if (fbDb && navigator.onLine) {
+        if (fbDb && fbUser && navigator.onLine) {
             fbDb.ref('health_reports/' + recordId).remove().then(() => {
                 alert("🗑️ Report deleted from Cloud Database!");
             }).catch(err => console.log("Cloud Delete Notice:", err));
@@ -1653,164 +1678,27 @@
         updatePrintForm();
     }
 
-    /* ---------- GPS helpers ---------- */
-    function gpsNotice(msg, color) {
-        const el = document.getElementById('gpsStatusNotice');
-        if (!el) return;
-        if (!msg) { el.style.display = 'none'; return; }
-        el.innerText = msg; el.style.color = color || '#dc2626'; el.style.display = 'block';
-    }
-    function gpsSet(lat, lng) {
-        document.getElementById('inGpsCoords').value = lat.toFixed(6) + ", " + lng.toFixed(6);
-        updatePrintForm();
-    }
-
-    /* Auto pick: do NOT trust the first fix (phones often give a coarse Wi-Fi/tower fix first).
-       Keep listening up to 15 s and keep the most accurate reading. */
     function fetchGPS() {
-        if (!navigator.geolocation) { gpsNotice("⚠️ Geolocation not supported on this browser. Use 'Pick on Map' or type coordinates.", '#dc2626'); return; }
-        gpsNotice("⏳ Getting GPS… stay outside / near a window (up to 15 s)", '#475569');
-        let best = null, done = false, wid = null, timer = null;
-        const finish = () => {
-            if (done) return; done = true;
-            navigator.geolocation.clearWatch(wid); clearTimeout(timer);
-            if (!best) { gpsNotice("⚠️ Could not get a GPS fix. Use 'Pick on Map' and tap the location.", '#dc2626'); return; }
-            gpsSet(best.latitude, best.longitude);
-            const a = Math.round(best.accuracy);
-            if (a <= 25) gpsNotice("✔ GPS picked (accuracy ±" + a + " m)", '#16a34a');
-            else gpsNotice("⚠️ Low accuracy (±" + a + " m). Please check with 'Pick on Map' and tap the exact house.", '#d97706');
+        const noticeEl = document.getElementById('gpsStatusNotice');
+        const say = (t, c) => { if (noticeEl) { noticeEl.innerText = t; noticeEl.style.color = c; noticeEl.style.display = 'block'; } };
+        if (!navigator.geolocation) { say('⚠️ Geolocation not supported on this browser. Type coordinates manually.', '#dc2626'); return; }
+        let best = null, id = null, timer = null, finished = false;
+        const done = () => {
+            if (finished) return; finished = true; clearTimeout(timer); navigator.geolocation.clearWatch(id);
+            if (!best) { say('⚠️ Could not get a GPS fix. Use "Pick on Map" or type the coordinates.', '#dc2626'); return; }
+            document.getElementById('inGpsCoords').value = best.coords.latitude.toFixed(6) + ', ' + best.coords.longitude.toFixed(6);
+            updatePrintForm();
+            const acc = Math.round(best.coords.accuracy);
+            if (acc <= 50) say('✔ GPS accuracy about ±' + acc + ' m', '#166534');
+            else say('⚠️ Weak GPS (±' + acc + ' m). Please check it with "Pick on Map" and tap the exact house.', '#b45309');
         };
-        wid = navigator.geolocation.watchPosition(pos => {
-            if (!best || pos.coords.accuracy < best.accuracy) best = pos.coords;
-            if (best.accuracy <= 15) finish();
-        }, err => {
-            if (done) return;
-            if (err.code === 1) { done = true; navigator.geolocation.clearWatch(wid); clearTimeout(timer); gpsNotice("⚠️ Location permission blocked. Allow location for this site, or use 'Pick on Map'.", '#dc2626'); }
-        }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
-        timer = setTimeout(finish, 15000);
-    }
-
-    /* ---------- Map pin picker: blue "you are here" dot + tap/drag to place the pin ---------- */
-    let mpMap = null, mpPin = null, mpMe = null, mpAcc = null, mpWatch = null, mpLast = null, mpAuto = true, mpBest = Infinity, mpArea = null;
-
-    function mpParse(v) {
-        const m = String(v || '').match(/-?\d+(?:\.\d+)?/g);
-        if (!m || m.length < 2) return null;
-        const a = parseFloat(m[0]), b = parseFloat(m[1]);
-        return (a > 5 && a < 11 && b > 79 && b < 83) ? L.latLng(a, b) : null;
-    }
-    function mpInRing(lng, lat, ring) {
-        let ins = false;
-        for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-            const xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
-            if (((yi > lat) !== (yj > lat)) && (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)) ins = !ins;
-        }
-        return ins;
-    }
-    function mpGnAt(ll) {   // which GN division of the PHI area contains this point (or null)
-        const fc = window.AREA_GEOJSON; if (!fc) return undefined;
-        for (const f of fc.features) {
-            const g = f.geometry, polys = g.type === 'Polygon' ? [g.coordinates] : g.coordinates;
-            for (const poly of polys) if (mpInRing(ll.lng, ll.lat, poly[0])) return f.properties.GND_N || 'GN';
-        }
-        return null;
-    }
-    function mpInfo() {
-        const el = document.getElementById('mpInfo'); if (!el) return;
-        let h = '';
-        if (mpPin) {
-            const ll = mpPin.getLatLng(), gn = mpGnAt(ll);
-            h += '📌 Pin: <b>' + ll.lat.toFixed(6) + ', ' + ll.lng.toFixed(6) + '</b>';
-            if (gn) h += ' · GN: <b>' + gn + '</b>';
-            else if (gn === null) h += ' · <span style="color:#d97706;font-weight:bold">⚠️ outside your PHI area</span>';
-            h += '<br>';
-        } else h += '👆 Tap the map to place the pin.<br>';
-        if (mpLast) {
-            const a = Math.round(mpLast.acc), c = a <= 20 ? '#16a34a' : a <= 50 ? '#d97706' : '#dc2626';
-            h += '🔵 Your location: <b style="color:' + c + '">±' + a + ' m</b>' + (a > 50 ? ' (weak signal – tap the correct spot)' : '') + (mpAuto && mpPin ? ' · pin follows you until you tap the map' : '');
-        } else h += '🔵 Looking for your location…';
-        el.innerHTML = h;
-    }
-    function mpSetPin(ll, manual) {
-        if (manual) mpAuto = false;
-        if (!mpPin) {
-            mpPin = L.marker(ll, { draggable: true, autoPan: true }).addTo(mpMap);
-            mpPin.on('dragstart', () => { mpAuto = false; });
-            mpPin.on('dragend', mpInfo);
-        } else mpPin.setLatLng(ll);
-        mpInfo();
-    }
-    function mpStartWatch() {
-        if (!navigator.geolocation || mpWatch != null) return;
-        mpWatch = navigator.geolocation.watchPosition(pos => {
-            const ll = L.latLng(pos.coords.latitude, pos.coords.longitude), acc = pos.coords.accuracy, first = !mpMe;
-            mpLast = { ll, acc };
-            if (first) {
-                mpMe = L.marker(ll, { zIndexOffset: 1000, keyboard: false, icon: L.divIcon({ className: '', html: '<div class="mp-me"><i></i></div>', iconSize: [36, 36], iconAnchor: [18, 18] }) }).addTo(mpMap);
-                mpMe.bindTooltip('Tap = use my location', { direction: 'top', offset: [0, -14] });
-                mpMe.on('click', () => { mpSetPin(mpLast.ll, true); });
-                mpAcc = L.circle(ll, { radius: acc, interactive: false, color: '#2563eb', weight: 1, fillColor: '#2563eb', fillOpacity: 0.12 }).addTo(mpMap);
-            } else { mpMe.setLatLng(ll); mpAcc.setLatLng(ll).setRadius(acc); }
-            // pin follows the blue dot (only while the user has not touched the map, and only to better fixes)
-            if (mpAuto && (!mpPin || acc <= mpBest)) { mpBest = Math.min(mpBest, acc); mpSetPin(ll, false); }
-            if (first && mpAuto) mpMap.setView(ll, 18);
-            mpInfo();
-        }, err => {
-            const el = document.getElementById('mpInfo');
-            if (err.code === 1 && el) el.innerHTML = '⚠️ Location permission blocked – allow location for this site, or just <b>tap the map</b> to place the pin.';
-        }, { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 });
-    }
-    function mpStopWatch() {
-        if (mpWatch != null) navigator.geolocation.clearWatch(mpWatch);
-        mpWatch = null;
-        if (mpMe) { mpMap.removeLayer(mpMe); mpMe = null; }
-        if (mpAcc) { mpMap.removeLayer(mpAcc); mpAcc = null; }
-        mpLast = null;
-    }
-    function openMapPicker() {
-        if (!window.L) { alert('The map could not load (no internet). Type the GPS coordinates instead.'); return; }
-        const modal = document.getElementById('mapPickerModal');
-        modal.classList.add('open');
-        if (!mpMap) {
-            mpMap = L.map('mpMap', { zoomControl: true });
-            const esri = (n, o) => L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/' + n + '/MapServer/tile/{z}/{y}/{x}', Object.assign({ attribution: 'Tiles &copy; Esri', maxZoom: 19 }, o || {}));
-            const street = esri('World_Street_Map');
-            const hybrid = L.layerGroup([esri('World_Imagery', { maxNativeZoom: 18 }), esri('Reference/World_Transportation', { maxNativeZoom: 18 }), esri('Reference/World_Boundaries_and_Places', { maxNativeZoom: 18 })]);
-            const bases = { '🛣️ Street': street, '🛰️ Satellite': hybrid };
-            let saved = '🛣️ Street'; try { saved = localStorage.getItem('mp_base') || saved; } catch (e) {}
-            (bases[saved] || street).addTo(mpMap);
-            L.control.layers(bases, null, { position: 'topright', collapsed: false }).addTo(mpMap);
-            mpMap.on('baselayerchange', e => { try { localStorage.setItem('mp_base', e.name); } catch (x) {} });
-            if (window.AREA_GEOJSON && window.AREA_GEOJSON.features.length) {
-                mpArea = L.geoJSON(window.AREA_GEOJSON, { interactive: false, style: { color: '#dc2626', weight: 1.5, fillOpacity: 0.03, dashArray: '4 4' } }).addTo(mpMap);
-            }
-            mpMap.on('click', e => mpSetPin(e.latlng, true));   // tap anywhere = move the pin there
-        }
-        setTimeout(() => {
-            mpMap.invalidateSize();
-            if (mpPin) { mpMap.removeLayer(mpPin); mpPin = null; }
-            mpAuto = true; mpBest = Infinity;
-            const ex = mpParse(document.getElementById('inGpsCoords').value);
-            if (ex) { mpAuto = false; mpSetPin(ex, false); mpMap.setView(ex, 18); }
-            else if (mpArea && mpArea.getBounds().isValid()) { mpMap.fitBounds(mpArea.getBounds()); mpInfo(); }
-            else { mpMap.setView([7.8, 80.7], 8); mpInfo(); }
-            mpStartWatch();
-        }, 60);
-    }
-    function mpMyLocation() {
-        if (mpLast) { mpMap.setView(mpLast.ll, Math.max(mpMap.getZoom(), 18)); mpSetPin(mpLast.ll, true); }
-        else { const el = document.getElementById('mpInfo'); if (el) el.innerHTML = '🔵 Still looking for your location… or tap the map.'; }
-    }
-    function closeMapPicker() {
-        mpStopWatch();
-        document.getElementById('mapPickerModal').classList.remove('open');
-    }
-    function confirmMapPicker() {
-        if (!mpPin) { alert('Tap the map (or the blue dot) to place the pin first.'); return; }
-        const ll = mpPin.getLatLng();
-        gpsSet(ll.lat, ll.lng);
-        gpsNotice("📌 Location set from map", '#16a34a');
-        closeMapPicker();
+        say('Getting GPS... please wait a few seconds', '#475569');
+        id = navigator.geolocation.watchPosition(pos => {
+            if (!best || pos.coords.accuracy < best.coords.accuracy) best = pos;
+            if (pos.coords.accuracy <= 25) done();           // good enough: stop early
+        }, () => { say('⚠️ Location permission blocked. Please allow location, or use "Pick on Map".', '#dc2626'); finished = true; clearTimeout(timer); navigator.geolocation.clearWatch(id); },
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 });
+        timer = setTimeout(done, 12000);                      // otherwise take the best fix we got
     }
 
     function openLabPhotoChooser() {
@@ -2460,14 +2348,157 @@ Required Output Structure:
     window.alert = function (m) { _alert(m); if (ov.classList.contains('open') && /^✅/.test(String(m))) { closeWizard(); const t = document.getElementById('savedRecordsTableBody'); if (t) setTimeout(() => t.scrollIntoView({ behavior: 'smooth', block: 'center' }), 60); } };
 })();
 </script>
-<div id="mapPickerModal">
-    <div class="mp-top"><span>🗺️ Patient location – tap the map to place the pin</span><button type="button" onclick="closeMapPicker()">✖ Close</button></div>
-    <div id="mpMap"></div>
-    <div class="mp-bar">
-        <div class="mp-info" id="mpInfo"></div>
-        <button type="button" style="background:#2563eb" onclick="mpMyLocation()">🔵 Use my location</button>
-        <button type="button" style="background:#16a34a" onclick="confirmMapPicker()">✅ Confirm location</button>
-    </div>
+
+<div class="lg-overlay" id="loginOverlay">
+  <div class="lg-card">
+    <h3>🔐 Health 411 — Sign in</h3>
+    <p id="lgSub">Only staff allowed by the PHI can open the patient records.</p>
+    <input type="email" id="lgEmail" placeholder="Email" autocomplete="username">
+    <input type="password" id="lgPass" placeholder="Password" autocomplete="current-password">
+    <button type="button" id="lgBtn">Sign in</button>
+    <div id="lgMsg"></div>
+    <a href="#" id="lgForgot">Forgot password?</a>
+  </div>
 </div>
+<script>
+/* ===== Login screen (Firebase Authentication, e-mail + password) ===== */
+(function () {
+    if (typeof fbAuth === 'undefined' || !fbAuth) return;
+    const $ = id => document.getElementById(id), ov = $('loginOverlay');
+    const nice = e => {
+        const c = (e && e.code) || '';
+        if (/invalid-credential|wrong-password|user-not-found|invalid-email/.test(c)) return 'Wrong email or password.';
+        if (c === 'auth/operation-not-allowed') return 'Email/Password sign-in is not switched on. Firebase console → Authentication → Sign-in method → Email/Password → Enable.';
+        if (c === 'auth/network-request-failed') return 'No internet. The first sign-in on a device needs internet.';
+        if (c === 'auth/too-many-requests') return 'Too many attempts. Wait a few minutes and try again.';
+        if (c === 'auth/user-disabled') return 'This account has been disabled.';
+        return (e && e.message) || 'Sign-in failed.';
+    };
+    ov.classList.add('open'); $('lgSub').textContent = 'Checking sign-in...';
+    fbAuth.onAuthStateChanged(u => {
+        fbUser = u || null;
+        const so = $('btnSignOut');
+        if (u) {
+            ov.classList.remove('open'); so.style.display = ''; so.textContent = '🔒 Sign out (' + (u.email || 'user') + ')';
+            if (dbDB) fetchCloudFirebaseRecords();
+        } else {
+            firebaseListenerAttached = false; so.style.display = 'none';
+            $('lgSub').textContent = 'Only staff allowed by the PHI can open the patient records.'; ov.classList.add('open');
+        }
+    });
+    async function go() {
+        const em = $('lgEmail').value.trim(), pw = $('lgPass').value;
+        if (!em || !pw) { $('lgMsg').textContent = 'Enter your email and password.'; return; }
+        $('lgBtn').disabled = true; $('lgMsg').textContent = '';
+        try { await fbAuth.signInWithEmailAndPassword(em, pw); $('lgPass').value = ''; }
+        catch (e) { $('lgMsg').textContent = nice(e); }
+        $('lgBtn').disabled = false;
+    }
+    $('lgBtn').addEventListener('click', go);
+    ['lgEmail', 'lgPass'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key === 'Enter') go(); }));
+    $('lgForgot').addEventListener('click', async e => {
+        e.preventDefault(); const em = $('lgEmail').value.trim();
+        if (!em) { $('lgMsg').textContent = 'Type your email first, then press "Forgot password?".'; return; }
+        try { await fbAuth.sendPasswordResetEmail(em); $('lgMsg').style.color = '#166534'; $('lgMsg').textContent = 'Password reset email sent (check your inbox / spam).'; }
+        catch (x) { $('lgMsg').style.color = '#b91c1c'; $('lgMsg').textContent = nice(x); }
+    });
+    $('btnSignOut').addEventListener('click', () => fbAuth.signOut().then(() => location.reload()));
+})();
+</script>
+
+<div class="gp-overlay" id="gpPicker">
+  <div class="gp-card">
+    <div class="gp-head"><b>🎯 Patient location</b><button type="button" class="gp-x" onclick="closeGpsPicker()" title="Close">✕</button></div>
+    <div class="gp-info" id="gpInfo">Opening map...</div>
+    <div id="gpMap"></div>
+    <div class="gp-foot">
+      <button type="button" class="btn btn-gps" onclick="gpCenterMe()">🔵 My location</button>
+      <button type="button" class="btn btn-update" id="gpUse" onclick="gpUse()" disabled>✅ Use this location</button>
+    </div>
+  </div>
+</div>
+<script>
+/* ===== Location picker: blue blinking dot = where you are, tap the map / drag the pin = where the patient lives ===== */
+(function () {
+    let map = null, pin = null, meMark = null, meCirc = null, watchId = null, chosen = null, me = null, acc = null;
+    const $ = id => document.getElementById(id);
+    const esri = (n, o) => L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/' + n + '/MapServer/tile/{z}/{y}/{x}', Object.assign({ attribution: 'Tiles &copy; Esri', maxZoom: 19 }, o || {}));
+    const parse = v => { const m = String(v || '').match(/-?\d+(?:\.\d+)?/g); if (!m || m.length < 2) return null; const a = +m[0], b = +m[1]; return (a > 5 && a < 10.5 && b > 79 && b < 82.5) ? [a, b] : null; };
+
+    function info() {
+        let t = chosen ? '📍 Selected: <b>' + chosen.lat.toFixed(6) + ', ' + chosen.lng.toFixed(6) + '</b>' : '👆 Tap the map (or wait for the blue dot) to choose the patient\'s location.';
+        if (acc != null) {
+            const a = Math.round(acc);
+            t += '<br>🔵 Your GPS: ' + (a <= 30 ? '<span style="color:#166534"><b>good (±' + a + ' m)</b></span>' : a <= 100 ? '<span style="color:#b45309"><b>fair (±' + a + ' m)</b></span>' : '<span style="color:#b91c1c"><b>weak (±' + a + ' m) - tap the exact house on the map</b></span>');
+        } else t += '<br>🔵 Looking for your GPS position...';
+        t += '<br><small>Tap the map or drag the 📍 pin onto the patient\'s house. Use the layer button (top right) for satellite view.</small>';
+        $('gpInfo').innerHTML = t;
+    }
+    function setPin(ll) {
+        chosen = L.latLng(ll[0] !== undefined ? ll[0] : ll.lat, ll[1] !== undefined ? ll[1] : ll.lng);
+        if (!pin) {
+            pin = L.marker(chosen, { draggable: true, zIndexOffset: 1000, icon: L.divIcon({ className: '', html: '<div class="gp-pin">📍</div>', iconSize: [30, 30], iconAnchor: [15, 28] }) }).addTo(map);
+            pin.on('dragend', () => { chosen = pin.getLatLng(); info(); });
+        } else pin.setLatLng(chosen);
+        $('gpUse').disabled = false; info();
+    }
+    function onFix(pos) {
+        me = [pos.coords.latitude, pos.coords.longitude]; acc = pos.coords.accuracy;
+        if (!meMark) {
+            meCirc = L.circle(me, { radius: acc, color: '#2563eb', weight: 1, fillColor: '#2563eb', fillOpacity: 0.12, interactive: false }).addTo(map);
+            meMark = L.marker(me, { interactive: false, icon: L.divIcon({ className: '', html: '<div class="gp-me"></div>', iconSize: [18, 18], iconAnchor: [9, 9] }) }).addTo(map);
+            if (!chosen) { setPin(me); map.setView(me, acc <= 60 ? 18 : 16); }   // first fix and nothing chosen yet: start the pin at your position
+        } else { meMark.setLatLng(me); meCirc.setLatLng(me); meCirc.setRadius(acc); }
+        info();
+    }
+    function onErr(e) {
+        acc = null;
+        $('gpInfo').innerHTML = '⚠️ ' + (e && e.code === 1 ? 'Location permission is blocked, so the blue dot cannot be shown.' : 'GPS position not available right now.') + ' You can still tap the map to choose the location.';
+    }
+    function startWatch() {
+        if (!navigator.geolocation) { onErr(); return; }
+        stopWatch(); watchId = navigator.geolocation.watchPosition(onFix, onErr, { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 });
+    }
+    function stopWatch() { if (watchId != null && navigator.geolocation) navigator.geolocation.clearWatch(watchId); watchId = null; }
+
+    window.openGpsPicker = function () {
+        if (!window.L) { alert('The map needs internet (map library could not load). Please type the coordinates instead.'); return; }
+        $('gpPicker').classList.add('open'); document.body.style.overflow = 'hidden';
+        if (!map) {
+            map = L.map('gpMap', { zoomControl: true });
+            const sat = L.layerGroup([esri('World_Imagery', { maxNativeZoom: 18 }), esri('Reference/World_Transportation', { maxNativeZoom: 18 }), esri('Reference/World_Boundaries_and_Places', { maxNativeZoom: 18 })]);
+            const street = esri('World_Street_Map'), topo = esri('World_Topo_Map');
+            street.addTo(map);
+            L.control.layers({ '🛣️ Street': street, '🗺️ Topo': topo, '🛰️ Satellite': sat }, null, { position: 'topright' }).addTo(map);
+            if (window.AREA_GEOJSON && window.AREA_GEOJSON.features && window.AREA_GEOJSON.features.length) {
+                window.gpArea = L.geoJSON(window.AREA_GEOJSON, { style: { color: '#f59e0b', weight: 2, fill: false, dashArray: '6 4' }, interactive: false }).addTo(map);
+            }
+            map.on('click', e => setPin(e.latlng));
+        }
+        setTimeout(() => map.invalidateSize(), 60);
+        chosen = null; acc = null; $('gpUse').disabled = true;
+        if (pin) { map.removeLayer(pin); pin = null; }
+        if (meMark) { map.removeLayer(meMark); map.removeLayer(meCirc); meMark = meCirc = null; }
+        const existing = parse($('inGpsCoords').value);
+        if (existing) { setPin(existing); map.setView(existing, 18); }
+        else if (window.gpArea && window.gpArea.getBounds().isValid()) map.fitBounds(window.gpArea.getBounds());
+        else map.setView([7.87, 80.77], 8);
+        info(); startWatch();
+    };
+    window.closeGpsPicker = function () {
+        stopWatch(); $('gpPicker').classList.remove('open');
+        const w = $('entryWizard'); if (!w || !w.classList.contains('open')) document.body.style.overflow = '';
+    };
+    window.gpCenterMe = function () { if (me) map.setView(me, Math.max(map.getZoom(), 17)); else startWatch(); };
+    window.gpUse = function () {
+        if (!chosen) return;
+        const f = $('inGpsCoords'); f.value = chosen.lat.toFixed(6) + ', ' + chosen.lng.toFixed(6);
+        f.dispatchEvent(new Event('input', { bubbles: true }));
+        const n = $('gpsStatusNotice'); if (n) { n.innerText = '✔ Location chosen on map'; n.style.color = '#166534'; n.style.display = 'block'; }
+        closeGpsPicker();
+    };
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('gpPicker').classList.contains('open')) closeGpsPicker(); });
+})();
+</script>
 </body>
 </html>

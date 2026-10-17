@@ -46,6 +46,10 @@
   .crow { padding: 7px 8px; margin-bottom: 5px; border-radius: 6px; background: #f1f5f9; border-left: 6px solid #64748b; font-size: 13px; cursor: pointer; line-height: 1.4; }
   .crow:hover { background: #e2e8f0; } .crow small { color: #475569; }
   .cbadge { width: 26px; height: 26px; border-radius: 50%; color: #fff; font-weight: bold; font-size: 13px; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; box-shadow: 0 0 4px rgba(0,0,0,.7); text-shadow: 0 0 2px #000; }
+  .lg-overlay { display:none; position:fixed; inset:0; background:#0f172a; z-index:9800; align-items:center; justify-content:center; padding:14px; } .lg-overlay.open { display:flex; }
+  .lg-card { background:#fff; width:min(380px,100%); border-radius:12px; padding:22px; box-shadow:0 12px 40px rgba(0,0,0,.5); } .lg-card h3 { margin:0 0 6px; font-size:19px; } .lg-card p { margin:0 0 14px; font-size:13px; color:#64748b; }
+  .lg-card input { width:100%; padding:11px; font-size:15px; border:1px solid #94a3b8; border-radius:6px; margin-bottom:10px; }
+  .lg-card button { width:100%; padding:12px; font-size:15px; font-weight:bold; border:0; border-radius:6px; background:#2563eb; color:#fff; cursor:pointer; } .lg-card button:disabled { opacity:.5; } #lgMsg { margin-top:10px; font-size:13px; font-weight:bold; color:#b91c1c; }
   .leaflet-overlay-pane path.dg-pt { filter: drop-shadow(0 0 1.5px rgba(0,0,0,.85)); }
   .gn-label { background: rgba(255,255,255,.75); border: 0; box-shadow: none; font-size: 11px; font-weight: bold; color: #334155; padding: 0 4px; }
   .gn-label:before { display: none; }
@@ -116,9 +120,14 @@
   </div>
 </div>
 
+<div class="lg-overlay" id="loginOverlay"><div class="lg-card">
+  <h3>🔐 Health 411 — Sign in</h3><p>Only staff allowed by the PHI can see the patient map.</p>
+  <input type="email" id="lgEmail" placeholder="Email" autocomplete="username"><input type="password" id="lgPass" placeholder="Password" autocomplete="current-password">
+  <button type="button" id="lgBtn">Sign in</button><div id="lgMsg"></div></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="config.js"></script>
 <script src="area-geo.js"></script>
 <script>
@@ -377,15 +386,34 @@ if (APP && APP.areaName) { $('areaTitle').textContent = APP.areaName + ' — Pat
 let fb = null;
 try { if (!firebaseConfig.apiKey || !firebaseConfig.databaseURL) throw new Error('Firebase not configured'); firebase.initializeApp(firebaseConfig); fb = firebase.database(); } catch (e) { console.log(e.message); }
 if (!APP || !PHI_GEOJSON.features.length) setStatus('⚙️ Run setup.html first', 'err');
-if (fb && navigator.onLine) {
+function startCloud() {
   const fallback = setTimeout(loadLocal, 8000);   // if the cloud does not answer, use the local copy
   fb.ref('health_reports').on('value', snap => {
     clearTimeout(fallback);
     const d = snap.val() || {};
     records = Object.keys(d).map(k => ({ ...d[k], id: k }));
     setStatus('🟢 Cloud live', 'live'); render();
-  }, err => { clearTimeout(fallback); console.error(err); loadLocal(); });
-} else loadLocal();
+  }, err => { clearTimeout(fallback); console.error(err); setStatus('🔒 Not allowed / not signed in', 'err'); loadLocal(); });
+}
+let auth = null;
+if (fb && typeof firebase.auth === 'function' && !(APP && APP.requireLogin === false)) auth = firebase.auth();
+if (auth) {
+  const ov = $('loginOverlay'); let started = false;
+  ov.classList.add('open');
+  auth.onAuthStateChanged(u => {
+    if (u) { ov.classList.remove('open'); if (!started && navigator.onLine) { started = true; startCloud(); } else if (!navigator.onLine) loadLocal(); }
+    else { started = false; ov.classList.add('open'); }
+  });
+  const go = async () => {
+    const em = $('lgEmail').value.trim(), pw = $('lgPass').value; if (!em || !pw) { $('lgMsg').textContent = 'Enter your email and password.'; return; }
+    $('lgBtn').disabled = true; $('lgMsg').textContent = '';
+    try { await auth.signInWithEmailAndPassword(em, pw); $('lgPass').value = ''; }
+    catch (e) { $('lgMsg').textContent = /invalid|wrong|not-found/.test(e.code || '') ? 'Wrong email or password.' : (e.code === 'auth/network-request-failed' ? 'No internet.' : (e.message || 'Sign-in failed.')); }
+    $('lgBtn').disabled = false;
+  };
+  $('lgBtn').addEventListener('click', go);
+  ['lgEmail', 'lgPass'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key === 'Enter') go(); }));
+} else if (fb && navigator.onLine) startCloud(); else loadLocal();
 render();
 </script>
 </body>
