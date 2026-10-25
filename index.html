@@ -514,6 +514,16 @@
     
 
 
+
+        /* ===== PENDING CONFIRMATION POPUP ===== */
+        .pc-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,.75); z-index:9400; align-items:center; justify-content:center; padding:10px; }
+        .pc-overlay.open { display:flex; }
+        .pc-card { background:#fff; width:min(1000px,100%); max-height:94vh; border-radius:12px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 12px 40px rgba(0,0,0,.45); }
+        .pc-head { background:#b45309; color:#fff; padding:11px 14px; display:flex; align-items:center; gap:10px; } .pc-head b { flex:1; font-size:15px; }
+        .pc-x { border:0; background:rgba(255,255,255,.25); color:#fff; width:30px; height:30px; border-radius:50%; cursor:pointer; font-size:15px; }
+        .pc-bar { padding:9px 14px; background:#fffbeb; border-bottom:1px solid #fde68a; font-size:13px; display:flex; gap:16px; flex-wrap:wrap; align-items:center; }
+        .pc-scroll { overflow:auto; flex:1; } .pc-scroll table { width:100%; border-collapse:collapse; font-size:13px; }
+        .pc-scroll th { position:sticky; top:0; background:#1e293b; color:#fff; padding:8px; text-align:left; } .pc-scroll td { padding:7px 8px; border-bottom:1px solid #e2e8f0; }
         /* ===== LOGIN ===== */
         .lg-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#0f172a; z-index:9800; align-items:center; justify-content:center; padding:14px; }
         .lg-overlay.open { display:flex; }
@@ -1021,6 +1031,10 @@
                         <label>🔍 Search Saved Reports by Patient Name, Ref No, or Disease</label>
                         <input type="text" id="inSearchQuery" placeholder="Type Patient Name, Ref No, or Disease to filter..." oninput="filterAndRenderRecords()">
                     </div>
+                    <div class="form-group" style="grid-column: span 4;">
+                        <button type="button" id="btnPending" class="btn" style="background:#d97706; color:#fff;" onclick="openPendingList()">⏳ Pending Confirmation</button>
+                        <span style="font-size:12px; color:#64748b; margin-left:8px;">Reports with no confirmed disease / date. Red = not confirmed 3+ days after the notified date.</span>
+                    </div>
                 </div>
 
                 <div class="record-viewer-card" id="cardNavViewer" style="display: none;">
@@ -1424,7 +1438,60 @@
         };
     }
 
+    /* ---- confirmation tracking: green = confirmed, red = not confirmed 3+ days after the notified date ---- */
+    const CONFIRM_ALERT_DAYS = 3;
+    const escH = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    function daysSince(dateStr) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr || '')) return null;
+        const [y, m, d] = dateStr.split('-').map(Number), t = new Date();
+        return Math.round((new Date(t.getFullYear(), t.getMonth(), t.getDate()) - new Date(y, m - 1, d)) / 86400000);
+    }
+    function confirmInfo(r) {
+        const confirmed = !!((r.inDiseaseConfirmed || '').trim() || (r.inDateConfirmed || '').trim());
+        const days = daysSince(r.inDateNotified);
+        return { confirmed, days, overdue: !confirmed && days !== null && days >= CONFIRM_ALERT_DAYS };
+    }
+    function diseaseCellHtml(r) {
+        const ci = confirmInfo(r), name = escH(r.inDiseaseConfirmed || r.inDiseaseNotified || 'N/A');
+        if (ci.confirmed) return `<span style="color:#15803d;font-weight:bold;">✔ ${name}</span><br><small style="color:#15803d;">Confirmed${r.inDateConfirmed ? ' · ' + escH(r.inDateConfirmed) : ''}</small>`;
+        if (ci.overdue) return `<span style="color:#dc2626;font-weight:bold;">⏰ ${name}</span><br><small style="color:#dc2626;font-weight:bold;">Not confirmed · ${ci.days} days since notified</small>`;
+        return `${name}<br><small style="color:#64748b;">Not confirmed yet${ci.days !== null ? ' · ' + ci.days + (ci.days === 1 ? ' day' : ' days') : ''}</small>`;
+    }
+    function updatePendingBadge() {
+        const btn = document.getElementById('btnPending'); if (!btn) return;
+        const pend = allFetchedRecords.filter(r => !confirmInfo(r).confirmed), od = pend.filter(r => confirmInfo(r).overdue).length;
+        btn.innerHTML = `⏳ Pending Confirmation (${pend.length})` + (od ? ` · <span style="background:#fff;color:#dc2626;border-radius:10px;padding:0 7px;">${od} overdue</span>` : '');
+        btn.style.background = od ? '#dc2626' : '#d97706';
+    }
+    function openPendingList() {
+        document.getElementById('pcOnlyOverdue').checked = false; renderPendingList();
+        document.getElementById('pendingPopup').classList.add('open'); document.body.style.overflow = 'hidden';
+    }
+    function closePendingList() {
+        document.getElementById('pendingPopup').classList.remove('open');
+        const w = document.getElementById('entryWizard'); if (!w || !w.classList.contains('open')) document.body.style.overflow = '';
+    }
+    function renderPendingList() {
+        const onlyOd = document.getElementById('pcOnlyOverdue').checked;
+        let list = allFetchedRecords.map(r => ({ r, ci: confirmInfo(r) })).filter(x => !x.ci.confirmed && (!onlyOd || x.ci.overdue));
+        list.sort((a, b) => (b.ci.days === null ? -1 : b.ci.days) - (a.ci.days === null ? -1 : a.ci.days));   // longest waiting first
+        const tb = document.getElementById('pcBody');
+        document.getElementById('pcSummary').textContent = list.length + (onlyOd ? ' overdue' : ' not yet confirmed') + ' report(s)';
+        tb.innerHTML = list.length ? list.map(({ r, ci }) => `<tr${ci.overdue ? ' style="background:#fef2f2;"' : ''}>
+            <td><b>${escH(r.inPhiRefNo || 'No Ref')}</b></td><td>${escH(r.inPatientName || 'Unnamed Patient')}</td>
+            <td>${escH(r.inDiseaseNotified || 'N/A')}</td><td style="white-space:nowrap;">${escH(r.inDateNotified || '-')}</td>
+            <td style="white-space:nowrap;font-weight:bold;color:${ci.overdue ? '#dc2626' : '#475569'};">${ci.days === null ? '-' : (ci.overdue ? '⏰ ' : '') + ci.days + ' d'}</td>
+            <td>${escH(r.inGNArea || '-')}</td><td>${escH(r.inPatientPhone || '-')}</td>
+            <td><button type="button" class="btn btn-gps" style="padding:4px 8px;font-size:11px;" onclick="openPendingRecord('${escH(r.id)}')">✏️ Open</button></td></tr>`).join('')
+            : '<tr><td colspan="8" style="text-align:center;color:#166534;font-weight:bold;">✔ Nothing pending – every report has confirmation data.</td></tr>';
+    }
+    function openPendingRecord(id) {          // open the report in the entry popup, on the "Disease & Dates" step
+        closePendingList(); loadRecordForEditing(id);
+        if (typeof openWizard === 'function') openWizard(1);
+    }
+
     function filterAndRenderRecords() {
+        updatePendingBadge();
         const query = document.getElementById('inSearchQuery')?.value.toLowerCase().trim() || '';
         const reversedRecords = [...allFetchedRecords].reverse();
 
@@ -1448,14 +1515,13 @@
         filteredRecords.forEach(r => {
             const ref = r.inPhiRefNo || 'No Ref';
             const name = r.inPatientName || 'Unnamed Patient';
-            const disease = r.inDiseaseConfirmed || r.inDiseaseNotified || 'N/A';
             const statusHtml = r.synced ? '<span style="color:#16a34a; font-weight:bold;">🟢 Synced</span>' : '<span style="color:#d97706; font-weight:bold;">🟡 Local Only</span>';
 
             tbody.innerHTML += `
-                <tr>
-                    <td><b>${ref}</b></td>
-                    <td>${name}</td>
-                    <td>${disease}</td>
+                <tr${confirmInfo(r).overdue ? ' style="background:#fef2f2;"' : ''}>
+                    <td><b>${escH(ref)}</b></td>
+                    <td>${escH(name)}</td>
+                    <td>${diseaseCellHtml(r)}</td>
                     <td>${statusHtml}</td>
                     <td>
                         <button type="button" class="btn btn-gps" style="padding:4px 8px; font-size:11px;" onclick="loadRecordForEditing('${r.id}')">✏️ Edit</button>
@@ -1487,7 +1553,7 @@
         const ref = rec.inPhiRefNo || 'No Ref';
         const name = rec.inPatientName || 'Unnamed Patient';
         const address = rec.inPatientAddress || 'No Address';
-        const disease = rec.inDiseaseConfirmed || rec.inDiseaseNotified || 'N/A';
+        const disease = diseaseCellHtml(rec).replace(/<br>.*$/, '');
         const hospital = rec.inHospitalName || 'N/A';
         const phone = rec.inPatientPhone || 'Not provided';
         const syncStr = rec.synced ? '🟢 Synced to Cloud' : '🟡 Offline Local Only';
@@ -1519,26 +1585,36 @@
         if (!confirm("Are you sure you want to permanently delete this report? This will remove it from all devices.")) {
             return;
         }
+        const rec = allFetchedRecords.find(r => r.id === recordId);
+        const localOnly = !!rec && rec.synced === false;      // never reached the cloud
 
-        if (fbDb && fbUser && navigator.onLine) {
-            fbDb.ref('health_reports/' + recordId).remove().then(() => {
-                alert("🗑️ Report deleted from Cloud Database!");
-            }).catch(err => console.log("Cloud Delete Notice:", err));
+        const removeLocally = () => {
+            delete pendingLocal[recordId];
+            allFetchedRecords = allFetchedRecords.filter(r => r.id !== recordId);
+            if (activeEditingRecordId === recordId) {
+                activeEditingRecordId = null;
+                sessionStorage.removeItem('h411_active_edit_id');
+            }
+            if (dbDB) {
+                try { dbDB.transaction('patient_records', 'readwrite').objectStore('patient_records').delete(recordId); } catch (e) { console.log('Local delete notice:', e.message); }
+            }
+            currentNavIndex = 0;
+            filterAndRenderRecords();
+        };
+
+        if (!fbDb || localOnly) { removeLocally(); return; }     // local-only mode / report that was never uploaded
+
+        if (!fbUser || !navigator.onLine) {
+            alert("⚠️ Cannot delete now: deleting a saved report needs internet and you must be signed in.\nNothing was deleted (otherwise it would come back from the cloud).");
+            return;
         }
-
-        if (dbDB) {
-            const tx = dbDB.transaction('patient_records', 'readwrite');
-            const store = tx.objectStore('patient_records');
-            store.delete(recordId);
-
-            tx.oncomplete = function() {
-                if (activeEditingRecordId === recordId) {
-                    activeEditingRecordId = null;
-                    sessionStorage.removeItem('h411_active_edit_id');
-                }
-                loadOfflineRecordsTable();
-            };
-        }
+        // delete from the cloud FIRST; only when the cloud agrees, remove it here too
+        fbDb.ref('health_reports/' + recordId).remove().then(() => {
+            removeLocally();
+            alert("🗑️ Report deleted from Cloud Database!");
+        }).catch(err => {
+            alert("⚠️ The report could NOT be deleted from the cloud, so it was kept.\nReason: " + (err && err.message ? err.message : err));
+        });
     }
 
     function loadRecordForEditing(recordId) {
@@ -2348,6 +2424,15 @@ Required Output Structure:
     window.alert = function (m) { _alert(m); if (ov.classList.contains('open') && /^✅/.test(String(m))) { closeWizard(); const t = document.getElementById('savedRecordsTableBody'); if (t) setTimeout(() => t.scrollIntoView({ behavior: 'smooth', block: 'center' }), 60); } };
 })();
 </script>
+
+<div class="pc-overlay" id="pendingPopup">
+  <div class="pc-card">
+    <div class="pc-head"><b>⏳ Reports waiting for confirmation</b><button type="button" class="pc-x" onclick="closePendingList()" title="Close">✕</button></div>
+    <div class="pc-bar"><span id="pcSummary"></span><label style="cursor:pointer;"><input type="checkbox" id="pcOnlyOverdue" onchange="renderPendingList()"> Only overdue (3+ days)</label><span style="color:#64748b;">Longest waiting first</span></div>
+    <div class="pc-scroll"><table><thead><tr><th>Ref No</th><th>Patient</th><th>Disease (notified)</th><th>Date notified</th><th>Waiting</th><th>GN</th><th>Phone</th><th></th></tr></thead><tbody id="pcBody"></tbody></table></div>
+  </div>
+</div>
+<script>document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('pendingPopup').classList.contains('open')) closePendingList(); });</script>
 
 <div class="lg-overlay" id="loginOverlay">
   <div class="lg-card">
