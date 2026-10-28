@@ -394,7 +394,7 @@
         .modal-card {
             background: #ffffff;
             width: 100%;
-            max-width: 650px;
+            max-width: 760px;
             border-radius: 12px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.3);
             overflow: hidden;
@@ -1103,7 +1103,7 @@
             <div class="note-step" data-step="1">
                 <div class="form-group">
                     <label>1. Source of Infection (බෝවීමේ ප්‍රමය පිළිබඳ සටහන්)</label>
-                    <select id="modalSourceSel" onchange="noteSelChange(this,'modalSourceCustom')">
+                    <select id="modalSourceSel" onchange="noteFillChange(this,'modalSourceCustom')">
                         <option>Residential premises / neighbourhood</option>
                         <option>Workplace / school / institution</option>
                         <option>Contact with a known case (household)</option>
@@ -1115,7 +1115,7 @@
                         <option>Unknown / under investigation</option>
                         <option value="__CUSTOM__">➕ Custom (type your own)</option>
                     </select>
-                    <input type="text" id="modalSourceCustom" style="display:none; margin-top:6px;" placeholder="Type in Sinhala / Singlish / English - AI will write it in basic English">
+                    <textarea id="modalSourceCustom" data-fill="1" rows="5" style="margin-top:6px; width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; font-family:inherit; line-height:1.5; resize:vertical;" placeholder="Type in Sinhala / Singlish / English - AI will write it in basic English"></textarea>
                 </div>
             </div>
 
@@ -1129,7 +1129,8 @@
                         <option value="IMPORTED_CASE">Imported Case (Acquired outside area / abroad)</option>
                         <option value="__CUSTOM__">➕ Custom (type your own)</option>
                     </select>
-                    <input type="text" id="modalCaseCustom" style="display:none; margin-top:6px;" placeholder="Type in Sinhala / Singlish / English - AI will write it in basic English">
+                    <div id="hint_modalCaseIndex" style="margin-top:6px; padding:8px 10px; background:#f1f5f9; border-radius:6px; font-size:13px; line-height:1.5; color:#334155; white-space:normal;"></div>
+                    <textarea id="modalCaseCustom" rows="4" style="display:none; margin-top:6px; width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; font-family:inherit; line-height:1.5; resize:vertical;" placeholder="Type in Sinhala / Singlish / English - AI will write it in basic English"></textarea>
                 </div>
             </div>
 
@@ -1143,7 +1144,8 @@
                         <option value="SUBSEQUENT_OUTBREAK_CASE">Subsequent case of an outbreak (Covered by same information/action)</option>
                         <option value="__CUSTOM__">➕ Custom (type your own)</option>
                     </select>
-                    <input type="text" id="modalOutbreakCustom" style="display:none; margin-top:6px;" placeholder="Type in Sinhala / Singlish / English - AI will write it in basic English">
+                    <div id="hint_modalOutbreakStatus" style="margin-top:6px; padding:8px 10px; background:#f1f5f9; border-radius:6px; font-size:13px; line-height:1.5; color:#334155; white-space:normal;"></div>
+                    <textarea id="modalOutbreakCustom" rows="4" style="display:none; margin-top:6px; width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; font-family:inherit; line-height:1.5; resize:vertical;" placeholder="Type in Sinhala / Singlish / English - AI will write it in basic English"></textarea>
                 </div>
                 <div class="form-group" id="outbreakRefGroup" style="display: none;">
                     <label>Reference Number in Infectious Diseases Register</label>
@@ -1156,7 +1158,7 @@
             <div class="note-step" data-step="4" style="display:none;">
                 <div class="form-group">
                     <label>3. Action Taken (ගෙන ඇති ක්‍රියා මාර්ගය)</label>
-                    <select id="modalActionSel" onchange="noteSelChange(this,'modalActionCustom')">
+                    <select id="modalActionSel" onchange="noteFillChange(this,'modalActionCustom')">
                         <option>Premises inspection, vector source reduction/fogging conducted, patient isolation ensured, and health education given.</option>
                         <option>Contact tracing and screening of household and close contacts, patient isolation ensured, and health education given.</option>
                         <option>Premises inspection and vector breeding site destruction done, and health education given.</option>
@@ -1165,7 +1167,7 @@
                         <option>Health education given to patient and family.</option>
                         <option value="__CUSTOM__">➕ Custom (type your own)</option>
                     </select>
-                    <textarea id="modalActionCustom" rows="3" style="display:none; margin-top:6px;" placeholder="Type in Sinhala / Singlish / English - AI will write it in basic English"></textarea>
+                    <textarea id="modalActionCustom" data-fill="1" rows="6" style="margin-top:6px; width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; font-family:inherit; line-height:1.5; resize:vertical;" placeholder="Type in Sinhala / Singlish / English - AI will write it in basic English"></textarea>
                 </div>
             </div>
         </div>
@@ -2021,12 +2023,27 @@
         const on = sel.value === '__CUSTOM__';
         c.style.display = on ? 'block' : 'none';
         if (on) c.focus();
+        // show the full wording of the chosen option (long options cannot fit in the dropdown)
+        const h = document.getElementById('hint_' + sel.id);
+        if (h) {
+            h.innerText = on ? '' : sel.options[sel.selectedIndex].text;
+            h.style.display = on ? 'none' : 'block';
+        }
+    }
+
+    // Source / Action: the dropdown fills a big editable box. Choosing Custom keeps what is already typed.
+    function noteFillChange(sel, taId) {
+        const ta = document.getElementById(taId);
+        if (sel.value !== '__CUSTOM__') ta.value = sel.options[sel.selectedIndex].text;
+        ta.focus();
     }
 
     // value of a dropdown, or the typed custom text when "Custom" is chosen
     function noteVal(selId, customId) {
         const sel = document.getElementById(selId);
-        if (sel.value === '__CUSTOM__') return document.getElementById(customId).value.trim();
+        const box = document.getElementById(customId);
+        if (box.dataset.fill) return box.value.trim();
+        if (sel.value === '__CUSTOM__') return box.value.trim();
         return sel.options[sel.selectedIndex].text;
     }
 
@@ -2048,8 +2065,10 @@
             3: ['modalOutbreakStatus', 'modalOutbreakCustom'],
             4: ['modalActionSel', 'modalActionCustom']
         }[noteStep];
-        if (document.getElementById(customChecks[0]).value === '__CUSTOM__' && !document.getElementById(customChecks[1]).value.trim()) {
-            alert('Please type your custom text, or choose one of the options in the list.');
+        const chkBox = document.getElementById(customChecks[1]);
+        const needText = chkBox.dataset.fill ? true : document.getElementById(customChecks[0]).value === '__CUSTOM__';
+        if (needText && !chkBox.value.trim()) {
+            alert('Please type some text, or choose one of the options in the list.');
             document.getElementById(customChecks[1]).focus();
             return;
         }
@@ -2067,17 +2086,21 @@
 
         document.getElementById('modalDisease').value = confirmedDis;
 
-        // Pre-fill source from patient movements (as custom text) if the PHI already typed something
+        // Source: pre-fill from patient movements (if typed on page 1), otherwise keep what was typed before
         const srcSel = document.getElementById('modalSourceSel');
-        const srcCustom = document.getElementById('modalSourceCustom');
+        const srcBox = document.getElementById('modalSourceCustom');
         if (movements.trim()) {
             srcSel.value = '__CUSTOM__';
-            srcCustom.value = movements.split('\n')[0];
-        } else {
+            srcBox.value = movements.trim();
+        } else if (!srcBox.value.trim()) {
             srcSel.selectedIndex = 0;
-            srcCustom.value = '';
+            srcBox.value = srcSel.options[0].text;
         }
-        noteSelChange(srcSel, 'modalSourceCustom');
+        const actSel = document.getElementById('modalActionSel');
+        const actBox = document.getElementById('modalActionCustom');
+        if (!actBox.value.trim()) actBox.value = actSel.options[actSel.selectedIndex].text;
+        noteSelChange(document.getElementById('modalCaseIndex'), 'modalCaseCustom');
+        noteSelChange(document.getElementById('modalOutbreakStatus'), 'modalOutbreakCustom');
 
         toggleOutbreakRefInput();
         showNoteStep(1);
