@@ -993,7 +993,11 @@
                     </div>
                     <div class="form-group" style="grid-column: span 3;">
                         <label>TABLE 02 — GEMINI AI NOTE / SOURCE, SPREAD & ACTION TAKEN</label>
-                        <textarea id="inP2Content2" rows="10" placeholder="Click 'Gemini Generate Table 02' to analyse the case information and generate this note. You may edit the generated text before printing." oninput="updatePrintForm()"></textarea>
+                        <textarea id="inP2Content2" rows="10" placeholder="Click 'Gemini Generate Table 02' to analyse the case information and generate this note. You may edit the generated text before printing." oninput="p2Dirty=true; updatePrintForm()" onblur="autoConvertP2()"></textarea>
+                        <div style="display:flex; align-items:center; gap:10px; margin-top:6px; flex-wrap:wrap;">
+                            <button type="button" class="btn btn-ai" id="btnConvertP2" style="font-size:12px; padding:6px 14px;" onclick="convertP2ToEnglish()">🔤 Convert to English</button>
+                            <small id="p2ConvertStatus" style="color:#64748b;">Type in Sinhala / Singlish / English. When you leave the box it is converted to basic English automatically.</small>
+                        </div>
                     </div>
                 </div>
 
@@ -1091,46 +1095,84 @@
             <div class="form-group">
                 <label>Disease Confirmed / Notified</label>
                 <input type="text" id="modalDisease" readonly style="background-color: #f1f5f9;">
-                <small style="color: #64748b;">The AI-generated note below will be tailored specifically to this disease's standard PHI investigation protocol (not a generic note).</small>
             </div>
 
-            <div class="form-group">
-                <label>1. Source of Infection (බෝවීමේ ප්‍රමය පිළිබඳ සටහන්)</label>
-                <input type="text" id="modalSource" placeholder="e.g. Workplace exposure, local vector breeding site, residence neighbourhood">
+            <div id="noteStepLabel" style="font-size:12px; font-weight:700; color:#2563eb; margin-bottom:6px;"></div>
+
+            <!-- STEP 1 -->
+            <div class="note-step" data-step="1">
+                <div class="form-group">
+                    <label>1. Source of Infection (බෝවීමේ ප්‍රමය පිළිබඳ සටහන්)</label>
+                    <select id="modalSourceSel" onchange="noteSelChange(this,'modalSourceCustom')">
+                        <option>Residential premises / neighbourhood</option>
+                        <option>Workplace / school / institution</option>
+                        <option>Contact with a known case (household)</option>
+                        <option>Contact with a known case (outside household)</option>
+                        <option>Vector breeding site near home / premises</option>
+                        <option>Contaminated food / water</option>
+                        <option>Animal contact / animal bite</option>
+                        <option>Travel / came from another area</option>
+                        <option>Unknown / under investigation</option>
+                        <option value="__CUSTOM__">➕ Custom (type your own)</option>
+                    </select>
+                    <input type="text" id="modalSourceCustom" style="display:none; margin-top:6px;" placeholder="Type in Sinhala / Singlish / English - AI will write it in basic English">
+                </div>
             </div>
 
-            <div class="form-group">
-                <label>2. Spread of Disease (රෝගය පැතිරීම)</label>
-                <select id="modalCaseIndex">
-                    <option value="PRIMARY_INDEX_LOCAL">Primary Index Case (Local transmission)</option>
-                    <option value="SUBSEQUENT_LOCAL" selected>Subsequent Case (Local transmission chain)</option>
-                    <option value="IMPORTED_CASE">Imported Case (Acquired outside area / abroad)</option>
-                </select>
+            <!-- STEP 2 -->
+            <div class="note-step" data-step="2" style="display:none;">
+                <div class="form-group">
+                    <label>2. Spread of Disease (රෝගය පැතිරීම)</label>
+                    <select id="modalCaseIndex" onchange="noteSelChange(this,'modalCaseCustom')">
+                        <option value="PRIMARY_INDEX_LOCAL">Primary Index Case (Local transmission)</option>
+                        <option value="SUBSEQUENT_LOCAL" selected>Subsequent Case (Local transmission chain)</option>
+                        <option value="IMPORTED_CASE">Imported Case (Acquired outside area / abroad)</option>
+                        <option value="__CUSTOM__">➕ Custom (type your own)</option>
+                    </select>
+                    <input type="text" id="modalCaseCustom" style="display:none; margin-top:6px;" placeholder="Type in Sinhala / Singlish / English - AI will write it in basic English">
+                </div>
             </div>
 
-            <div class="form-group">
-                <label>2.1 Outbreak Information (වසංගත තත්ත්වය පිළිබඳ නියෝගය)</label>
-                <select id="modalOutbreakStatus" onchange="toggleOutbreakRefInput()">
-                    <option value="NO_OUTBREAK">Isolated Case (No active outbreak in the area)</option>
-                    <option value="FIRST_CASE_OUTBREAK">First case of an outbreak (Enter full information on report card)</option>
-                    <option value="SUBSEQUENT_OUTBREAK_CASE">Subsequent case of an outbreak (Covered by same information/action)</option>
-                </select>
+            <!-- STEP 3 -->
+            <div class="note-step" data-step="3" style="display:none;">
+                <div class="form-group">
+                    <label>2.1 Outbreak Information (වසංගත තත්ත්වය පිළිබඳ නියෝගය)</label>
+                    <select id="modalOutbreakStatus" onchange="noteSelChange(this,'modalOutbreakCustom'); toggleOutbreakRefInput()">
+                        <option value="NO_OUTBREAK">Isolated Case (No active outbreak in the area)</option>
+                        <option value="FIRST_CASE_OUTBREAK">First case of an outbreak (Enter full information on report card)</option>
+                        <option value="SUBSEQUENT_OUTBREAK_CASE">Subsequent case of an outbreak (Covered by same information/action)</option>
+                        <option value="__CUSTOM__">➕ Custom (type your own)</option>
+                    </select>
+                    <input type="text" id="modalOutbreakCustom" style="display:none; margin-top:6px;" placeholder="Type in Sinhala / Singlish / English - AI will write it in basic English">
+                </div>
+                <div class="form-group" id="outbreakRefGroup" style="display: none;">
+                    <label>Reference Number in Infectious Diseases Register</label>
+                    <input type="text" id="modalOutbreakRefNo" placeholder="e.g. IDR/2026/DEN/042">
+                    <small style="color: #64748b;">Give reference number in infectious diseases register on cards of subsequent cases covered by same action.</small>
+                </div>
             </div>
 
-            <div class="form-group" id="outbreakRefGroup" style="display: none;">
-                <label>Reference Number in Infectious Diseases Register</label>
-                <input type="text" id="modalOutbreakRefNo" placeholder="e.g. IDR/2026/DEN/042">
-                <small style="color: #64748b;">Give reference number in infectious diseases register on cards of subsequent cases covered by same action.</small>
-            </div>
-
-            <div class="form-group">
-                <label>3. Action Taken (ගෙන ඇති ක්‍රියා මාර්ගය)</label>
-                <textarea id="modalActionTaken" rows="3">Premises inspection, vector source reduction/fogging conducted, patient isolation ensured, and health education directives given.</textarea>
+            <!-- STEP 4 -->
+            <div class="note-step" data-step="4" style="display:none;">
+                <div class="form-group">
+                    <label>3. Action Taken (ගෙන ඇති ක්‍රියා මාර්ගය)</label>
+                    <select id="modalActionSel" onchange="noteSelChange(this,'modalActionCustom')">
+                        <option>Premises inspection, vector source reduction/fogging conducted, patient isolation ensured, and health education given.</option>
+                        <option>Contact tracing and screening of household and close contacts, patient isolation ensured, and health education given.</option>
+                        <option>Premises inspection and vector breeding site destruction done, and health education given.</option>
+                        <option>Food/water sample collection, premises inspection done, and health education given.</option>
+                        <option>Patient isolation ensured and health education given.</option>
+                        <option>Health education given to patient and family.</option>
+                        <option value="__CUSTOM__">➕ Custom (type your own)</option>
+                    </select>
+                    <textarea id="modalActionCustom" rows="3" style="display:none; margin-top:6px;" placeholder="Type in Sinhala / Singlish / English - AI will write it in basic English"></textarea>
+                </div>
             </div>
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-reset" onclick="closeNoteConfirmModal()">Cancel</button>
-            <button type="button" class="btn btn-update" onclick="submitAndGeneratePage2Note()">✨ Gemini Analyze & Generate</button>
+            <button type="button" class="btn btn-reset" id="noteBackBtn" onclick="noteBack()">⬅ Back</button>
+            <button type="button" class="btn btn-update" id="noteNextBtn" onclick="noteNext()">Next ➡</button>
         </div>
     </div>
 </div>
@@ -1971,19 +2013,74 @@
         }
     }
 
+    const NOTE_STEPS = 4;
+    let noteStep = 1;
+
+    function noteSelChange(sel, customId) {
+        const c = document.getElementById(customId);
+        const on = sel.value === '__CUSTOM__';
+        c.style.display = on ? 'block' : 'none';
+        if (on) c.focus();
+    }
+
+    // value of a dropdown, or the typed custom text when "Custom" is chosen
+    function noteVal(selId, customId) {
+        const sel = document.getElementById(selId);
+        if (sel.value === '__CUSTOM__') return document.getElementById(customId).value.trim();
+        return sel.options[sel.selectedIndex].text;
+    }
+
+    function showNoteStep(n) {
+        noteStep = n;
+        document.querySelectorAll('#noteConfirmModal .note-step').forEach(el => {
+            el.style.display = Number(el.dataset.step) === n ? 'block' : 'none';
+        });
+        const labels = ['Source of Infection', 'Spread of Disease', 'Outbreak Information', 'Action Taken'];
+        document.getElementById('noteStepLabel').innerText = 'Question ' + n + ' of ' + NOTE_STEPS + ' — ' + labels[n - 1];
+        document.getElementById('noteBackBtn').style.display = n === 1 ? 'none' : '';
+        document.getElementById('noteNextBtn').innerText = n === NOTE_STEPS ? '✨ Gemini Analyze & Generate' : 'Next ➡';
+    }
+
+    function noteNext() {
+        const customChecks = {
+            1: ['modalSourceSel', 'modalSourceCustom'],
+            2: ['modalCaseIndex', 'modalCaseCustom'],
+            3: ['modalOutbreakStatus', 'modalOutbreakCustom'],
+            4: ['modalActionSel', 'modalActionCustom']
+        }[noteStep];
+        if (document.getElementById(customChecks[0]).value === '__CUSTOM__' && !document.getElementById(customChecks[1]).value.trim()) {
+            alert('Please type your custom text, or choose one of the options in the list.');
+            document.getElementById(customChecks[1]).focus();
+            return;
+        }
+        if (noteStep < NOTE_STEPS) showNoteStep(noteStep + 1);
+        else submitAndGeneratePage2Note();
+    }
+
+    function noteBack() {
+        if (noteStep > 1) showNoteStep(noteStep - 1);
+    }
+
     function openNoteConfirmModal() {
         const confirmedDis = document.getElementById('inDiseaseConfirmed').value || document.getElementById('inDiseaseNotified').value || 'Communicable Disease';
         const movements = document.getElementById('inMovements').value || '';
-        
+
         document.getElementById('modalDisease').value = confirmedDis;
-        
-        if (movements) {
-            document.getElementById('modalSource').value = movements.split('\n')[0];
+
+        // Pre-fill source from patient movements (as custom text) if the PHI already typed something
+        const srcSel = document.getElementById('modalSourceSel');
+        const srcCustom = document.getElementById('modalSourceCustom');
+        if (movements.trim()) {
+            srcSel.value = '__CUSTOM__';
+            srcCustom.value = movements.split('\n')[0];
         } else {
-            document.getElementById('modalSource').value = "Residential premises / local working environment";
+            srcSel.selectedIndex = 0;
+            srcCustom.value = '';
         }
+        noteSelChange(srcSel, 'modalSourceCustom');
 
         toggleOutbreakRefInput();
+        showNoteStep(1);
         document.getElementById('noteConfirmModal').style.display = 'flex';
     }
 
@@ -2014,11 +2111,11 @@
         };
 
         const confirmed = {
-            source: get('modalSource'),
+            source: noteVal('modalSourceSel', 'modalSourceCustom'),
             classification: get('modalCaseIndex'),
             outbreak: get('modalOutbreakStatus'),
             outbreakRefNo: get('modalOutbreakRefNo'),
-            actions: get('modalActionTaken')
+            actions: noteVal('modalActionSel', 'modalActionCustom')
         };
 
         let spreadDescription = "Subsequent Case acquired through local transmission chain.";
@@ -2026,7 +2123,10 @@
             spreadDescription = "Primary Index Case in the local MOH/PHI area (Local transmission).";
         } else if (confirmed.classification === 'IMPORTED_CASE') {
             spreadDescription = "Imported Case (Infection acquired from outside MOH boundary or overseas).";
+        } else if (confirmed.classification === '__CUSTOM__') {
+            spreadDescription = noteVal('modalCaseIndex', 'modalCaseCustom');
         }
+        const outbreakCustomText = confirmed.outbreak === '__CUSTOM__' ? noteVal('modalOutbreakStatus', 'modalOutbreakCustom') : '';
 
         const button = document.querySelector('.section-title button.btn-ai');
         const oldText = button ? button.innerText : '';
@@ -2051,6 +2151,8 @@ Input Data for Analysis:
 - Action Taken: ${confirmed.actions || 'Not documented'}
 
 CRITICAL RULES:
+- The Input Data above may be written in Sinhala, Singlish (Sinhala typed in English letters) or English, and may have spelling mistakes. Understand the meaning and write the FINAL note ONLY in simple, basic English. Never output Sinhala or Singlish words.
+- Include the meaning of EVERY input item (Prior Movements, Source of Infection, Spread of Disease, Action Taken) in the note, converted to basic English.
 - DO NOT INCLUDE ANY PATIENT DETAILS (No Name, Address, Age, Sex, or Disease Header).
 - Do NOT use markdown bolding (**) or asterisks (*).
 - Write the analysis specifically for "${diseaseName}" — use the standard Sri Lankan PHI investigation and control protocol for THIS disease (for example: vector breeding site survey/larviciding/fogging for vector-borne diseases such as Dengue or Chikungunya; food/water sample collection and premises inspection for food/water-borne diseases; contact tracing and isolation/quarantine measures for airborne or contact-spread diseases; wound/vaccination status check for diseases such as tetanus or rabies; whichever protocol is medically correct for "${diseaseName}"). Do not default to dengue-specific wording unless the confirmed disease is actually Dengue or DHF.
@@ -2072,7 +2174,7 @@ Required Output Structure:
 - [point 2]
 
 4. Outbreak recording directive:
-[Analyze the outbreak status based on the rule. If ${confirmed.outbreak} is 'FIRST_CASE_OUTBREAK', state: "First case of an outbreak: Full information entered on this report card." If ${confirmed.outbreak} is 'SUBSEQUENT_OUTBREAK_CASE', state: "Subsequent case of an outbreak: Covered by the same action. Refer to Infectious Diseases Register Reference Number: ${confirmed.outbreakRefNo || 'N/A'}." If ${confirmed.outbreak} is 'NO_OUTBREAK', state: "Isolated case: Not part of an active outbreak."]`;
+[Analyze the outbreak status based on the rule. If ${confirmed.outbreak} is 'FIRST_CASE_OUTBREAK', state: "First case of an outbreak: Full information entered on this report card." If ${confirmed.outbreak} is 'SUBSEQUENT_OUTBREAK_CASE', state: "Subsequent case of an outbreak: Covered by the same action. Refer to Infectious Diseases Register Reference Number: ${confirmed.outbreakRefNo || 'N/A'}." If ${confirmed.outbreak} is 'NO_OUTBREAK', state: "Isolated case: Not part of an active outbreak." If ${confirmed.outbreak} is '__CUSTOM__', convert this PHI input into one clear sentence of basic English: "${outbreakCustomText}".]`;
 
             const response = await ai.models.generateContent({
                 model: 'gemini-3.6-flash',
@@ -2093,6 +2195,66 @@ Required Output Structure:
 
     async function submitAndGeneratePage2Note() {
         return generatePage2FromPage1();
+    }
+
+    // ---- Table 02: manual Sinhala / Singlish typing -> basic English ----
+    let p2Dirty = false;
+    let p2Converting = false;
+
+    async function convertP2ToEnglish() {
+        const ta = document.getElementById('inP2Content2');
+        const status = document.getElementById('p2ConvertStatus');
+        const btn = document.getElementById('btnConvertP2');
+        const original = ta.value;
+        if (!original.trim() || p2Converting) return;
+        const apiKey = document.getElementById('inAiApiKey').value.trim();
+        const provider = document.getElementById('inAiEngineProvider').value;
+        if (provider !== 'GEMINI_AI' || !apiKey) {
+            status.innerText = 'Select Gemini AI and enter the API key in Section 00 to convert.';
+            return;
+        }
+        p2Converting = true;
+        btn.disabled = true;
+        status.innerText = '⏳ Converting to basic English...';
+        try {
+            const GoogleGenAI = window.GoogleGenAIReady ? await window.GoogleGenAIReady : window.GoogleGenAI;
+            if (!GoogleGenAI) throw new Error('Gemini SDK is not loaded. Please reload the page.');
+            const ai = new GoogleGenAI({ apiKey });
+            const prompt = `You are helping a Sri Lankan Public Health Inspector. Convert the text below into simple, basic English.
+The text may be Sinhala, Singlish (Sinhala typed in English letters), English, or a mix, and may contain spelling mistakes.
+RULES:
+- Keep the exact meaning. Do not add new facts. Do not remove any information.
+- If a part is already correct English, keep it unchanged.
+- Keep the same line breaks, numbering and "- " point form as the input.
+- Do NOT use markdown bold (**) or asterisks.
+- Do not add patient details, titles or explanations. Output ONLY the converted text.
+
+TEXT:
+${original}`;
+            const response = await ai.models.generateContent({
+                model: 'gemini-3.6-flash',
+                contents: [{ text: prompt }]
+            });
+            const text = response?.text?.trim();
+            if (!text) throw new Error('Gemini returned empty text.');
+            // do not overwrite if the user kept typing while converting
+            if (ta.value === original) {
+                ta.value = text;
+                updatePrintForm();
+            }
+            p2Dirty = false;
+            status.innerText = '✅ Converted to basic English.';
+        } catch (e) {
+            console.error('Table 02 convert error:', e);
+            status.innerText = '⚠ Could not convert: ' + (e?.message || e);
+        } finally {
+            p2Converting = false;
+            btn.disabled = false;
+        }
+    }
+
+    function autoConvertP2() {
+        if (p2Dirty) convertP2ToEnglish();
     }
 
     function updatePrintForm() {
