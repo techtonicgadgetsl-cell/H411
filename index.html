@@ -139,9 +139,10 @@
             line-height: 1;
         }
 
+        .data-overlay-textarea.p2-small { font-family: Arial, 'Iskoola Pota', 'Nirmala UI', 'Noto Sans Sinhala', sans-serif; font-weight: normal; font-size: 8.5px; line-height: 10.5px; color: #000060; }
         .data-overlay-textarea {
             position: absolute;
-            font-family: 'Courier New', Courier, monospace;
+            font-family: 'Courier New', Courier, 'Iskoola Pota', 'Nirmala UI', 'Noto Sans Sinhala', monospace;
             font-weight: bold;
             font-size: 11px;
             color: #000080;
@@ -394,7 +395,7 @@
         .modal-card {
             background: #ffffff;
             width: 100%;
-            max-width: 760px;
+            max-width: 650px;
             border-radius: 12px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.3);
             overflow: hidden;
@@ -524,6 +525,25 @@
         .pc-bar { padding:9px 14px; background:#fffbeb; border-bottom:1px solid #fde68a; font-size:13px; display:flex; gap:16px; flex-wrap:wrap; align-items:center; }
         .pc-scroll { overflow:auto; flex:1; } .pc-scroll table { width:100%; border-collapse:collapse; font-size:13px; }
         .pc-scroll th { position:sticky; top:0; background:#1e293b; color:#fff; padding:8px; text-align:left; } .pc-scroll td { padding:7px 8px; border-bottom:1px solid #e2e8f0; }
+
+        /* ===== PAGE 2 NOTES POPUP ===== */
+        .p2-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,.75); z-index:9450; align-items:center; justify-content:center; padding:10px; }
+        .p2-overlay.open { display:flex; }
+        .p2-card { background:#fff; width:min(760px,100%); max-height:94vh; border-radius:12px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 12px 40px rgba(0,0,0,.45); }
+        .p2-head { background:#1d4ed8; color:#fff; padding:11px 14px; display:flex; align-items:center; gap:10px; } .p2-head b { flex:1; font-size:15px; } .p2-head span { font-size:12px; opacity:.85; }
+        .p2-x { border:0; background:rgba(255,255,255,.25); color:#fff; width:30px; height:30px; border-radius:50%; cursor:pointer; font-size:15px; }
+        .p2-body { padding:14px; overflow-y:auto; flex:1; }
+        .p2-body label.p2l { display:block; font-size:13px; font-weight:bold; margin:10px 0 4px; }
+        .p2-body textarea, .p2-body input[type=date], .p2-body input[type=text], .p2-body select { width:100%; padding:9px; font-size:14px; border:1px solid #94a3b8; border-radius:6px; background:#f8fafc; font-family:inherit; }
+        .p2-body textarea { min-height:78px; resize:vertical; }
+        .p2-lang { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:6px; }
+        .p2-lang label { flex:1; min-width:210px; border:2px solid #cbd5e1; border-radius:8px; padding:9px 11px; cursor:pointer; font-size:14px; font-weight:bold; }
+        .p2-lang label.on { border-color:#16a34a; background:#f0fdf4; }
+        .p2-lang small { display:block; font-weight:normal; color:#64748b; margin-top:2px; font-size:11.5px; }
+        .p2-note { font-size:12px; color:#64748b; margin-top:4px; }
+        .p2-warn { background:#fef3c7; border:1px solid #f59e0b; color:#78350f; padding:8px 10px; border-radius:6px; font-size:13px; margin-bottom:8px; }
+        .p2-foot { padding:11px 14px; background:#f1f5f9; display:flex; gap:10px; justify-content:space-between; border-top:1px solid #e2e8f0; }
+        .p2-foot .btn { min-width:110px; } .p2-foot .btn:disabled { opacity:.5; }
         /* ===== LOGIN ===== */
         .lg-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#0f172a; z-index:9800; align-items:center; justify-content:center; padding:14px; }
         .lg-overlay.open { display:flex; }
@@ -653,13 +673,13 @@
 
                 <!-- TABLE 02 -->
                 <span class="data-overlay" id="outP2Date2" style="top: 275px; left: 90px; width: 110px;"></span>
-                <div class="data-overlay-textarea" id="outP2Content2" style="top: 275px; left: 230px; width: 780px; height: 265px; font-size: 12px; line-height: 15px;"></div>
+                <div class="data-overlay-textarea" id="outP2Content2" style="top: 275px; left: 230px; width: 515px; height: 265px; font-size: 12px; line-height: 15px;"></div>
 
-                <!-- LAB REPORTS AREA -->
-                <div class="data-overlay-textarea" id="outP2LabReports" style="top: 600px; left: 230px; width: 780px; height: 135px; font-size: 11px; line-height: 15px; color: #000080; border-top: 1px dashed #2563eb; padding-top: 4px; white-space: pre-wrap; overflow: hidden; overflow-wrap: anywhere; word-break: break-word;"></div>
-
-                <!-- GPS LOCATION -->
-                <div class="data-overlay" id="outP2GpsBlock" style="top: 720px; left: 230px; width: 790px; font-size: 14px; color: #000080; font-weight: 900;"></div>
+                <!-- LOCATION MAP (1 km x 1 km, 500 m buffer) -->
+                <canvas id="outP2MapCanvas" width="1000" height="1000" style="position:absolute; left:762px; top:312px; width:290px; height:290px; display:none; border:1px solid #000;"></canvas>
+                <div class="data-overlay-textarea p2-small" id="outP2MapCaption" style="top:605px; left:760px; width:295px; height:24px;"></div>
+                <div class="data-overlay-textarea p2-small" id="outP2MapOthers" style="top:631px; left:760px; width:295px; height:118px;"></div>
+                <div class="data-overlay-textarea p2-small" id="outP2MapPlaces" style="top:548px; left:230px; width:520px; height:200px; column-count:2; column-gap:14px;"></div>
             </div>
         </div>
     </div>
@@ -969,42 +989,67 @@
                 </div>
 
                     </div>
-                    <div class="wiz-step" data-title="Investigation Notes">
+                    <div class="wiz-step" data-title="Investigation Notes &amp; Map">
                 <div class="section-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                     <span>08. PAGE 2 - INVESTIGATION NOTES</span>
-                    <button type="button" class="btn btn-ai" onclick="openNoteConfirmModal()">✨ Gemini Generate Table 02</button>
+                    <span style="display:inline-flex; gap:6px; flex-wrap:wrap;">
+                        <button type="button" class="btn btn-update" onclick="openP2Notes('both')">✍️ Write notes (popups)</button>
+                        <button type="button" class="btn btn-reset" onclick="openP2Notes('t1')">Table 01</button>
+                        <button type="button" class="btn btn-reset" onclick="openP2Notes('t2')">Table 02</button>
+                    </span>
                 </div>
 
                 <div class="form-grid">
                     <div class="form-group">
-                        <label>TABLE 01 — DATE (Manual)</label>
+                        <label>TABLE 01 — DATE</label>
                         <input type="date" id="inP2Date1" onchange="updatePrintForm()">
                     </div>
                     <div class="form-group" style="grid-column: span 3;">
-                        <label>TABLE 01 — MANUAL NOTE / PATIENT VISIT RECORD</label>
-                        <textarea id="inP2Content1" rows="3" placeholder="Type this note manually. Nothing in Table 01 will be auto-generated." oninput="updatePrintForm()"></textarea>
+                        <label>TABLE 01 — NOTE / PATIENT VISIT RECORD (typed by you)</label>
+                        <textarea id="inP2Content1" rows="3" placeholder="Use the ✍️ popup above, or type here. Nothing is generated automatically." oninput="updatePrintForm()"></textarea>
                     </div>
                 </div>
 
                 <div class="form-grid">
                     <div class="form-group">
-                        <label>TABLE 02 — DATE (Manual)</label>
+                        <label>TABLE 02 — DATE</label>
                         <input type="date" id="inP2Date2" onchange="updatePrintForm()">
                     </div>
                     <div class="form-group" style="grid-column: span 3;">
-                        <label>TABLE 02 — GEMINI AI NOTE / SOURCE, SPREAD & ACTION TAKEN</label>
-                        <textarea id="inP2Content2" rows="10" placeholder="Click 'Gemini Generate Table 02' to analyse the case information and generate this note. You may edit the generated text before printing." oninput="p2Dirty=true; updatePrintForm()" onblur="autoConvertP2()"></textarea>
-                        <div style="display:flex; align-items:center; gap:10px; margin-top:6px; flex-wrap:wrap;">
-                            <button type="button" class="btn btn-ai" id="btnConvertP2" style="font-size:12px; padding:6px 14px;" onclick="convertP2ToEnglish()">🔤 Convert to English</button>
-                            <small id="p2ConvertStatus" style="color:#64748b;">Type in Sinhala / Singlish / English. When you leave the box it is converted to basic English automatically.</small>
-                        </div>
+                        <label>TABLE 02 — SOURCE OF INFECTION, SPREAD OF DISEASE &amp; ACTION TAKEN (typed by you)</label>
+                        <textarea id="inP2Content2" rows="8" placeholder="Use the ✍️ popup above (it asks for the 3 points), or type here. Nothing is generated automatically." oninput="updatePrintForm()"></textarea>
                     </div>
                 </div>
 
+                <div class="section-title" style="margin-top:18px;"><span>09. PAGE 2 - LOCATION MAP (1 km² · 500 m buffer · special places)</span></div>
                 <div class="form-grid">
                     <div class="form-group" style="grid-column: span 4;">
-                        <label>LABORATORY REPORTS</label>
-                        <textarea id="inP2LabReports" rows="5" placeholder="Laboratory findings from Page 1 / Gemini scan. You may edit before printing." oninput="updatePrintForm()"></textarea>
+                        <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" id="inP2MapOn" checked> Print the location map on Page 2 (needs the patient GPS in Section 03)</label>
+                    </div>
+                    <div class="form-group">
+                        <label>Map style</label>
+                        <select id="inP2MapStyle">
+                            <option value="street" selected>Street map</option>
+                            <option value="sat">Satellite</option>
+                            <option value="topo">Topo</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Show other cases notified within (days)</label>
+                        <input type="number" id="inP2MapDays" min="1" max="365" value="28">
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label style="display:flex;gap:8px;align-items:center;cursor:pointer;margin-top:22px;"><input type="checkbox" id="inP2MapAll"> Include cases of all diseases (default: same disease only)</label>
+                    </div>
+                    <div class="form-group" style="grid-column: span 4;">
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                            <button type="button" class="btn btn-gps" id="btnP2MapRefresh" onclick="p2MapRefresh(false)">🗺️ Prepare / refresh map</button>
+                            <button type="button" class="btn btn-reset" onclick="p2MapRefresh(true)">🔄 Find special places again</button>
+                            <span id="p2MapStatus" style="font-size:12px;color:#475569;"></span>
+                        </div>
+                        <canvas id="p2MapPreview" width="1000" height="1000" style="width:280px;height:280px;border:1px solid #94a3b8;margin-top:10px;display:none;"></canvas>
+                        <input type="hidden" id="inP2Places" value="">
+                        <div style="font-size:12px;color:#64748b;margin-top:6px;">The map shows the patient house, a 500 m buffer, other cases (name labelled) and special places (schools, temples, hospitals, markets, etc. from OpenStreetMap) with their GPS coordinates. Names of other patients are printed on this patient's form.</div>
                     </div>
                 </div>
 
@@ -1074,109 +1119,14 @@
                 </div>
 
                 <div class="btn-group">
-                    <button type="button" class="btn btn-update" onclick="updatePrintForm()">Update Preview</button>
-                    <button type="button" class="btn btn-print" onclick="window.print()">Print A4 Form</button>
+                    <button type="button" class="btn btn-update" onclick="updatePrintForm(); if (typeof p2MapRefresh === 'function') p2MapRefresh(false);">Update Preview</button>
+                    <button type="button" class="btn btn-print" id="btnPrintA4" onclick="printA4Form()">Print A4 Form</button>
                     <button type="button" class="btn btn-reset" onclick="resetForm()">Clear Form</button>
                 </div>
             </form>
         </div>
     </div>
 
-</div>
-
-<!-- 📋 MODAL DIALOG POPUP (STATUTORY DIRECTIVE COMPLIANT) -->
-<div class="modal-overlay" id="noteConfirmModal">
-    <div class="modal-card">
-        <div class="modal-header">
-            <h4>📋 Notes on Source of Infection, Spread of Disease and Action Taken</h4>
-            <button type="button" style="background:none; border:none; color:white; font-size:18px; cursor:pointer;" onclick="closeNoteConfirmModal()">✖</button>
-        </div>
-        <div class="modal-body">
-            <div class="form-group">
-                <label>Disease Confirmed / Notified</label>
-                <input type="text" id="modalDisease" readonly style="background-color: #f1f5f9;">
-            </div>
-
-            <div id="noteStepLabel" style="font-size:12px; font-weight:700; color:#2563eb; margin-bottom:6px;"></div>
-
-            <!-- STEP 1 -->
-            <div class="note-step" data-step="1">
-                <div class="form-group">
-                    <label>1. Source of Infection (බෝවීමේ ප්‍රමය පිළිබඳ සටහන්)</label>
-                    <select id="modalSourceSel" onchange="noteFillChange(this,'modalSourceCustom')">
-                        <option>Residential premises / neighbourhood</option>
-                        <option>Workplace / school / institution</option>
-                        <option>Contact with a known case (household)</option>
-                        <option>Contact with a known case (outside household)</option>
-                        <option>Vector breeding site near home / premises</option>
-                        <option>Contaminated food / water</option>
-                        <option>Animal contact / animal bite</option>
-                        <option>Travel / came from another area</option>
-                        <option>Unknown / under investigation</option>
-                        <option value="__CUSTOM__">➕ Custom (type your own)</option>
-                    </select>
-                    <textarea id="modalSourceCustom" data-fill="1" rows="5" style="margin-top:6px; width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; font-family:inherit; line-height:1.5; resize:vertical;" placeholder="Type in Sinhala / Singlish / English - AI will write it in basic English"></textarea>
-                </div>
-            </div>
-
-            <!-- STEP 2 -->
-            <div class="note-step" data-step="2" style="display:none;">
-                <div class="form-group">
-                    <label>2. Spread of Disease (රෝගය පැතිරීම)</label>
-                    <select id="modalCaseIndex" onchange="noteSelChange(this,'modalCaseCustom')">
-                        <option value="PRIMARY_INDEX_LOCAL">Primary Index Case (Local transmission)</option>
-                        <option value="SUBSEQUENT_LOCAL" selected>Subsequent Case (Local transmission chain)</option>
-                        <option value="IMPORTED_CASE">Imported Case (Acquired outside area / abroad)</option>
-                        <option value="__CUSTOM__">➕ Custom (type your own)</option>
-                    </select>
-                    <div id="hint_modalCaseIndex" style="margin-top:6px; padding:8px 10px; background:#f1f5f9; border-radius:6px; font-size:13px; line-height:1.5; color:#334155; white-space:normal;"></div>
-                    <textarea id="modalCaseCustom" rows="4" style="display:none; margin-top:6px; width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; font-family:inherit; line-height:1.5; resize:vertical;" placeholder="Type in Sinhala / Singlish / English - AI will write it in basic English"></textarea>
-                </div>
-            </div>
-
-            <!-- STEP 3 -->
-            <div class="note-step" data-step="3" style="display:none;">
-                <div class="form-group">
-                    <label>2.1 Outbreak Information (වසංගත තත්ත්වය පිළිබඳ නියෝගය)</label>
-                    <select id="modalOutbreakStatus" onchange="noteSelChange(this,'modalOutbreakCustom'); toggleOutbreakRefInput()">
-                        <option value="NO_OUTBREAK">Isolated Case (No active outbreak in the area)</option>
-                        <option value="FIRST_CASE_OUTBREAK">First case of an outbreak (Enter full information on report card)</option>
-                        <option value="SUBSEQUENT_OUTBREAK_CASE">Subsequent case of an outbreak (Covered by same information/action)</option>
-                        <option value="__CUSTOM__">➕ Custom (type your own)</option>
-                    </select>
-                    <div id="hint_modalOutbreakStatus" style="margin-top:6px; padding:8px 10px; background:#f1f5f9; border-radius:6px; font-size:13px; line-height:1.5; color:#334155; white-space:normal;"></div>
-                    <textarea id="modalOutbreakCustom" rows="4" style="display:none; margin-top:6px; width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; font-family:inherit; line-height:1.5; resize:vertical;" placeholder="Type in Sinhala / Singlish / English - AI will write it in basic English"></textarea>
-                </div>
-                <div class="form-group" id="outbreakRefGroup" style="display: none;">
-                    <label>Reference Number in Infectious Diseases Register</label>
-                    <input type="text" id="modalOutbreakRefNo" placeholder="e.g. IDR/2026/DEN/042">
-                    <small style="color: #64748b;">Give reference number in infectious diseases register on cards of subsequent cases covered by same action.</small>
-                </div>
-            </div>
-
-            <!-- STEP 4 -->
-            <div class="note-step" data-step="4" style="display:none;">
-                <div class="form-group">
-                    <label>3. Action Taken (ගෙන ඇති ක්‍රියා මාර්ගය)</label>
-                    <select id="modalActionSel" onchange="noteFillChange(this,'modalActionCustom')">
-                        <option>Premises inspection, vector source reduction/fogging conducted, patient isolation ensured, and health education given.</option>
-                        <option>Contact tracing and screening of household and close contacts, patient isolation ensured, and health education given.</option>
-                        <option>Premises inspection and vector breeding site destruction done, and health education given.</option>
-                        <option>Food/water sample collection, premises inspection done, and health education given.</option>
-                        <option>Patient isolation ensured and health education given.</option>
-                        <option>Health education given to patient and family.</option>
-                        <option value="__CUSTOM__">➕ Custom (type your own)</option>
-                    </select>
-                    <textarea id="modalActionCustom" data-fill="1" rows="6" style="margin-top:6px; width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; font-family:inherit; line-height:1.5; resize:vertical;" placeholder="Type in Sinhala / Singlish / English - AI will write it in basic English"></textarea>
-                </div>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-reset" onclick="closeNoteConfirmModal()">Cancel</button>
-            <button type="button" class="btn btn-reset" id="noteBackBtn" onclick="noteBack()">⬅ Back</button>
-            <button type="button" class="btn btn-update" id="noteNextBtn" onclick="noteNext()">Next ➡</button>
-        </div>
-    </div>
 </div>
 
 <script type="module">
@@ -2005,281 +1955,6 @@
         return dateStr;
     }
 
-    function toggleOutbreakRefInput() {
-        const outbreakVal = document.getElementById('modalOutbreakStatus').value;
-        const refGroup = document.getElementById('outbreakRefGroup');
-        if (outbreakVal === 'SUBSEQUENT_OUTBREAK_CASE') {
-            refGroup.style.display = 'flex';
-        } else {
-            refGroup.style.display = 'none';
-        }
-    }
-
-    const NOTE_STEPS = 4;
-    let noteStep = 1;
-
-    function noteSelChange(sel, customId) {
-        const c = document.getElementById(customId);
-        const on = sel.value === '__CUSTOM__';
-        c.style.display = on ? 'block' : 'none';
-        if (on) c.focus();
-        // show the full wording of the chosen option (long options cannot fit in the dropdown)
-        const h = document.getElementById('hint_' + sel.id);
-        if (h) {
-            h.innerText = on ? '' : sel.options[sel.selectedIndex].text;
-            h.style.display = on ? 'none' : 'block';
-        }
-    }
-
-    // Source / Action: the dropdown fills a big editable box. Choosing Custom keeps what is already typed.
-    function noteFillChange(sel, taId) {
-        const ta = document.getElementById(taId);
-        if (sel.value !== '__CUSTOM__') ta.value = sel.options[sel.selectedIndex].text;
-        ta.focus();
-    }
-
-    // value of a dropdown, or the typed custom text when "Custom" is chosen
-    function noteVal(selId, customId) {
-        const sel = document.getElementById(selId);
-        const box = document.getElementById(customId);
-        if (box.dataset.fill) return box.value.trim();
-        if (sel.value === '__CUSTOM__') return box.value.trim();
-        return sel.options[sel.selectedIndex].text;
-    }
-
-    function showNoteStep(n) {
-        noteStep = n;
-        document.querySelectorAll('#noteConfirmModal .note-step').forEach(el => {
-            el.style.display = Number(el.dataset.step) === n ? 'block' : 'none';
-        });
-        const labels = ['Source of Infection', 'Spread of Disease', 'Outbreak Information', 'Action Taken'];
-        document.getElementById('noteStepLabel').innerText = 'Question ' + n + ' of ' + NOTE_STEPS + ' — ' + labels[n - 1];
-        document.getElementById('noteBackBtn').style.display = n === 1 ? 'none' : '';
-        document.getElementById('noteNextBtn').innerText = n === NOTE_STEPS ? '✨ Gemini Analyze & Generate' : 'Next ➡';
-    }
-
-    function noteNext() {
-        const customChecks = {
-            1: ['modalSourceSel', 'modalSourceCustom'],
-            2: ['modalCaseIndex', 'modalCaseCustom'],
-            3: ['modalOutbreakStatus', 'modalOutbreakCustom'],
-            4: ['modalActionSel', 'modalActionCustom']
-        }[noteStep];
-        const chkBox = document.getElementById(customChecks[1]);
-        const needText = chkBox.dataset.fill ? true : document.getElementById(customChecks[0]).value === '__CUSTOM__';
-        if (needText && !chkBox.value.trim()) {
-            alert('Please type some text, or choose one of the options in the list.');
-            document.getElementById(customChecks[1]).focus();
-            return;
-        }
-        if (noteStep < NOTE_STEPS) showNoteStep(noteStep + 1);
-        else submitAndGeneratePage2Note();
-    }
-
-    function noteBack() {
-        if (noteStep > 1) showNoteStep(noteStep - 1);
-    }
-
-    function openNoteConfirmModal() {
-        const confirmedDis = document.getElementById('inDiseaseConfirmed').value || document.getElementById('inDiseaseNotified').value || 'Communicable Disease';
-        const movements = document.getElementById('inMovements').value || '';
-
-        document.getElementById('modalDisease').value = confirmedDis;
-
-        // Source: pre-fill from patient movements (if typed on page 1), otherwise keep what was typed before
-        const srcSel = document.getElementById('modalSourceSel');
-        const srcBox = document.getElementById('modalSourceCustom');
-        if (movements.trim()) {
-            srcSel.value = '__CUSTOM__';
-            srcBox.value = movements.trim();
-        } else if (!srcBox.value.trim()) {
-            srcSel.selectedIndex = 0;
-            srcBox.value = srcSel.options[0].text;
-        }
-        const actSel = document.getElementById('modalActionSel');
-        const actBox = document.getElementById('modalActionCustom');
-        if (!actBox.value.trim()) actBox.value = actSel.options[actSel.selectedIndex].text;
-        noteSelChange(document.getElementById('modalCaseIndex'), 'modalCaseCustom');
-        noteSelChange(document.getElementById('modalOutbreakStatus'), 'modalOutbreakCustom');
-
-        toggleOutbreakRefInput();
-        showNoteStep(1);
-        document.getElementById('noteConfirmModal').style.display = 'flex';
-    }
-
-    function closeNoteConfirmModal() {
-        document.getElementById('noteConfirmModal').style.display = 'none';
-    }
-
-    // 🌟 OFFICIAL STATUTORY COMPLIANT PAGE 02 NOTE GENERATOR (STRICT POINT-WISE ANALYSIS)
-    async function generatePage2FromPage1() {
-        const apiKey = document.getElementById('inAiApiKey').value.trim();
-        const provider = document.getElementById('inAiEngineProvider').value;
-        if (provider !== 'GEMINI_AI') {
-            alert('Please select Google Gemini AI in Section 00 before generating Page 2 Table 02.');
-            return;
-        }
-        if (!apiKey) {
-            alert('Please enter your Gemini API key in Section 00 before generating Page 2 Table 02.');
-            return;
-        }
-
-        const get = id => document.getElementById(id)?.value?.trim() || '';
-        const checked = name => document.querySelector(`input[name="${name}"]:checked`)?.value || '';
-
-        const diseaseName = get('modalDisease') || get('inDiseaseConfirmed') || get('inDiseaseNotified') || 'the notified communicable disease';
-
-        const patient = {
-            movements: get('inMovements')
-        };
-
-        const confirmed = {
-            source: noteVal('modalSourceSel', 'modalSourceCustom'),
-            classification: get('modalCaseIndex'),
-            outbreak: get('modalOutbreakStatus'),
-            outbreakRefNo: get('modalOutbreakRefNo'),
-            actions: noteVal('modalActionSel', 'modalActionCustom')
-        };
-
-        let spreadDescription = "Subsequent Case acquired through local transmission chain.";
-        if (confirmed.classification === 'PRIMARY_INDEX_LOCAL') {
-            spreadDescription = "Primary Index Case in the local MOH/PHI area (Local transmission).";
-        } else if (confirmed.classification === 'IMPORTED_CASE') {
-            spreadDescription = "Imported Case (Infection acquired from outside MOH boundary or overseas).";
-        } else if (confirmed.classification === '__CUSTOM__') {
-            spreadDescription = noteVal('modalCaseIndex', 'modalCaseCustom');
-        }
-        const outbreakCustomText = confirmed.outbreak === '__CUSTOM__' ? noteVal('modalOutbreakStatus', 'modalOutbreakCustom') : '';
-
-        const button = document.querySelector('.section-title button.btn-ai');
-        const oldText = button ? button.innerText : '';
-        try {
-            closeNoteConfirmModal();
-            if (button) { button.disabled = true; button.innerText = '⏳ Gemini preparing statutory investigation note...'; }
-            const GoogleGenAI = window.GoogleGenAIReady ? await window.GoogleGenAIReady : window.GoogleGenAI;
-            if (!GoogleGenAI) throw new Error('Gemini SDK is not loaded. Please reload the page and try again.');
-            const ai = new GoogleGenAI({ apiKey });
-
-            const prompt = `You are a Sri Lankan Public Health Inspector (PHI). Write the investigation note for PAGE 2, TABLE 02 strictly analyzing and responding to this exact statutory directive:
-"Notes on source of infection, spread of disease and ACTION TAKEN. If case was one of an outbreak enter information on report card first case only and give reference number in infectious diseases register on the cards of all other cases covered by the same information and/or action."
-
-Confirmed Disease: ${diseaseName}
-
-Input Data for Analysis:
-- Prior Movements: ${patient.movements || 'Not documented'}
-- Source of Infection: ${confirmed.source || 'Not documented'}
-- Spread of Disease: ${spreadDescription}
-- Outbreak Status: ${confirmed.outbreak}
-- ID Register Ref No: ${confirmed.outbreakRefNo || 'N/A'}
-- Action Taken: ${confirmed.actions || 'Not documented'}
-
-CRITICAL RULES:
-- The Input Data above may be written in Sinhala, Singlish (Sinhala typed in English letters) or English, and may have spelling mistakes. Understand the meaning and write the FINAL note ONLY in simple, basic English. Never output Sinhala or Singlish words.
-- Include the meaning of EVERY input item (Prior Movements, Source of Infection, Spread of Disease, Action Taken) in the note, converted to basic English.
-- DO NOT INCLUDE ANY PATIENT DETAILS (No Name, Address, Age, Sex, or Disease Header).
-- Do NOT use markdown bolding (**) or asterisks (*).
-- Write the analysis specifically for "${diseaseName}" — use the standard Sri Lankan PHI investigation and control protocol for THIS disease (for example: vector breeding site survey/larviciding/fogging for vector-borne diseases such as Dengue or Chikungunya; food/water sample collection and premises inspection for food/water-borne diseases; contact tracing and isolation/quarantine measures for airborne or contact-spread diseases; wound/vaccination status check for diseases such as tetanus or rabies; whichever protocol is medically correct for "${diseaseName}"). Do not default to dengue-specific wording unless the confirmed disease is actually Dengue or DHF.
-- Under each of the 4 numbered headings below, write in short POINT FORM (each point on its own line, starting with "- "), not long paragraphs. 2-4 concise points per heading is enough.
-- Analyze the data and provide the output strictly in the 4 points below.
-
-Required Output Structure:
-
-1. Source of infection:
-- [point 1]
-- [point 2]
-
-2. Spread of disease:
-- [point 1]
-- [point 2]
-
-3. Action taken:
-- [point 1]
-- [point 2]
-
-4. Outbreak recording directive:
-[Analyze the outbreak status based on the rule. If ${confirmed.outbreak} is 'FIRST_CASE_OUTBREAK', state: "First case of an outbreak: Full information entered on this report card." If ${confirmed.outbreak} is 'SUBSEQUENT_OUTBREAK_CASE', state: "Subsequent case of an outbreak: Covered by the same action. Refer to Infectious Diseases Register Reference Number: ${confirmed.outbreakRefNo || 'N/A'}." If ${confirmed.outbreak} is 'NO_OUTBREAK', state: "Isolated case: Not part of an active outbreak." If ${confirmed.outbreak} is '__CUSTOM__', convert this PHI input into one clear sentence of basic English: "${outbreakCustomText}".]`;
-
-            const response = await ai.models.generateContent({
-                model: 'gemini-3.6-flash',
-                contents: [{ text: prompt }]
-            });
-            const text = response?.text?.trim();
-            if (!text) throw new Error('Gemini returned an empty Page 2 note.');
-
-            document.getElementById('inP2Content2').value = text;
-            updatePrintForm();
-        } catch (e) {
-            console.error('Gemini Page 2 error:', e);
-            alert('Gemini Page 2 Error:\n\n' + (e?.message || String(e)));
-        } finally {
-            if (button) { button.disabled = false; button.innerText = oldText || '✨ Gemini Generate Table 02'; }
-        }
-    }
-
-    async function submitAndGeneratePage2Note() {
-        return generatePage2FromPage1();
-    }
-
-    // ---- Table 02: manual Sinhala / Singlish typing -> basic English ----
-    let p2Dirty = false;
-    let p2Converting = false;
-
-    async function convertP2ToEnglish() {
-        const ta = document.getElementById('inP2Content2');
-        const status = document.getElementById('p2ConvertStatus');
-        const btn = document.getElementById('btnConvertP2');
-        const original = ta.value;
-        if (!original.trim() || p2Converting) return;
-        const apiKey = document.getElementById('inAiApiKey').value.trim();
-        const provider = document.getElementById('inAiEngineProvider').value;
-        if (provider !== 'GEMINI_AI' || !apiKey) {
-            status.innerText = 'Select Gemini AI and enter the API key in Section 00 to convert.';
-            return;
-        }
-        p2Converting = true;
-        btn.disabled = true;
-        status.innerText = '⏳ Converting to basic English...';
-        try {
-            const GoogleGenAI = window.GoogleGenAIReady ? await window.GoogleGenAIReady : window.GoogleGenAI;
-            if (!GoogleGenAI) throw new Error('Gemini SDK is not loaded. Please reload the page.');
-            const ai = new GoogleGenAI({ apiKey });
-            const prompt = `You are helping a Sri Lankan Public Health Inspector. Convert the text below into simple, basic English.
-The text may be Sinhala, Singlish (Sinhala typed in English letters), English, or a mix, and may contain spelling mistakes.
-RULES:
-- Keep the exact meaning. Do not add new facts. Do not remove any information.
-- If a part is already correct English, keep it unchanged.
-- Keep the same line breaks, numbering and "- " point form as the input.
-- Do NOT use markdown bold (**) or asterisks.
-- Do not add patient details, titles or explanations. Output ONLY the converted text.
-
-TEXT:
-${original}`;
-            const response = await ai.models.generateContent({
-                model: 'gemini-3.6-flash',
-                contents: [{ text: prompt }]
-            });
-            const text = response?.text?.trim();
-            if (!text) throw new Error('Gemini returned empty text.');
-            // do not overwrite if the user kept typing while converting
-            if (ta.value === original) {
-                ta.value = text;
-                updatePrintForm();
-            }
-            p2Dirty = false;
-            status.innerText = '✅ Converted to basic English.';
-        } catch (e) {
-            console.error('Table 02 convert error:', e);
-            status.innerText = '⚠ Could not convert: ' + (e?.message || e);
-        } finally {
-            p2Converting = false;
-            btn.disabled = false;
-        }
-    }
-
-    function autoConvertP2() {
-        if (p2Dirty) convertP2ToEnglish();
-    }
-
     function updatePrintForm() {
         document.getElementById('outPhiRefNo').innerText = document.getElementById('inPhiRefNo').value;
         document.getElementById('outPhiRange').innerText = document.getElementById('inPhiRange').value;
@@ -2317,14 +1992,6 @@ ${original}`;
         const page1LabFindings = document.getElementById('inLabFindings').value;
         document.getElementById('outLabFindings').innerText = page1LabFindings;
         
-        const p2LabField = document.getElementById('inP2LabReports');
-        if (page1LabFindings && !p2LabField.value) {
-            p2LabField.value = page1LabFindings;
-        }
-        
-        const labDisplayContent = p2LabField.value || page1LabFindings;
-        document.getElementById('outP2LabReports').innerText = labDisplayContent ? 'LABORATORY REPORTS: ' + labDisplayContent.replace(/\s*[\r\n]+\s*/g, ' | ') : '';
-
         document.getElementById('outMovements').innerText = document.getElementById('inMovements').value;
 
         const outcomeVal = document.querySelector('input[name="outcomeOption"]:checked')?.value;
@@ -2396,6 +2063,8 @@ ${original}`;
 
         document.getElementById('outP2Date2').innerText = document.getElementById('inP2Date2').value;
         document.getElementById('outP2Content2').innerText = document.getElementById('inP2Content2').value;
+        if (typeof p2MapCheck === 'function') p2MapCheck();
+        if (typeof fitP2Text === 'function') { fitP2Text(document.getElementById('outP2Content1'), 12, 15); fitP2Text(document.getElementById('outP2Content2'), 12, 15); }
 
         const gpsVal = document.getElementById('inGpsCoords').value;
         
@@ -2406,7 +2075,6 @@ ${original}`;
             mapBtn.href = `https://maps.google.com`;
         }
 
-        document.getElementById('outP2GpsBlock').innerText = gpsVal ? "PATIENT LOCATION GPS - " + gpsVal : "";
         document.getElementById('outGpsCoordsPage1').innerText = gpsVal ? "PATIENT HOME / LOCATION GPS COORDINATE - " + gpsVal : "";
 
         // 🆕 NEW: Generate the Extra Info Table dynamically
@@ -2619,6 +2287,53 @@ ${original}`;
 </div>
 <script>document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('pendingPopup').classList.contains('open')) closePendingList(); });</script>
 
+<div class="p2-overlay" id="p2Popup">
+  <div class="p2-card">
+    <div class="p2-head"><b id="p2Title">✍️ Page 2</b><span id="p2Step"></span><button type="button" class="p2-x" onclick="p2Close()" title="Close">✕</button></div>
+    <div class="p2-body" id="p2Body">
+      <div id="p2LangBox">
+        <div class="p2-lang">
+          <label id="p2LangSi"><input type="radio" name="p2lang" value="si"> සිංහල<small>Sinhala letters are printed on the form. (English / Singlish typed text is converted to Sinhala by Gemini.)</small></label>
+          <label id="p2LangEn"><input type="radio" name="p2lang" value="en"> English<small>Type in any language. Gemini translates it to English before it is printed.</small></label>
+        </div>
+      </div>
+      <div id="p2PaneT1">
+        <label class="p2l" for="p2T1Date">Date</label><input type="date" id="p2T1Date">
+        <label class="p2l" for="p2T1Text">Table 01 – note / patient visit record</label>
+        <textarea id="p2T1Text" rows="6" placeholder="e.g. patient is still in the hospital / not at the given address ..."></textarea>
+      </div>
+      <div id="p2PaneT2" style="display:none">
+        <label class="p2l" for="p2T2Date">Date</label><input type="date" id="p2T2Date">
+        <label class="p2l" for="p2Src">1. Source of infection &nbsp;/&nbsp; බෝවීමේ ක්‍රමය</label>
+        <textarea id="p2Src" rows="3"></textarea>
+        <label class="p2l" for="p2Spread">2. Spread of disease &nbsp;/&nbsp; රෝගය පැතිරීම</label>
+        <textarea id="p2Spread" rows="3"></textarea>
+        <label class="p2l" for="p2Action">3. Action taken &nbsp;/&nbsp; ගෙන ඇති ක්‍රියා මාර්ගය</label>
+        <textarea id="p2Action" rows="3"></textarea>
+        <label class="p2l" for="p2Other">Other notes (optional, e.g. premises inspected / larvae positive)</label>
+        <textarea id="p2Other" rows="2"></textarea>
+        <label class="p2l" for="p2Outbreak">4. Outbreak status</label>
+        <select id="p2Outbreak">
+          <option value="NO_OUTBREAK">Isolated case (not part of an active outbreak)</option>
+          <option value="FIRST_CASE_OUTBREAK">First case of an outbreak</option>
+          <option value="SUBSEQUENT_OUTBREAK_CASE">Subsequent case of an outbreak</option>
+        </select>
+        <div id="p2OutRefBox" style="display:none"><label class="p2l" for="p2OutRef">Reference No in the infectious diseases register</label><input type="text" id="p2OutRef" placeholder="e.g. IDR/2026/DEN/042"></div>
+        <div class="p2-note" id="p2T2Existing"></div>
+      </div>
+      <div id="p2PaneRev" style="display:none">
+        <div class="p2-warn" id="p2RevMsg"></div>
+        <div id="p2RevFields"></div>
+      </div>
+    </div>
+    <div class="p2-foot">
+      <button type="button" class="btn btn-reset" onclick="p2Close()">Cancel</button>
+      <button type="button" class="btn btn-reset" id="p2Back" style="display:none" onclick="p2BackToEdit()">⬅ Edit my text</button>
+      <button type="button" class="btn btn-update" id="p2Next" onclick="p2Next()">Next ➡</button>
+    </div>
+  </div>
+</div>
+
 <div class="lg-overlay" id="loginOverlay">
   <div class="lg-card">
     <h3>🔐 Health 411 — Sign in</h3>
@@ -2769,6 +2484,381 @@ ${original}`;
     };
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('gpPicker').classList.contains('open')) closeGpsPicker(); });
 })();
+</script>
+<script>
+/* ===== PAGE 2: notes typed by the PHI in popups (Sinhala / English via Gemini) + 1 km² location map ===== */
+(function () {
+    const $ = id => document.getElementById(id);
+    const pad = n => String(n).padStart(2, '0');
+    const today = () => { const t = new Date(); return t.getFullYear() + '-' + pad(t.getMonth() + 1) + '-' + pad(t.getDate()); };
+    const escT = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+    /* ---------- fit long text into the printed box ---------- */
+    window.fitP2Text = function (el, px, lh) {
+        const W = el.style.width, H = parseFloat(el.style.height) || 265;
+        const m = document.createElement('div');
+        m.className = 'data-overlay-textarea';
+        m.style.cssText = 'position:absolute;left:-9999px;top:0;visibility:hidden;height:auto;overflow:visible;width:' + W;
+        m.textContent = el.textContent; document.body.appendChild(m);
+        let use = [px, lh];
+        for (const [a, b] of [[px, lh], [11, 14], [10, 13], [9, 12], [8, 11]]) { m.style.fontSize = a + 'px'; m.style.lineHeight = b + 'px'; use = [a, b]; if (m.scrollHeight <= H) break; }
+        m.remove(); el.style.fontSize = use[0] + 'px'; el.style.lineHeight = use[1] + 'px';
+    };
+
+    /* =====================  NOTES POPUPS  ===================== */
+    let mode = 'both', cur = 't1', stage = 'in', pend = null;
+    const SI = /[\u0D80-\u0DFF]/;
+    const LABEL = { t1: 'Table 01 note', src: '1. Source of infection', spread: '2. Spread of disease', action: '3. Action taken', other: 'Other notes' };
+    const lang = () => (document.querySelector('input[name="p2lang"]:checked') || {}).value || 'en';
+    function paintLang() { $('p2LangSi').classList.toggle('on', lang() === 'si'); $('p2LangEn').classList.toggle('on', lang() === 'en'); }
+    function setLang(v) { document.querySelectorAll('input[name="p2lang"]').forEach(r => { r.checked = r.value === v; }); paintLang(); }
+    document.querySelectorAll('input[name="p2lang"]').forEach(r => r.addEventListener('change', () => { paintLang(); try { localStorage.setItem('h411_p2lang', lang()); } catch (e) {} }));
+    $('p2Outbreak').addEventListener('change', () => { $('p2OutRefBox').style.display = $('p2Outbreak').value === 'SUBSEQUENT_OUTBREAK_CASE' ? '' : 'none'; });
+
+    const lastStage = () => mode !== 'both' || cur === 't2';
+    function show() {
+        const inp = stage === 'in';
+        $('p2LangBox').style.display = inp ? '' : 'none';
+        $('p2PaneT1').style.display = inp && cur === 't1' ? '' : 'none';
+        $('p2PaneT2').style.display = inp && cur === 't2' ? '' : 'none';
+        $('p2PaneRev').style.display = inp ? 'none' : '';
+        $('p2Back').style.display = inp ? 'none' : '';
+        $('p2Step').textContent = mode === 'both' ? (cur === 't1' ? 'step 1 of 2' : 'step 2 of 2') : '';
+        $('p2Title').textContent = inp ? (cur === 't1' ? '✍️ Page 2 – Table 01' : '✍️ Page 2 – Table 02') : '🔎 Check the converted text';
+        $('p2Next').textContent = inp ? (lastStage() ? 'Done ✔' : 'Next ➡') : '✔ Use this text';
+        $('p2Next').disabled = false;
+        $('p2Body').scrollTop = 0;
+    }
+    window.openP2Notes = function (m) {
+        mode = m; cur = m === 't2' ? 't2' : 't1'; stage = 'in'; pend = null;
+        let l = 'en'; try { l = localStorage.getItem('h411_p2lang') || 'en'; } catch (e) {}
+        setLang(l);
+        $('p2T1Date').value = $('inP2Date1').value || today();
+        $('p2T1Text').value = $('inP2Content1').value || '';
+        $('p2T2Date').value = $('inP2Date2').value || today();
+        ['p2Src', 'p2Spread', 'p2Action', 'p2Other', 'p2OutRef'].forEach(id => { $(id).value = ''; });
+        $('p2Outbreak').value = 'NO_OUTBREAK'; $('p2OutRefBox').style.display = 'none';
+        $('p2T2Existing').textContent = $('inP2Content2').value.trim() ? 'Table 02 already has text. Finishing here will replace it.' : '';
+        show(); $('p2Popup').classList.add('open');
+    };
+    window.p2Close = function () { $('p2Popup').classList.remove('open'); };
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('p2Popup').classList.contains('open')) p2Close(); });
+
+    function gather() {
+        if (cur === 't1') return { t1: $('p2T1Text').value.trim() };
+        return { src: $('p2Src').value.trim(), spread: $('p2Spread').value.trim(), action: $('p2Action').value.trim(), other: $('p2Other').value.trim() };
+    }
+    function needsConv(text, target) {
+        if (!text) return false;
+        if (target === 'en') return true;                                   // English: always let Gemini make sure it is English
+        const sin = (text.match(/[\u0D80-\u0DFF]/g) || []).length, lat = (text.match(/[A-Za-z]/g) || []).length;
+        if (!sin) return lat > 0;                                           // only English / Singlish letters -> convert
+        return lat / (lat + sin) > 0.25;                                    // mostly Sinhala already -> keep as typed
+    }
+    const geminiReady = () => $('inAiEngineProvider').value === 'GEMINI_AI' && ($('inAiApiKey').value || '').trim() && $('inAiApiKey').value.trim() !== 'K88879688888957';
+
+    async function convert(obj, target) {
+        const GoogleGenAI = window.GoogleGenAIReady ? await window.GoogleGenAIReady : window.GoogleGenAI;
+        if (!GoogleGenAI) throw new Error('Gemini SDK is not loaded. Reload the page and try again.');
+        const ai = new GoogleGenAI({ apiKey: $('inAiApiKey').value.trim() });
+        const tName = target === 'si' ? 'Sinhala' : 'English';
+        const prompt = `You are a language assistant for a Sri Lankan Public Health Inspector (PHI) who is filling the statutory H 411 communicable disease report.
+Convert EVERY value of the JSON object below into ${tName}.
+The input may be Sinhala script, English, Sinhala written with English letters (Singlish), or a mix of these.
+Rules:
+- Keep the exact meaning. Do NOT add, remove, explain or invent any fact.
+- Keep names of people and places, numbers, dates, reference numbers, GPS values and units unchanged.
+- Use standard Sri Lankan public health terminology.
+- ${target === 'si' ? 'Write in Sinhala script (Unicode). Lab / medical abbreviations such as NS1, IgG, IgM, PCR may stay in English letters.' : 'Write clear, plain English.'}
+- Keep the line breaks and any "- " bullet structure of the input.
+- Return ONLY one valid JSON object with exactly the same keys. No markdown, no code fences, no comments.
+
+${JSON.stringify(obj)}`;
+        const resp = await ai.models.generateContent({ model: 'gemini-3.6-flash', contents: [{ text: prompt }] });
+        const raw = ((resp && resp.text) || '').trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+        if (!raw) throw new Error('Gemini returned an empty answer.');
+        const out = JSON.parse(raw);
+        Object.keys(obj).forEach(k => { if (typeof out[k] !== 'string') throw new Error('Gemini answer is missing "' + k + '".'); });
+        return out;
+    }
+
+    window.p2Next = async function () {
+        if (stage === 'rev') {
+            const vals = Object.assign({}, pend.vals);
+            pend.keys.forEach(k => { vals[k] = $('p2Rev_' + k).value.trim(); });
+            commit(vals); return;
+        }
+        const vals = gather(), target = lang(), need = {};
+        Object.keys(vals).forEach(k => { if (vals[k] && needsConv(vals[k], target)) need[k] = vals[k]; });
+        if (!Object.keys(need).length) { commit(vals); return; }
+        if (!geminiReady()) {
+            if (!confirm('Converting to ' + (target === 'si' ? 'Sinhala' : 'English') + ' needs Gemini (Step 1: choose Google Gemini AI and enter the API key).\n\nOK = use the text exactly as you typed it.\nCancel = go back.')) return;
+            commit(vals); return;
+        }
+        $('p2Next').disabled = true; $('p2Next').textContent = '⏳ Converting with Gemini...';
+        try {
+            const out = await convert(need, target);
+            pend = { vals, conv: out, keys: Object.keys(need), target };
+            $('p2RevMsg').textContent = 'Gemini converted your text to ' + (target === 'si' ? 'Sinhala' : 'English') + '. Please read it carefully (you can edit it). This is exactly what will be printed.';
+            $('p2RevFields').innerHTML = pend.keys.map(k => `<label class="p2l">${escT(LABEL[k])}</label><div class="p2-note" style="margin:0 0 3px;">You typed: ${escT(need[k]).replace(/\n/g, ' ⏎ ')}</div><textarea id="p2Rev_${k}" rows="4"></textarea>`).join('');
+            pend.keys.forEach(k => { $('p2Rev_' + k).value = out[k]; });
+            stage = 'rev'; show();
+        } catch (e) {
+            show(); alert('Gemini conversion error:\n\n' + (e && e.message ? e.message : e) + '\n\nYour text is still in the box. You can try again.');
+        }
+    };
+    window.p2BackToEdit = function () { stage = 'in'; show(); };
+
+    const HEAD = { en: ['1. Source of infection:', '2. Spread of disease:', '3. Action taken:', '4. Outbreak recording directive:'],
+                   si: ['1. බෝවීමේ ක්‍රමය:', '2. රෝගය පැතිරීම:', '3. ගෙන ඇති ක්‍රියා මාර්ගය:', '4. වසංගත තත්ත්වය:'] };
+    function outbreakLine(L) {
+        const v = $('p2Outbreak').value, ref = $('p2OutRef').value.trim();
+        if (L === 'si') {
+            if (v === 'FIRST_CASE_OUTBREAK') return 'වසංගතයක පළමු රෝගියා: සම්පූර්ණ තොරතුරු මෙම වාර්තා පත්‍රයේ සටහන් කර ඇත.';
+            if (v === 'SUBSEQUENT_OUTBREAK_CASE') return 'වසංගතයක පසුකාලීන රෝගියෙකි: එම තොරතුරු / ක්‍රියා මාර්ග ඇතුළත් වේ.' + (ref ? ' බෝවන රෝග ලේඛනයේ යොමු අංකය: ' + ref + '.' : '');
+            return 'හුදකලා රෝගියෙකි: ප්‍රදේශයේ සක්‍රීය වසංගතයක කොටසක් නොවේ.';
+        }
+        if (v === 'FIRST_CASE_OUTBREAK') return 'First case of an outbreak: Full information entered on this report card.';
+        if (v === 'SUBSEQUENT_OUTBREAK_CASE') return 'Subsequent case of an outbreak: Covered by the same information/action.' + (ref ? ' Infectious Diseases Register Ref No: ' + ref + '.' : '');
+        return 'Isolated case: Not part of an active outbreak.';
+    }
+    function compose(v, L) {
+        const H = HEAD[L], lines = [];
+        if (v.src) lines.push(H[0], v.src);
+        if (v.spread) lines.push(H[1], v.spread);
+        if (v.action) lines.push(H[2], v.action);
+        if (v.other) lines.push(v.other);
+        lines.push(H[3], outbreakLine(L));
+        return lines.join('\n');
+    }
+    function commit(vals) {
+        if (cur === 't1') {
+            if (vals.t1) { $('inP2Date1').value = $('p2T1Date').value; $('inP2Content1').value = vals.t1; }
+        } else if (vals.src || vals.spread || vals.action || vals.other) {
+            $('inP2Date2').value = $('p2T2Date').value; $('inP2Content2').value = compose(vals, lang());
+        }
+        updatePrintForm();
+        if (mode === 'both' && cur === 't1') { cur = 't2'; stage = 'in'; pend = null; show(); } else p2Close();
+    }
+
+    /* =====================  LOCATION MAP  ===================== */
+    const SZ = 1000, HALF = 500;                                  // canvas: 1000 px = 1000 m  (1 px per metre)
+    const parseGps = v => { const m = String(v || '').match(/-?\d+(?:\.\d+)?/g); if (!m || m.length < 2) return null; const a = +m[0], b = +m[1]; return (a > 5 && a < 10.5 && b > 79 && b < 82.5) ? [a, b] : null; };
+    const dKey = n => { const s = String(n || '').toLowerCase(); if (s.includes('dengue')) return 'dengue'; if (s.includes('tubercul') || s.trim() === 'tb') return 'tb'; if (s.includes('leptospir')) return 'lepto'; if (s.includes('chicken')) return 'chickenpox'; if (s.includes('dysentery')) return 'dysentery'; return 'o:' + s.trim(); };
+    const addDays = (ds, n) => { const [y, m, d] = ds.split('-').map(Number), t = new Date(y, m - 1, d + n); return t.getFullYear() + '-' + pad(t.getMonth() + 1) + '-' + pad(t.getDate()); };
+    const STYLE_NAME = { street: 'Street map', sat: 'Satellite', topo: 'Topo map' };
+
+    function classify(t) {
+        const a = t.amenity || '', b = t.building || '';
+        if (a === 'hospital' || b === 'hospital') return { type: 'Hospital', pri: 0, keep: true };
+        if (a === 'place_of_worship') return { type: ({ buddhist: 'Temple', hindu: 'Kovil', christian: 'Church', muslim: 'Mosque' })[t.religion] || 'Place of worship', pri: 2, keep: true };
+        if (/^(temple|church|mosque)$/.test(b)) return { type: b === 'temple' ? 'Temple' : (b === 'church' ? 'Church' : 'Mosque'), pri: 2, keep: true };
+        if (/^(school|college|university)$/.test(a) || b === 'school') return { type: a === 'university' ? 'University' : 'School', pri: 1, keep: true };
+        if (/^(kindergarten|childcare)$/.test(a)) return { type: 'Pre-school', pri: 3, keep: true };
+        if (a === 'pharmacy') return { type: 'Pharmacy', pri: 4 };
+        if (/^(clinic|doctors)$/.test(a) || t.healthcare) return { type: 'Clinic / health centre', pri: 1, keep: true };
+        if (a === 'marketplace') return { type: 'Market', pri: 2, keep: true };
+        if (a === 'police') return { type: 'Police', pri: 4 };
+        if (a === 'townhall' || t.office === 'government') return { type: 'Government office', pri: 3 };
+        if (a === 'community_centre') return { type: 'Community centre', pri: 4 };
+        if (a === 'post_office') return { type: 'Post office', pri: 5 };
+        if (a === 'bus_station') return { type: 'Bus station', pri: 5 };
+        if (a === 'fuel') return { type: 'Fuel station', pri: 5 };
+        if (a === 'library') return { type: 'Library', pri: 5 };
+        if (a === 'bank') return { type: 'Bank', pri: 6 };
+        if (t.landuse === 'construction') return { type: 'Construction site', pri: 2, keep: true };
+        if (t.landuse === 'industrial' || t.man_made === 'works' || /^(industrial|factory|warehouse)$/.test(b)) return { type: 'Factory / industrial', pri: 2, keep: true };
+        if (t.shop) return { type: 'Shop', pri: 7 };
+        if (t.leisure) return { type: 'Playground / sports ground', pri: 6 };
+        return null;
+    }
+    async function fetchPlaces(g) {
+        const dLat = HALF / 111320, dLng = HALF / (111320 * Math.cos(g[0] * Math.PI / 180));
+        const bb = `${g[0] - dLat},${g[1] - dLng},${g[0] + dLat},${g[1] + dLng}`;
+        const q = `[out:json][timeout:25];(
+nwr["amenity"~"^(school|college|kindergarten|university|childcare|hospital|clinic|doctors|pharmacy|place_of_worship|marketplace|police|post_office|townhall|community_centre|bank|bus_station|fuel|library)$"](${bb});
+nwr["shop"~"^(supermarket|mall|department_store|convenience|general|butcher|greengrocer|bakery)$"](${bb});
+nwr["office"="government"](${bb});
+nwr["healthcare"](${bb});
+nwr["landuse"~"^(industrial|construction)$"](${bb});
+nwr["man_made"="works"](${bb});
+nwr["building"~"^(school|hospital|temple|church|mosque|industrial|factory|warehouse)$"](${bb});
+nwr["leisure"~"^(playground|sports_centre|stadium|pitch)$"](${bb});
+);out center tags 250;`;
+        let lastErr = null, data = null;
+        for (const ep of ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter']) {
+            try {
+                const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 25000);
+                const res = await fetch(ep, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'data=' + encodeURIComponent(q), signal: ctl.signal });
+                clearTimeout(t);
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                data = await res.json(); break;
+            } catch (e) { lastErr = e; }
+        }
+        if (!data) throw new Error(lastErr && lastErr.name === 'AbortError' ? 'timeout' : (lastErr && lastErr.message) || 'no answer');
+        const hav = (a, b) => Math.hypot((a[1] - b[1]) * 111320 * Math.cos(g[0] * Math.PI / 180), (a[0] - b[0]) * 111320);
+        const found = [];
+        (data.elements || []).forEach(el => {
+            const t = el.tags || {}, lat = el.lat != null ? el.lat : (el.center && el.center.lat), lng = el.lon != null ? el.lon : (el.center && el.center.lon);
+            if (lat == null || lng == null) return;
+            const c = classify(t); if (!c) return;
+            const name = (t.name || t['name:en'] || t['name:si'] || '').trim();
+            if (!name && !c.keep) return;
+            found.push({ lat: +lat.toFixed(6), lng: +lng.toFixed(6), name, type: c.type, pri: c.pri, d: hav([lat, lng], g) });
+        });
+        found.sort((a, b) => a.pri - b.pri || a.d - b.d);
+        const out = [];
+        found.forEach(p => { if (!out.some(o => o.type === p.type && ((o.name && o.name === p.name) || hav([o.lat, o.lng], [p.lat, p.lng]) < 40))) out.push(p); });
+        return out.slice(0, 22).map(p => ({ lat: p.lat, lng: p.lng, name: p.name, type: p.type }));
+    }
+
+    const tileCache = new Map();
+    function loadTile(url) {
+        if (tileCache.has(url)) return tileCache.get(url);
+        const p = new Promise(res => { const img = new Image(); const t = setTimeout(() => res(null), 9000); img.onload = () => { clearTimeout(t); res(img); }; img.onerror = () => { clearTimeout(t); res(null); }; img.src = url; })
+            .then(img => { if (!img) tileCache.delete(url); return img; });
+        tileCache.set(url, p); return p;
+    }
+
+    function buildState(g, pdata) {
+        const c = { lat: g[0], lng: g[1], name: ($('inPatientName').value || '').trim() || 'Patient' };
+        const off = (lat, lng) => ({ dx: (lng - c.lng) * 111320 * Math.cos(c.lat * Math.PI / 180), dy: (lat - c.lat) * 111320 });
+        const inside = p => Math.abs(p.dx) <= HALF && Math.abs(p.dy) <= HALF;
+        const places = (pdata.places || []).map(p => Object.assign({}, p, off(p.lat, p.lng))).filter(inside);
+        places.forEach(p => { p.dist = Math.hypot(p.dx, p.dy); }); places.sort((a, b) => a.dist - b.dist); places.forEach((p, i) => { p.n = i + 1; });
+        const days = Math.max(1, parseInt($('inP2MapDays').value, 10) || 28);
+        const ref = /^\d{4}-\d{2}-\d{2}$/.test($('inDateNotified').value) ? $('inDateNotified').value : today();
+        const from = addDays(ref, -days), all = $('inP2MapAll').checked;
+        const myKey = dKey($('inDiseaseConfirmed').value || $('inDiseaseNotified').value);
+        const myRef = ($('inPhiRefNo').value || '').trim();
+        const myId = (typeof activeEditingRecordId !== 'undefined') ? activeEditingRecordId : null;
+        const recs = (typeof allFetchedRecords !== 'undefined') ? allFetchedRecords : [];
+        const others = [];
+        recs.forEach(r => {
+            if (myId && r.id === myId) return;
+            if (myRef && (r.inPhiRefNo || '').trim() === myRef) return;
+            const gg = parseGps(r.inGpsCoords); if (!gg) return;
+            const d = r.inDateNotified; if (!/^\d{4}-\d{2}-\d{2}$/.test(d || '') || d < from || d > ref) return;
+            if (!all && dKey(r.inDiseaseConfirmed || r.inDiseaseNotified) !== myKey) return;
+            const o = Object.assign({ lat: gg[0], lng: gg[1] }, off(gg[0], gg[1])); if (!inside(o)) return;
+            o.dist = Math.hypot(o.dx, o.dy); o.name = (r.inPatientName || '').trim() || (r.inPhiRefNo || 'Unnamed'); o.ref = r.inPhiRefNo || ''; o.date = d; o.disease = r.inDiseaseConfirmed || r.inDiseaseNotified || '';
+            others.push(o);
+        });
+        others.sort((a, b) => a.dist - b.dist);
+        return { c, places, others, days, from, ref, all, style: $('inP2MapStyle').value || 'street' };
+    }
+
+    async function renderMap(st) {
+        const cv = document.createElement('canvas'); cv.width = cv.height = SZ; const ctx = cv.getContext('2d');
+        ctx.fillStyle = '#e5e7eb'; ctx.fillRect(0, 0, SZ, SZ);
+        const z = 17, lat = st.c.lat, lng = st.c.lng, scale = 256 * Math.pow(2, z);
+        const k = 156543.03392 * Math.cos(lat * Math.PI / 180) / Math.pow(2, z);     // canvas px per tile px
+        const sinL = Math.sin(lat * Math.PI / 180), cx = (lng + 180) / 360 * scale, cy = (0.5 - Math.log((1 + sinL) / (1 - sinL)) / (4 * Math.PI)) * scale;
+        const svc = { street: 'World_Street_Map', sat: 'World_Imagery', topo: 'World_Topo_Map' }[st.style] || 'World_Street_Map';
+        const x0 = Math.floor((cx - HALF / k) / 256), x1 = Math.floor((cx + HALF / k) / 256), y0 = Math.floor((cy - HALF / k) / 256), y1 = Math.floor((cy + HALF / k) / 256);
+        const jobs = [];
+        for (let ty = y0; ty <= y1; ty++) for (let tx = x0; tx <= x1; tx++) jobs.push(loadTile(`https://server.arcgisonline.com/ArcGIS/rest/services/${svc}/MapServer/tile/${z}/${ty}/${tx}`).then(img => ({ img, tx, ty })));
+        const tiles = await Promise.all(jobs); let ok = 0;
+        tiles.forEach(t => { if (t.img) { ok++; ctx.drawImage(t.img, HALF + (t.tx * 256 - cx) * k - 0.5, HALF + (t.ty * 256 - cy) * k - 0.5, 256 * k + 1, 256 * k + 1); } });
+        if (!ok) {
+            ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 2; for (let i = 0; i <= SZ; i += 100) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, SZ); ctx.moveTo(0, i); ctx.lineTo(SZ, i); ctx.stroke(); }
+            ctx.fillStyle = '#64748b'; ctx.font = 'bold 34px Arial'; ctx.textAlign = 'center'; ctx.fillText('Map picture could not be loaded (no internet)', HALF, 80); ctx.textAlign = 'left';
+        }
+        // 500 m buffer
+        ctx.beginPath(); ctx.arc(HALF, HALF, HALF - 3, 0, Math.PI * 2); ctx.fillStyle = 'rgba(220,38,38,0.07)'; ctx.fill();
+        ctx.lineWidth = 5; ctx.strokeStyle = '#dc2626'; ctx.setLineDash([22, 14]); ctx.stroke(); ctx.setLineDash([]);
+
+        const occ = [], X = p => HALF + p.dx, Y = p => HALF - p.dy;
+        const rect = (x, y, w, h) => ({ x, y, w, h }), hit = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+        occ.push(rect(HALF - 30, HALF - 30, 60, 60));
+        st.places.forEach(p => occ.push(rect(X(p) - 20, Y(p) - 20, 40, 40)));
+        st.others.forEach(o => occ.push(rect(X(o) - 16, Y(o) - 16, 32, 32)));
+        function label(text, x, y, r, size, bold) {
+            text = text.length > 24 ? text.slice(0, 23) + '…' : text;
+            ctx.font = (bold ? 'bold ' : 'bold ') + size + 'px Arial, "Iskoola Pota", "Nirmala UI", sans-serif'; const w = ctx.measureText(text).width, h = size;
+            const c = [[r + 8, h / 3], [-w - r - 8, h / 3], [-w / 2, -r - 8], [-w / 2, r + h + 6], [r + 8, -r], [-w - r - 8, -r], [r + 8, r + h], [-w - r - 8, r + h]];
+            let pick = null;
+            for (const [dx, dy] of c) { const rc = rect(x + dx, y + dy - h, w, h + 4); if (rc.x > 6 && rc.y > 6 && rc.x + rc.w < SZ - 6 && rc.y + rc.h < SZ - 6 && !occ.some(o => hit(o, rc))) { pick = rc; break; } }
+            if (!pick) { const [dx, dy] = c[0]; pick = rect(Math.min(Math.max(x + dx, 6), SZ - w - 6), Math.min(Math.max(y + dy - h, 6), SZ - h - 10), w, h + 4); }
+            occ.push(pick);
+            ctx.lineJoin = 'round'; ctx.lineWidth = 8; ctx.strokeStyle = 'rgba(255,255,255,0.95)'; ctx.strokeText(text, pick.x, pick.y + h - 2);
+            ctx.fillStyle = '#111827'; ctx.fillText(text, pick.x, pick.y + h - 2);
+        }
+        // special places (numbered squares)
+        st.places.forEach(p => {
+            const x = X(p), y = Y(p); ctx.fillStyle = '#1e3a8a'; ctx.fillRect(x - 17, y - 17, 34, 34); ctx.lineWidth = 4; ctx.strokeStyle = '#fff'; ctx.strokeRect(x - 17, y - 17, 34, 34);
+            ctx.fillStyle = '#fff'; ctx.font = 'bold 24px Arial'; ctx.textAlign = 'center'; ctx.fillText(String(p.n), x, y + 8.5); ctx.textAlign = 'left';
+        });
+        // other cases
+        st.others.forEach(o => { const x = X(o), y = Y(o); ctx.beginPath(); ctx.arc(x, y, 13, 0, Math.PI * 2); ctx.fillStyle = '#f59e0b'; ctx.fill(); ctx.lineWidth = 4; ctx.strokeStyle = '#111'; ctx.stroke(); });
+        st.others.forEach(o => label(o.name, X(o), Y(o), 14, 28, true));
+        // patient house
+        ctx.beginPath(); ctx.moveTo(HALF, HALF - 26); ctx.lineTo(HALF + 26, HALF - 4); ctx.lineTo(HALF + 17, HALF - 4); ctx.lineTo(HALF + 17, HALF + 20); ctx.lineTo(HALF - 17, HALF + 20); ctx.lineTo(HALF - 17, HALF - 4); ctx.lineTo(HALF - 26, HALF - 4); ctx.closePath();
+        ctx.fillStyle = '#dc2626'; ctx.fill(); ctx.lineWidth = 5; ctx.strokeStyle = '#fff'; ctx.stroke();
+        label(st.c.name, HALF, HALF, 28, 32, true);
+        // north arrow + scale bar + frame
+        ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.fillRect(SZ - 90, 20, 70, 100);
+        ctx.fillStyle = '#111'; ctx.beginPath(); ctx.moveTo(SZ - 55, 30); ctx.lineTo(SZ - 75, 80); ctx.lineTo(SZ - 55, 68); ctx.lineTo(SZ - 35, 80); ctx.closePath(); ctx.fill();
+        ctx.font = 'bold 30px Arial'; ctx.textAlign = 'center'; ctx.fillText('N', SZ - 55, 112); ctx.textAlign = 'left';
+        ctx.fillStyle = 'rgba(255,255,255,0.88)'; ctx.fillRect(20, SZ - 82, 210, 62);
+        ctx.fillStyle = '#111'; ctx.fillRect(34, SZ - 48, 100, 8); ctx.fillRect(34, SZ - 58, 4, 26); ctx.fillRect(130, SZ - 58, 4, 26); ctx.font = 'bold 26px Arial'; ctx.fillText('100 m', 146, SZ - 40);
+        ctx.lineWidth = 8; ctx.strokeStyle = '#000'; ctx.strokeRect(4, 4, SZ - 8, SZ - 8);
+        return { canvas: cv, tiles: ok };
+    }
+
+    function paint(cv) {
+        ['outP2MapCanvas', 'p2MapPreview'].forEach(id => { const t = $(id); t.width = cv.width; t.height = cv.height; const x = t.getContext('2d'); x.clearRect(0, 0, cv.width, cv.height); x.drawImage(cv, 0, 0); t.style.display = ''; });
+    }
+    function hideMap() {
+        ['outP2MapCanvas', 'p2MapPreview'].forEach(id => { $(id).style.display = 'none'; });
+        ['outP2MapCaption', 'outP2MapOthers', 'outP2MapPlaces'].forEach(id => { $(id).innerHTML = ''; });
+    }
+    window.p2MapCheck = function () { if (!parseGps($('inGpsCoords').value) || !$('inP2MapOn').checked) hideMap(); };
+    const f5 = n => (+n).toFixed(5);
+    function legends(st, pdata) {
+        $('outP2MapCaption').innerHTML = `<b>1 km × 1 km</b> · dashed circle = 500 m buffer · house GPS ${f5(st.c.lat)}, ${f5(st.c.lng)}<br>${STYLE_NAME[st.style] || ''} © Esri · places © OpenStreetMap contributors`;
+        const oh = `<div><b>Other ${st.all ? '' : 'same-disease '}cases notified ${escT(st.from)} → ${escT(st.ref)} (${st.days} days): ${st.others.length}</b></div>`;
+        $('outP2MapOthers').innerHTML = oh + (st.others.length ? st.others.slice(0, 8).map(o => `<div>● ${escT(o.name)} · ${escT(o.ref || '-')} · ${escT(o.date)} · ${Math.round(o.dist)} m</div>`).join('') + (st.others.length > 8 ? `<div>+ ${st.others.length - 8} more</div>` : '') : '<div>none inside this area</div>');
+        const ph = `<div style="break-inside:avoid;"><b>Special places in this area (${st.places.length}) · GPS</b></div>`;
+        $('outP2MapPlaces').innerHTML = ph + (st.places.length ? st.places.map(p => `<div style="break-inside:avoid;margin-bottom:2px;"><b>${p.n}</b> ${escT(p.name || '(unnamed)')} <i>(${escT(p.type)})</i><br>&nbsp;&nbsp;${f5(p.lat)}, ${f5(p.lng)} · ${Math.round(p.dist)} m</div>`).join('') : `<div>${pdata.failed ? 'Could not load places (no internet / server busy).' : 'No special places found in OpenStreetMap for this area.'}</div>`);
+    }
+
+    let token = 0;
+    window.p2MapRefresh = async function (forcePlaces) {
+        const my = ++token, stEl = $('p2MapStatus');
+        if (!$('inP2MapOn').checked) { hideMap(); stEl.textContent = 'Map is switched off.'; return; }
+        const g = parseGps($('inGpsCoords').value);
+        if (!g) { hideMap(); stEl.textContent = 'Enter the patient GPS first (Section 03).'; return; }
+        const key = f5(g[0]) + ',' + f5(g[1]);
+        let pdata = null; try { pdata = JSON.parse($('inP2Places').value || 'null'); } catch (e) {}
+        if (!pdata || pdata.key !== key || forcePlaces) {
+            if (navigator.onLine) {
+                stEl.textContent = 'Finding special places (OpenStreetMap)...';
+                try { pdata = { key, places: await fetchPlaces(g) }; $('inP2Places').value = JSON.stringify(pdata); }
+                catch (e) { stEl.textContent = 'Could not load special places (' + (e && e.message ? e.message : e) + ').'; if (!pdata || pdata.key !== key) pdata = { key, places: [], failed: true }; }
+            } else if (!pdata || pdata.key !== key) pdata = { key, places: [], failed: true };
+        }
+        if (my !== token) return;
+        const st = buildState(g, pdata);
+        let res; try { res = await renderMap(st); } catch (e) { stEl.textContent = 'Map error: ' + (e && e.message ? e.message : e); return; }
+        if (my !== token) return;
+        paint(res.canvas); legends(st, pdata);
+        stEl.textContent = (res.tiles ? '✔ Map ready: ' : '⚠️ Map picture not loaded (no internet), but ') + st.places.length + ' special place(s), ' + st.others.length + ' other case(s).';
+        updatePrintForm();
+    };
+    window.printA4Form = async function () {
+        const b = $('btnPrintA4'); const old = b.textContent;
+        try { b.disabled = true; b.textContent = '⏳ Preparing map...'; await window.p2MapRefresh(false); } catch (e) { console.log('Map notice:', e && e.message); }
+        b.disabled = false; b.textContent = old;
+        updatePrintForm(); window.print();
+    };
+
+    let tmr = null; const sched = () => { clearTimeout(tmr); tmr = setTimeout(() => window.p2MapRefresh(false), 1200); };
+    ['inGpsCoords', 'inP2MapStyle', 'inP2MapDays', 'inP2MapAll', 'inP2MapOn'].forEach(id => ['input', 'change'].forEach(ev => $(id).addEventListener(ev, sched)));
+    ['inPatientName', 'inDateNotified', 'inDiseaseNotified', 'inDiseaseConfirmed'].forEach(id => { const el = $(id); if (el) el.addEventListener('change', sched); });
+    const _lre = loadRecordForEditing; loadRecordForEditing = function (id) { _lre(id); setTimeout(() => window.p2MapRefresh(false), 800); };
+})();
+
 </script>
 </body>
 </html>
