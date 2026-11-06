@@ -673,13 +673,13 @@
 
                 <!-- TABLE 02 -->
                 <span class="data-overlay" id="outP2Date2" style="top: 275px; left: 90px; width: 110px;"></span>
-                <div class="data-overlay-textarea" id="outP2Content2" style="top: 275px; left: 230px; width: 515px; height: 265px; font-size: 12px; line-height: 15px;"></div>
+                <div class="data-overlay-textarea" id="outP2Content2" style="top: 275px; left: 230px; width: 515px; height: 473px; font-size: 12px; line-height: 15px;"></div>
 
                 <!-- LOCATION MAP (1 km x 1 km, 500 m buffer) -->
-                <canvas id="outP2MapCanvas" width="1000" height="1000" style="position:absolute; left:762px; top:312px; width:290px; height:290px; display:none; border:1px solid #000;"></canvas>
-                <div class="data-overlay-textarea p2-small" id="outP2MapCaption" style="top:605px; left:760px; width:295px; height:24px;"></div>
-                <div class="data-overlay-textarea p2-small" id="outP2MapOthers" style="top:631px; left:760px; width:295px; height:118px;"></div>
-                <div class="data-overlay-textarea p2-small" id="outP2MapPlaces" style="top:548px; left:230px; width:520px; height:200px; column-count:2; column-gap:14px;"></div>
+                <canvas id="outP2MapCanvas" width="1000" height="1000" style="position:absolute; left:757px; top:430px; width:298px; height:298px; display:none; border:1px solid #000;"></canvas>
+                <div class="data-overlay-textarea p2-small" id="outP2MapCaption" style="top:731px; left:757px; width:298px; height:20px;"></div>
+                <div class="data-overlay-textarea p2-small" id="outP2MapOthers" style="top:312px; left:757px; width:298px; height:112px;"></div>
+                <div class="data-overlay-textarea p2-small" id="outP2MapPlaces" style="top:620px; left:230px; width:520px; height:128px; column-count:2; column-gap:14px;"></div>
             </div>
         </div>
     </div>
@@ -1007,6 +1007,7 @@
                     <div class="form-group" style="grid-column: span 3;">
                         <label>TABLE 01 — NOTE / PATIENT VISIT RECORD (typed by you)</label>
                         <textarea id="inP2Content1" rows="3" placeholder="Use the ✍️ popup above, or type here. Nothing is generated automatically." oninput="updatePrintForm()"></textarea>
+                        <div id="p2Warn1" style="display:none;color:#b91c1c;font-size:12px;font-weight:bold;margin-top:4px;">⚠️ Too long for the printed box even with the smallest letters. Please shorten it.</div>
                     </div>
                 </div>
 
@@ -1018,6 +1019,7 @@
                     <div class="form-group" style="grid-column: span 3;">
                         <label>TABLE 02 — SOURCE OF INFECTION, SPREAD OF DISEASE &amp; ACTION TAKEN (typed by you)</label>
                         <textarea id="inP2Content2" rows="8" placeholder="Use the ✍️ popup above (it asks for the 3 points), or type here. Nothing is generated automatically." oninput="updatePrintForm()"></textarea>
+                        <div id="p2Warn2" style="display:none;color:#b91c1c;font-size:12px;font-weight:bold;margin-top:4px;">⚠️ Too long for the printed box even with the smallest letters. Please shorten it.</div>
                     </div>
                 </div>
 
@@ -1029,7 +1031,8 @@
                     <div class="form-group">
                         <label>Map style</label>
                         <select id="inP2MapStyle">
-                            <option value="street" selected>Street map</option>
+                            <option value="bw" selected>Black &amp; white (best for B/W printers)</option>
+                            <option value="street">Street map (colour)</option>
                             <option value="sat">Satellite</option>
                             <option value="topo">Topo</option>
                         </select>
@@ -1123,6 +1126,7 @@
                     <button type="button" class="btn btn-print" id="btnPrintA4" onclick="printA4Form()">Print A4 Form</button>
                     <button type="button" class="btn btn-reset" onclick="resetForm()">Clear Form</button>
                 </div>
+                <div style="font-size:12px;color:#64748b;margin-top:8px;">🖨️ Print settings: Paper <b>A4</b> · Layout <b>Landscape</b> · Margins <b>None</b> · Scale <b>100</b> · <b>Background graphics ✔</b>. (If the preview shows 3 pages, the margins are not "None".)</div>
             </form>
         </div>
     </div>
@@ -2064,7 +2068,7 @@
         document.getElementById('outP2Date2').innerText = document.getElementById('inP2Date2').value;
         document.getElementById('outP2Content2').innerText = document.getElementById('inP2Content2').value;
         if (typeof p2MapCheck === 'function') p2MapCheck();
-        if (typeof fitP2Text === 'function') { fitP2Text(document.getElementById('outP2Content1'), 12, 15); fitP2Text(document.getElementById('outP2Content2'), 12, 15); }
+        if (typeof p2Layout === 'function') p2Layout();
 
         const gpsVal = document.getElementById('inGpsCoords').value;
         
@@ -2493,16 +2497,35 @@
     const today = () => { const t = new Date(); return t.getFullYear() + '-' + pad(t.getMonth() + 1) + '-' + pad(t.getDate()); };
     const escT = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-    /* ---------- fit long text into the printed box ---------- */
+    /* ---------- fit long text into the printed box (shrinks the font; returns false if it still does not fit) ---------- */
     window.fitP2Text = function (el, px, lh) {
         const W = el.style.width, H = parseFloat(el.style.height) || 265;
         const m = document.createElement('div');
         m.className = 'data-overlay-textarea';
         m.style.cssText = 'position:absolute;left:-9999px;top:0;visibility:hidden;height:auto;overflow:visible;width:' + W;
         m.textContent = el.textContent; document.body.appendChild(m);
-        let use = [px, lh];
-        for (const [a, b] of [[px, lh], [11, 14], [10, 13], [9, 12], [8, 11]]) { m.style.fontSize = a + 'px'; m.style.lineHeight = b + 'px'; use = [a, b]; if (m.scrollHeight <= H) break; }
+        let use = [px, lh], fits = false;
+        for (const [a, b] of [[px, lh], [11, 14], [10.5, 13], [10, 12.5], [9.5, 12], [9, 11.5], [8.5, 11], [8, 10.5]]) {
+            m.style.fontSize = a + 'px'; m.style.lineHeight = b + 'px'; use = [a, b];
+            if (m.scrollHeight <= H) { fits = true; break; }
+        }
         m.remove(); el.style.fontSize = use[0] + 'px'; el.style.lineHeight = use[1] + 'px';
+        return fits;
+    };
+    /* page 2 layout: the "special places" list sits at the bottom-left, Table 02 gets ALL the space above it */
+    window.p2Layout = function () {
+        const lg = $('outP2MapPlaces'), c1 = $('outP2Content1'), c2 = $('outP2Content2');
+        let H = 0;
+        if (lg.innerHTML.trim() && $('outP2MapCanvas').style.display !== 'none') {
+            const m = document.createElement('div'); m.className = 'data-overlay-textarea p2-small';
+            m.style.cssText = 'position:absolute;left:-9999px;top:0;visibility:hidden;height:auto;overflow:visible;width:520px;column-count:2;column-gap:14px;';
+            m.innerHTML = lg.innerHTML; document.body.appendChild(m); H = Math.min(m.scrollHeight + 3, 230); m.remove();
+        }
+        lg.style.display = H ? '' : 'none'; lg.style.height = H + 'px'; lg.style.top = (748 - H) + 'px';
+        c2.style.height = (748 - 275 - (H ? H + 6 : 0)) + 'px';
+        const ok1 = window.fitP2Text(c1, 12, 15), ok2 = window.fitP2Text(c2, 12, 15);
+        const w1 = $('p2Warn1'), w2 = $('p2Warn2');
+        if (w1) w1.style.display = ok1 ? 'none' : ''; if (w2) w2.style.display = ok2 ? 'none' : '';
     };
 
     /* =====================  NOTES POPUPS  ===================== */
@@ -2622,13 +2645,16 @@ ${JSON.stringify(obj)}`;
         if (v === 'SUBSEQUENT_OUTBREAK_CASE') return 'Subsequent case of an outbreak: Covered by the same information/action.' + (ref ? ' Infectious Diseases Register Ref No: ' + ref + '.' : '');
         return 'Isolated case: Not part of an active outbreak.';
     }
+    const HEAD_RE = /^\s*(?:\d+\s*[.)]\s*)?(?:source of infection|spread of disease|action taken|outbreak recording directive|බෝවීමේ ක්‍රමය|රෝගය පැතිරීම|ගෙන ඇති ක්‍රියා මාර්ගය|වසංගත තත්ත්වය)\s*:?\s*$/i;
+    const cleanField = t => { const ls = String(t || '').split('\n'); while (ls.length && (HEAD_RE.test(ls[0]) || !ls[0].trim())) ls.shift(); return ls.join('\n').trim(); };   // drop headings the user typed (we add them)
     function compose(v, L) {
-        const H = HEAD[L], lines = [];
-        if (v.src) lines.push(H[0], v.src);
-        if (v.spread) lines.push(H[1], v.spread);
-        if (v.action) lines.push(H[2], v.action);
-        if (v.other) lines.push(v.other);
-        lines.push(H[3], outbreakLine(L));
+        const H = HEAD[L], lines = [], src = cleanField(v.src), spread = cleanField(v.spread), action = cleanField(v.action), other = (v.other || '').trim();
+        if (src) lines.push(H[0], src);
+        if (spread) lines.push(H[1], spread);
+        if (action) lines.push(H[2], action);
+        if (other) lines.push(other);
+        const all = [src, spread, action, other].join('\n');
+        if (!/outbreak recording directive|වසංගත තත්ත්වය/i.test(all)) lines.push(H[3], outbreakLine(L));      // never print the outbreak line twice
         return lines.join('\n');
     }
     function commit(vals) {
@@ -2646,7 +2672,8 @@ ${JSON.stringify(obj)}`;
     const parseGps = v => { const m = String(v || '').match(/-?\d+(?:\.\d+)?/g); if (!m || m.length < 2) return null; const a = +m[0], b = +m[1]; return (a > 5 && a < 10.5 && b > 79 && b < 82.5) ? [a, b] : null; };
     const dKey = n => { const s = String(n || '').toLowerCase(); if (s.includes('dengue')) return 'dengue'; if (s.includes('tubercul') || s.trim() === 'tb') return 'tb'; if (s.includes('leptospir')) return 'lepto'; if (s.includes('chicken')) return 'chickenpox'; if (s.includes('dysentery')) return 'dysentery'; return 'o:' + s.trim(); };
     const addDays = (ds, n) => { const [y, m, d] = ds.split('-').map(Number), t = new Date(y, m - 1, d + n); return t.getFullYear() + '-' + pad(t.getMonth() + 1) + '-' + pad(t.getDate()); };
-    const STYLE_NAME = { street: 'Street map', sat: 'Satellite', topo: 'Topo map' };
+    const STYLE_NAME = { bw: 'Black & white street map', street: 'Street map', sat: 'Satellite', topo: 'Topo map' };
+    const ATTR = { bw: 'Map © OpenStreetMap contributors', street: 'Map © OpenStreetMap contributors', sat: 'Imagery © Esri', topo: 'Map © Esri' };
 
     function classify(t) {
         const a = t.amenity || '', b = t.building || '';
@@ -2686,9 +2713,9 @@ nwr["building"~"^(school|hospital|temple|church|mosque|industrial|factory|wareho
 nwr["leisure"~"^(playground|sports_centre|stadium|pitch)$"](${bb});
 );out center tags 250;`;
         let lastErr = null, data = null;
-        for (const ep of ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter']) {
+        for (const ep of ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter', 'https://maps.mail.ru/osm/tools/overpass/api/interpreter']) {
             try {
-                const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 25000);
+                const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 30000);
                 const res = await fetch(ep, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'data=' + encodeURIComponent(q), signal: ctl.signal });
                 clearTimeout(t);
                 if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -2745,64 +2772,73 @@ nwr["leisure"~"^(playground|sports_centre|stadium|pitch)$"](${bb});
             others.push(o);
         });
         others.sort((a, b) => a.dist - b.dist);
-        return { c, places, others, days, from, ref, all, style: $('inP2MapStyle').value || 'street' };
+        return { c, places, others, days, from, ref, all, style: $('inP2MapStyle').value || 'bw' };
     }
 
     async function renderMap(st) {
+        const bw = st.style === 'bw';
         const cv = document.createElement('canvas'); cv.width = cv.height = SZ; const ctx = cv.getContext('2d');
-        ctx.fillStyle = '#e5e7eb'; ctx.fillRect(0, 0, SZ, SZ);
+        ctx.fillStyle = bw ? '#ffffff' : '#e5e7eb'; ctx.fillRect(0, 0, SZ, SZ);
         const z = 17, lat = st.c.lat, lng = st.c.lng, scale = 256 * Math.pow(2, z);
         const k = 156543.03392 * Math.cos(lat * Math.PI / 180) / Math.pow(2, z);     // canvas px per tile px
         const sinL = Math.sin(lat * Math.PI / 180), cx = (lng + 180) / 360 * scale, cy = (0.5 - Math.log((1 + sinL) / (1 - sinL)) / (4 * Math.PI)) * scale;
-        const svc = { street: 'World_Street_Map', sat: 'World_Imagery', topo: 'World_Topo_Map' }[st.style] || 'World_Street_Map';
+        const tileUrl = (tx, ty) => st.style === 'sat' ? `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${ty}/${tx}`
+            : st.style === 'topo' ? `https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/${z}/${ty}/${tx}`
+            : `https://tile.openstreetmap.org/${z}/${tx}/${ty}.png`;
         const x0 = Math.floor((cx - HALF / k) / 256), x1 = Math.floor((cx + HALF / k) / 256), y0 = Math.floor((cy - HALF / k) / 256), y1 = Math.floor((cy + HALF / k) / 256);
         const jobs = [];
-        for (let ty = y0; ty <= y1; ty++) for (let tx = x0; tx <= x1; tx++) jobs.push(loadTile(`https://server.arcgisonline.com/ArcGIS/rest/services/${svc}/MapServer/tile/${z}/${ty}/${tx}`).then(img => ({ img, tx, ty })));
+        for (let ty = y0; ty <= y1; ty++) for (let tx = x0; tx <= x1; tx++) jobs.push(loadTile(tileUrl(tx, ty)).then(img => ({ img, tx, ty })));
         const tiles = await Promise.all(jobs); let ok = 0;
+        const hasFilter = bw && ('filter' in ctx);
+        if (hasFilter) ctx.filter = 'grayscale(1) brightness(0.65) contrast(3.4)';          // black & white printer: strong, clear lines
         tiles.forEach(t => { if (t.img) { ok++; ctx.drawImage(t.img, HALF + (t.tx * 256 - cx) * k - 0.5, HALF + (t.ty * 256 - cy) * k - 0.5, 256 * k + 1, 256 * k + 1); } });
+        if (hasFilter) ctx.filter = 'none';
+        else if (bw && ok) { ctx.globalCompositeOperation = 'saturation'; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, SZ, SZ); ctx.globalCompositeOperation = 'source-over'; }
         if (!ok) {
-            ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 2; for (let i = 0; i <= SZ; i += 100) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, SZ); ctx.moveTo(0, i); ctx.lineTo(SZ, i); ctx.stroke(); }
-            ctx.fillStyle = '#64748b'; ctx.font = 'bold 34px Arial'; ctx.textAlign = 'center'; ctx.fillText('Map picture could not be loaded (no internet)', HALF, 80); ctx.textAlign = 'left';
+            ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2; for (let i = 0; i <= SZ; i += 100) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, SZ); ctx.moveTo(0, i); ctx.lineTo(SZ, i); ctx.stroke(); }
+            ctx.fillStyle = '#334155'; ctx.font = 'bold 34px Arial'; ctx.textAlign = 'center'; ctx.fillText('Map picture could not be loaded (no internet)', HALF, 80); ctx.textAlign = 'left';
         }
-        // 500 m buffer
-        ctx.beginPath(); ctx.arc(HALF, HALF, HALF - 3, 0, Math.PI * 2); ctx.fillStyle = 'rgba(220,38,38,0.07)'; ctx.fill();
-        ctx.lineWidth = 5; ctx.strokeStyle = '#dc2626'; ctx.setLineDash([22, 14]); ctx.stroke(); ctx.setLineDash([]);
+        const P = bw ? { ring: '#000', fill: 'rgba(255,255,255,0)', house: '#000', other: '#000', sq: '#000', txt: '#000' }
+                     : { ring: '#dc2626', fill: 'rgba(220,38,38,0.07)', house: '#dc2626', other: '#f59e0b', sq: '#1e3a8a', txt: '#111827' };
+        // 500 m buffer (white halo under the dashes so it stays visible on a busy map)
+        ctx.beginPath(); ctx.arc(HALF, HALF, HALF - 5, 0, Math.PI * 2); ctx.fillStyle = P.fill; ctx.fill();
+        ctx.setLineDash([26, 16]); ctx.lineWidth = 14; ctx.strokeStyle = '#fff'; ctx.stroke(); ctx.lineWidth = 6; ctx.strokeStyle = P.ring; ctx.stroke(); ctx.setLineDash([]);
 
         const occ = [], X = p => HALF + p.dx, Y = p => HALF - p.dy;
         const rect = (x, y, w, h) => ({ x, y, w, h }), hit = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
         occ.push(rect(HALF - 30, HALF - 30, 60, 60));
-        st.places.forEach(p => occ.push(rect(X(p) - 20, Y(p) - 20, 40, 40)));
-        st.others.forEach(o => occ.push(rect(X(o) - 16, Y(o) - 16, 32, 32)));
-        function label(text, x, y, r, size, bold) {
+        st.places.forEach(p => occ.push(rect(X(p) - 22, Y(p) - 22, 44, 44)));
+        st.others.forEach(o => occ.push(rect(X(o) - 18, Y(o) - 18, 36, 36)));
+        function label(text, x, y, r, size) {
             text = text.length > 24 ? text.slice(0, 23) + '…' : text;
-            ctx.font = (bold ? 'bold ' : 'bold ') + size + 'px Arial, "Iskoola Pota", "Nirmala UI", sans-serif'; const w = ctx.measureText(text).width, h = size;
+            ctx.font = 'bold ' + size + 'px Arial, "Iskoola Pota", "Nirmala UI", sans-serif'; const w = ctx.measureText(text).width, h = size;
             const c = [[r + 8, h / 3], [-w - r - 8, h / 3], [-w / 2, -r - 8], [-w / 2, r + h + 6], [r + 8, -r], [-w - r - 8, -r], [r + 8, r + h], [-w - r - 8, r + h]];
             let pick = null;
             for (const [dx, dy] of c) { const rc = rect(x + dx, y + dy - h, w, h + 4); if (rc.x > 6 && rc.y > 6 && rc.x + rc.w < SZ - 6 && rc.y + rc.h < SZ - 6 && !occ.some(o => hit(o, rc))) { pick = rc; break; } }
             if (!pick) { const [dx, dy] = c[0]; pick = rect(Math.min(Math.max(x + dx, 6), SZ - w - 6), Math.min(Math.max(y + dy - h, 6), SZ - h - 10), w, h + 4); }
             occ.push(pick);
-            ctx.lineJoin = 'round'; ctx.lineWidth = 8; ctx.strokeStyle = 'rgba(255,255,255,0.95)'; ctx.strokeText(text, pick.x, pick.y + h - 2);
-            ctx.fillStyle = '#111827'; ctx.fillText(text, pick.x, pick.y + h - 2);
+            ctx.lineJoin = 'round'; ctx.lineWidth = 10; ctx.strokeStyle = '#fff'; ctx.strokeText(text, pick.x, pick.y + h - 2);
+            ctx.fillStyle = P.txt; ctx.fillText(text, pick.x, pick.y + h - 2);
         }
-        // special places (numbered squares)
+        // special places: numbered squares (white frame so they show on any background)
         st.places.forEach(p => {
-            const x = X(p), y = Y(p); ctx.fillStyle = '#1e3a8a'; ctx.fillRect(x - 17, y - 17, 34, 34); ctx.lineWidth = 4; ctx.strokeStyle = '#fff'; ctx.strokeRect(x - 17, y - 17, 34, 34);
-            ctx.fillStyle = '#fff'; ctx.font = 'bold 24px Arial'; ctx.textAlign = 'center'; ctx.fillText(String(p.n), x, y + 8.5); ctx.textAlign = 'left';
+            const x = X(p), y = Y(p); ctx.fillStyle = '#fff'; ctx.fillRect(x - 22, y - 22, 44, 44); ctx.fillStyle = P.sq; ctx.fillRect(x - 18, y - 18, 36, 36);
+            ctx.fillStyle = '#fff'; ctx.font = 'bold 26px Arial'; ctx.textAlign = 'center'; ctx.fillText(String(p.n), x, y + 9); ctx.textAlign = 'left';
         });
-        // other cases
-        st.others.forEach(o => { const x = X(o), y = Y(o); ctx.beginPath(); ctx.arc(x, y, 13, 0, Math.PI * 2); ctx.fillStyle = '#f59e0b'; ctx.fill(); ctx.lineWidth = 4; ctx.strokeStyle = '#111'; ctx.stroke(); });
-        st.others.forEach(o => label(o.name, X(o), Y(o), 14, 28, true));
+        // other cases: filled circles with a white ring
+        st.others.forEach(o => { const x = X(o), y = Y(o); ctx.beginPath(); ctx.arc(x, y, 18, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill(); ctx.beginPath(); ctx.arc(x, y, 13, 0, Math.PI * 2); ctx.fillStyle = P.other; ctx.fill(); if (!bw) { ctx.lineWidth = 4; ctx.strokeStyle = '#111'; ctx.stroke(); } });
+        st.others.forEach(o => label(o.name, X(o), Y(o), 18, 28));
         // patient house
-        ctx.beginPath(); ctx.moveTo(HALF, HALF - 26); ctx.lineTo(HALF + 26, HALF - 4); ctx.lineTo(HALF + 17, HALF - 4); ctx.lineTo(HALF + 17, HALF + 20); ctx.lineTo(HALF - 17, HALF + 20); ctx.lineTo(HALF - 17, HALF - 4); ctx.lineTo(HALF - 26, HALF - 4); ctx.closePath();
-        ctx.fillStyle = '#dc2626'; ctx.fill(); ctx.lineWidth = 5; ctx.strokeStyle = '#fff'; ctx.stroke();
-        label(st.c.name, HALF, HALF, 28, 32, true);
-        // north arrow + scale bar + frame
-        ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.fillRect(SZ - 90, 20, 70, 100);
-        ctx.fillStyle = '#111'; ctx.beginPath(); ctx.moveTo(SZ - 55, 30); ctx.lineTo(SZ - 75, 80); ctx.lineTo(SZ - 55, 68); ctx.lineTo(SZ - 35, 80); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(HALF, HALF - 28); ctx.lineTo(HALF + 28, HALF - 5); ctx.lineTo(HALF + 18, HALF - 5); ctx.lineTo(HALF + 18, HALF + 21); ctx.lineTo(HALF - 18, HALF + 21); ctx.lineTo(HALF - 18, HALF - 5); ctx.lineTo(HALF - 28, HALF - 5); ctx.closePath();
+        ctx.lineJoin = 'round'; ctx.lineWidth = 12; ctx.strokeStyle = '#fff'; ctx.stroke(); ctx.fillStyle = P.house; ctx.fill();
+        label(st.c.name, HALF, HALF, 30, 32);
+        // north arrow, scale bar, frame (always black)
+        ctx.fillStyle = 'rgba(255,255,255,0.92)'; ctx.fillRect(SZ - 90, 20, 70, 100);
+        ctx.fillStyle = '#000'; ctx.beginPath(); ctx.moveTo(SZ - 55, 30); ctx.lineTo(SZ - 75, 80); ctx.lineTo(SZ - 55, 68); ctx.lineTo(SZ - 35, 80); ctx.closePath(); ctx.fill();
         ctx.font = 'bold 30px Arial'; ctx.textAlign = 'center'; ctx.fillText('N', SZ - 55, 112); ctx.textAlign = 'left';
-        ctx.fillStyle = 'rgba(255,255,255,0.88)'; ctx.fillRect(20, SZ - 82, 210, 62);
-        ctx.fillStyle = '#111'; ctx.fillRect(34, SZ - 48, 100, 8); ctx.fillRect(34, SZ - 58, 4, 26); ctx.fillRect(130, SZ - 58, 4, 26); ctx.font = 'bold 26px Arial'; ctx.fillText('100 m', 146, SZ - 40);
-        ctx.lineWidth = 8; ctx.strokeStyle = '#000'; ctx.strokeRect(4, 4, SZ - 8, SZ - 8);
+        ctx.fillStyle = 'rgba(255,255,255,0.92)'; ctx.fillRect(20, SZ - 82, 210, 62);
+        ctx.fillStyle = '#000'; ctx.fillRect(34, SZ - 48, 100, 8); ctx.fillRect(34, SZ - 58, 4, 26); ctx.fillRect(130, SZ - 58, 4, 26); ctx.font = 'bold 26px Arial'; ctx.fillText('100 m', 146, SZ - 40);
+        ctx.lineWidth = 10; ctx.strokeStyle = '#000'; ctx.strokeRect(5, 5, SZ - 10, SZ - 10);
         return { canvas: cv, tiles: ok };
     }
 
@@ -2816,14 +2852,16 @@ nwr["leisure"~"^(playground|sports_centre|stadium|pitch)$"](${bb});
     window.p2MapCheck = function () { if (!parseGps($('inGpsCoords').value) || !$('inP2MapOn').checked) hideMap(); };
     const f5 = n => (+n).toFixed(5);
     function legends(st, pdata) {
-        $('outP2MapCaption').innerHTML = `<b>1 km × 1 km</b> · dashed circle = 500 m buffer · house GPS ${f5(st.c.lat)}, ${f5(st.c.lng)}<br>${STYLE_NAME[st.style] || ''} © Esri · places © OpenStreetMap contributors`;
+        $('outP2MapCaption').innerHTML = `<b>1 km × 1 km</b> · dashed circle = 500 m buffer · house GPS ${f5(st.c.lat)}, ${f5(st.c.lng)}<br>${ATTR[st.style] || ''} · places © OpenStreetMap contributors`;
         const oh = `<div><b>Other ${st.all ? '' : 'same-disease '}cases notified ${escT(st.from)} → ${escT(st.ref)} (${st.days} days): ${st.others.length}</b></div>`;
         $('outP2MapOthers').innerHTML = oh + (st.others.length ? st.others.slice(0, 8).map(o => `<div>● ${escT(o.name)} · ${escT(o.ref || '-')} · ${escT(o.date)} · ${Math.round(o.dist)} m</div>`).join('') + (st.others.length > 8 ? `<div>+ ${st.others.length - 8} more</div>` : '') : '<div>none inside this area</div>');
-        const ph = `<div style="break-inside:avoid;"><b>Special places in this area (${st.places.length}) · GPS</b></div>`;
-        $('outP2MapPlaces').innerHTML = ph + (st.places.length ? st.places.map(p => `<div style="break-inside:avoid;margin-bottom:2px;"><b>${p.n}</b> ${escT(p.name || '(unnamed)')} <i>(${escT(p.type)})</i><br>&nbsp;&nbsp;${f5(p.lat)}, ${f5(p.lng)} · ${Math.round(p.dist)} m</div>`).join('') : `<div>${pdata.failed ? 'Could not load places (no internet / server busy).' : 'No special places found in OpenStreetMap for this area.'}</div>`);
+        const ph = `<div style="break-inside:avoid;"><b>Special places in this area (${st.places.length}) · GPS coordinates</b></div>`;
+        $('outP2MapPlaces').innerHTML = ph + (st.places.length ? st.places.map(p => `<div style="break-inside:avoid;"><b>${p.n}</b> ${escT(p.name || '(unnamed)')} <i>(${escT(p.type)})</i> · ${f5(p.lat)}, ${f5(p.lng)} · ${Math.round(p.dist)} m</div>`).join('')
+            : `<div>${pdata.failed ? 'Special places could not be loaded' + (pdata.err ? ' (' + escT(pdata.err) + ')' : '') + '.' : 'No special places found in OpenStreetMap for this area.'}</div>`);
     }
 
     let token = 0;
+    let lastFail = 0, lastErr = '';
     window.p2MapRefresh = async function (forcePlaces) {
         const my = ++token, stEl = $('p2MapStatus');
         if (!$('inP2MapOn').checked) { hideMap(); stEl.textContent = 'Map is switched off.'; return; }
@@ -2832,18 +2870,21 @@ nwr["leisure"~"^(playground|sports_centre|stadium|pitch)$"](${bb});
         const key = f5(g[0]) + ',' + f5(g[1]);
         let pdata = null; try { pdata = JSON.parse($('inP2Places').value || 'null'); } catch (e) {}
         if (!pdata || pdata.key !== key || forcePlaces) {
-            if (navigator.onLine) {
+            if (!navigator.onLine) { if (!pdata || pdata.key !== key) pdata = { key, places: [], failed: true, err: 'offline' }; }
+            else if (!forcePlaces && lastFail && Date.now() - lastFail < 120000) { if (!pdata || pdata.key !== key) pdata = { key, places: [], failed: true, err: lastErr }; }
+            else {
                 stEl.textContent = 'Finding special places (OpenStreetMap)...';
-                try { pdata = { key, places: await fetchPlaces(g) }; $('inP2Places').value = JSON.stringify(pdata); }
-                catch (e) { stEl.textContent = 'Could not load special places (' + (e && e.message ? e.message : e) + ').'; if (!pdata || pdata.key !== key) pdata = { key, places: [], failed: true }; }
-            } else if (!pdata || pdata.key !== key) pdata = { key, places: [], failed: true };
+                try { pdata = { key, places: await fetchPlaces(g) }; $('inP2Places').value = JSON.stringify(pdata); lastFail = 0; }
+                catch (e) { lastFail = Date.now(); lastErr = (e && e.message) ? e.message : String(e); if (!pdata || pdata.key !== key) pdata = { key, places: [], failed: true, err: lastErr }; }
+            }
         }
         if (my !== token) return;
         const st = buildState(g, pdata);
         let res; try { res = await renderMap(st); } catch (e) { stEl.textContent = 'Map error: ' + (e && e.message ? e.message : e); return; }
         if (my !== token) return;
         paint(res.canvas); legends(st, pdata);
-        stEl.textContent = (res.tiles ? '✔ Map ready: ' : '⚠️ Map picture not loaded (no internet), but ') + st.places.length + ' special place(s), ' + st.others.length + ' other case(s).';
+        stEl.textContent = (res.tiles ? '✔ Map ready: ' : '⚠️ Map picture not loaded (check internet), but ') + st.places.length + ' special place(s), ' + st.others.length + ' other case(s).'
+            + (pdata.failed ? '  ⚠️ Special places could not be loaded (' + (pdata.err || 'no answer') + '). Press "Find special places again" later.' : '');
         updatePrintForm();
     };
     window.printA4Form = async function () {
