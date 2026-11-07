@@ -544,6 +544,19 @@
         .p2-warn { background:#fef3c7; border:1px solid #f59e0b; color:#78350f; padding:8px 10px; border-radius:6px; font-size:13px; margin-bottom:8px; }
         .p2-foot { padding:11px 14px; background:#f1f5f9; display:flex; gap:10px; justify-content:space-between; border-top:1px solid #e2e8f0; }
         .p2-foot .btn { min-width:110px; } .p2-foot .btn:disabled { opacity:.5; }
+
+        .preview-scale-wrapper.p3-off { display:none !important; }
+        /* ===== TAP-THE-MAP EDITOR POPUP ===== */
+        .pt-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,.75); z-index:9460; align-items:center; justify-content:center; padding:10px; }
+        .pt-overlay.open { display:flex; }
+        .pt-card { background:#fff; width:min(900px,100%); max-height:96vh; border-radius:12px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 12px 40px rgba(0,0,0,.45); }
+        .pt-bar { padding:9px 12px; background:#eff6ff; border-bottom:1px solid #dbeafe; display:flex; gap:8px; flex-wrap:wrap; align-items:center; font-size:13px; }
+        .pt-bar input, .pt-bar select { padding:8px; font-size:14px; border:1px solid #94a3b8; border-radius:6px; }
+        .pt-bar input { flex:1; min-width:200px; }
+        #ptMap { height:340px; background:#dbe4ee; }
+        .pt-list { max-height:150px; overflow:auto; padding:4px 10px; } .pt-list td { padding:4px 6px; border-bottom:1px solid #e2e8f0; }
+        .pt-m { width:26px; height:26px; line-height:26px; text-align:center; font-weight:bold; font-size:18px; }
+        .pt-house { font-size:22px; } .pt-sq { color:#1e3a8a; font-size:24px; } .pt-prem { color:#b91c1c; background:rgba(255,255,255,.85); border-radius:50%; border:1px solid #b91c1c; font-size:15px; }
         /* ===== LOGIN ===== */
         .lg-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#0f172a; z-index:9800; align-items:center; justify-content:center; padding:14px; }
         .lg-overlay.open { display:flex; }
@@ -603,6 +616,7 @@
         <div class="preview-page-switcher">
             <button type="button" class="preview-page-btn active" id="btnPreviewPage1" onclick="showPreviewPage(1)">📄 Page 1</button>
             <button type="button" class="preview-page-btn" id="btnPreviewPage2" onclick="showPreviewPage(2)">📄 Page 2</button>
+            <button type="button" class="preview-page-btn" id="btnPreviewPage3" onclick="showPreviewPage(3)" style="display:none;">📄 Page 3 (map)</button>
         </div>
         <div class="preview-scale-wrapper" id="previewWrapperPage1">
             <div class="page-container" id="page-1">
@@ -680,6 +694,14 @@
                 <div class="data-overlay-textarea p2-small" id="outP2MapCaption" style="top:731px; left:757px; width:298px; height:20px;"></div>
                 <div class="data-overlay-textarea p2-small" id="outP2MapOthers" style="top:312px; left:757px; width:298px; height:112px;"></div>
                 <div class="data-overlay-textarea p2-small" id="outP2MapPlaces" style="top:620px; left:230px; width:520px; height:128px; column-count:2; column-gap:14px;"></div>
+            </div>
+        </div>
+
+        <div class="preview-scale-wrapper preview-page-inactive p3-off" id="previewWrapperPage3">
+            <div class="page-container" id="page-3" style="background-image:none;">
+                <div class="data-overlay" id="outP3Title" style="top:16px; left:28px; width:1070px; font-size:15px; font-weight:bold; color:#000; white-space:nowrap;"></div>
+                <canvas id="outP3MapCanvas" width="2000" height="2000" style="position:absolute; left:28px; top:46px; width:664px; height:664px; display:none; border:1px solid #000;"></canvas>
+                <div class="data-overlay-textarea p2-small" id="outP3Legend" style="top:46px; left:704px; width:395px; height:700px; column-count:2; column-gap:14px; color:#000;"></div>
             </div>
         </div>
     </div>
@@ -1028,31 +1050,49 @@
                     <div class="form-group" style="grid-column: span 4;">
                         <label style="display:flex;gap:8px;align-items:center;cursor:pointer;"><input type="checkbox" id="inP2MapOn" checked> Print the location map on Page 2 (needs the patient GPS in Section 03)</label>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" style="grid-column: span 2;">
                         <label>Map style</label>
-                        <select id="inP2MapStyle">
-                            <option value="bw" selected>Black &amp; white (best for B/W printers)</option>
+                        <select id="inP2MapStyle" style="width:100%;">
+                            <option value="bw" selected>Black &amp; white street map</option>
+                            <option value="satbw">Black &amp; white satellite</option>
                             <option value="street">Street map (colour)</option>
-                            <option value="sat">Satellite</option>
-                            <option value="topo">Topo</option>
+                            <option value="sat">Satellite (colour)</option>
+                            <option value="topo">Topo map (colour)</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>Label other cases</label>
+                        <select id="inP2MapLabel" style="width:100%;">
+                            <option value="ref" selected>Letters A, B, C (Ref No in the list)</option>
+                            <option value="name">Patient names on the map</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Show other cases notified within (days)</label>
+                        <label>Other cases within (days)</label>
                         <input type="number" id="inP2MapDays" min="1" max="365" value="28">
                     </div>
-                    <div class="form-group" style="grid-column: span 2;">
+                    <div class="form-group" style="grid-column: span 3;">
                         <label style="display:flex;gap:8px;align-items:center;cursor:pointer;margin-top:22px;"><input type="checkbox" id="inP2MapAll"> Include cases of all diseases (default: same disease only)</label>
+                    </div>
+                    <div class="form-group" style="grid-column: span 4;">
+                        <div style="display:flex;gap:18px;flex-wrap:wrap;font-size:14px;">
+                            <label style="display:flex;gap:6px;align-items:center;cursor:pointer;"><input type="checkbox" id="inP2MapGN" checked> GN division boundaries + names</label>
+                            <label style="display:flex;gap:6px;align-items:center;cursor:pointer;"><input type="checkbox" id="inP2MapRing" checked> 250 m ring</label>
+                            <label style="display:flex;gap:6px;align-items:center;cursor:pointer;"><input type="checkbox" id="inP2MapSheet"> Also print a full-page map sheet (Page 3)</label>
+                        </div>
                     </div>
                     <div class="form-group" style="grid-column: span 4;">
                         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
                             <button type="button" class="btn btn-gps" id="btnP2MapRefresh" onclick="p2MapRefresh(false)">🗺️ Prepare / refresh map</button>
                             <button type="button" class="btn btn-reset" onclick="p2MapRefresh(true)">🔄 Find special places again</button>
-                            <span id="p2MapStatus" style="font-size:12px;color:#475569;"></span>
+                            <button type="button" class="btn btn-update" id="btnPlaces" onclick="openPtEditor('places')">📍 Special places (add / edit)</button>
+                            <button type="button" class="btn btn-update" id="btnPrem" onclick="openPtEditor('prem')">🧪 Premises points</button>
                         </div>
+                        <div id="p2MapStatus" style="font-size:12px;color:#475569;margin-top:6px;"></div>
                         <canvas id="p2MapPreview" width="1000" height="1000" style="width:280px;height:280px;border:1px solid #94a3b8;margin-top:10px;display:none;"></canvas>
                         <input type="hidden" id="inP2Places" value="">
-                        <div style="font-size:12px;color:#64748b;margin-top:6px;">The map shows the patient house, a 500 m buffer, other cases (name labelled) and special places (schools, temples, hospitals, markets, etc. from OpenStreetMap) with their GPS coordinates. Names of other patients are printed on this patient's form.</div>
+                        <input type="hidden" id="inP2Pts" value="">
+                        <div style="font-size:12px;color:#64748b;margin-top:6px;">The map shows the patient house, 250 m / 500 m rings, GN boundaries, other cases, premises points (▲ larvae positive, ○ inspected negative, ◆ breeding site) and special places (OpenStreetMap + places you register) with GPS coordinates. Special places you add are shared for the whole area. With "Patient names on the map", other patients' names are printed on this patient's form.</div>
                     </div>
                 </div>
 
@@ -2179,22 +2219,11 @@
     }
 
     function showPreviewPage(pageNum) {
-        const p1 = document.getElementById('previewWrapperPage1');
-        const p2 = document.getElementById('previewWrapperPage2');
-        const b1 = document.getElementById('btnPreviewPage1');
-        const b2 = document.getElementById('btnPreviewPage2');
-        if (!p1 || !p2) return;
-        if (pageNum === 2) {
-            p1.classList.add('preview-page-inactive');
-            p2.classList.remove('preview-page-inactive');
-            b1?.classList.remove('active');
-            b2?.classList.add('active');
-        } else {
-            p1.classList.remove('preview-page-inactive');
-            p2.classList.add('preview-page-inactive');
-            b1?.classList.add('active');
-            b2?.classList.remove('active');
-        }
+        [1, 2, 3].forEach(n => {
+            const w = document.getElementById('previewWrapperPage' + n), b = document.getElementById('btnPreviewPage' + n);
+            if (w) w.classList.toggle('preview-page-inactive', n !== pageNum);
+            if (b) b.classList.toggle('active', n === pageNum);
+        });
     }
 
     function toggleMobilePreview() {
@@ -2290,6 +2319,24 @@
   </div>
 </div>
 <script>document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('pendingPopup').classList.contains('open')) closePendingList(); });</script>
+
+<div class="pt-overlay" id="ptPopup">
+  <div class="pt-card">
+    <div class="p2-head"><b id="ptTitle"></b><button type="button" class="p2-x" onclick="ptClose()" title="Close">✕</button></div>
+    <div class="pt-bar" id="ptPlacesBar">
+      <input type="text" id="ptName" placeholder="Name (e.g. Sri Sumangala Pansala, Ananda Vidyalaya, Perera Stores)">
+      <select id="ptType"></select>
+      <span style="color:#475569;">① type the name ② choose the type ③ <b>tap the map</b> where it is. Shared with everyone using this area.</span>
+    </div>
+    <div class="pt-bar" id="ptPremBar" style="display:none">
+      <select id="ptPType"><option value="L">▲ Larvae positive premises</option><option value="N">○ Inspected – negative</option><option value="B">◆ Potential breeding site</option></select>
+      <span style="color:#475569;">Choose the type, then <b>tap the map</b> on the premises. The black square = 1 km × 1 km printed area.</span>
+    </div>
+    <div id="ptMap"></div>
+    <div class="pt-list" id="ptList"></div>
+    <div class="p2-foot"><span id="ptCount" style="font-size:13px;color:#475569;align-self:center;"></span><button type="button" class="btn btn-update" onclick="ptClose()">Done ✔</button></div>
+  </div>
+</div>
 
 <div class="p2-overlay" id="p2Popup">
   <div class="p2-card">
@@ -2512,22 +2559,6 @@
         m.remove(); el.style.fontSize = use[0] + 'px'; el.style.lineHeight = use[1] + 'px';
         return fits;
     };
-    /* page 2 layout: the "special places" list sits at the bottom-left, Table 02 gets ALL the space above it */
-    window.p2Layout = function () {
-        const lg = $('outP2MapPlaces'), c1 = $('outP2Content1'), c2 = $('outP2Content2');
-        let H = 0;
-        if (lg.innerHTML.trim() && $('outP2MapCanvas').style.display !== 'none') {
-            const m = document.createElement('div'); m.className = 'data-overlay-textarea p2-small';
-            m.style.cssText = 'position:absolute;left:-9999px;top:0;visibility:hidden;height:auto;overflow:visible;width:520px;column-count:2;column-gap:14px;';
-            m.innerHTML = lg.innerHTML; document.body.appendChild(m); H = Math.min(m.scrollHeight + 3, 230); m.remove();
-        }
-        lg.style.display = H ? '' : 'none'; lg.style.height = H + 'px'; lg.style.top = (748 - H) + 'px';
-        c2.style.height = (748 - 275 - (H ? H + 6 : 0)) + 'px';
-        const ok1 = window.fitP2Text(c1, 12, 15), ok2 = window.fitP2Text(c2, 12, 15);
-        const w1 = $('p2Warn1'), w2 = $('p2Warn2');
-        if (w1) w1.style.display = ok1 ? 'none' : ''; if (w2) w2.style.display = ok2 ? 'none' : '';
-    };
-
     /* =====================  NOTES POPUPS  ===================== */
     let mode = 'both', cur = 't1', stage = 'in', pend = null;
     const SI = /[\u0D80-\u0DFF]/;
@@ -2668,13 +2699,44 @@ ${JSON.stringify(obj)}`;
     }
 
     /* =====================  LOCATION MAP  ===================== */
-    const SZ = 1000, HALF = 500;                                  // canvas: 1000 px = 1000 m  (1 px per metre)
+    const SZ = 1000, HALF = 500;                                  // map space: 1000 units = 1000 m, centred on the patient house
     const parseGps = v => { const m = String(v || '').match(/-?\d+(?:\.\d+)?/g); if (!m || m.length < 2) return null; const a = +m[0], b = +m[1]; return (a > 5 && a < 10.5 && b > 79 && b < 82.5) ? [a, b] : null; };
     const dKey = n => { const s = String(n || '').toLowerCase(); if (s.includes('dengue')) return 'dengue'; if (s.includes('tubercul') || s.trim() === 'tb') return 'tb'; if (s.includes('leptospir')) return 'lepto'; if (s.includes('chicken')) return 'chickenpox'; if (s.includes('dysentery')) return 'dysentery'; return 'o:' + s.trim(); };
     const addDays = (ds, n) => { const [y, m, d] = ds.split('-').map(Number), t = new Date(y, m - 1, d + n); return t.getFullYear() + '-' + pad(t.getMonth() + 1) + '-' + pad(t.getDate()); };
-    const STYLE_NAME = { bw: 'Black & white street map', street: 'Street map', sat: 'Satellite', topo: 'Topo map' };
-    const ATTR = { bw: 'Map © OpenStreetMap contributors', street: 'Map © OpenStreetMap contributors', sat: 'Imagery © Esri', topo: 'Map © Esri' };
+    const letter = i => { let s = '', n = i + 1; while (n > 0) { const r = (n - 1) % 26; s = String.fromCharCode(65 + r) + s; n = Math.floor((n - 1) / 26); } return s; };
+    const STYLE_NAME = { bw: 'Black & white street map', satbw: 'Black & white satellite', street: 'Street map', sat: 'Satellite', topo: 'Topo map' };
+    const ATTR = { bw: 'Map © OpenStreetMap contributors', street: 'Map © OpenStreetMap contributors', satbw: 'Imagery © Esri', sat: 'Imagery © Esri', topo: 'Map © Esri' };
+    const PLACE_TYPES = ['Temple', 'Kovil', 'Church', 'Mosque', 'School', 'Pre-school', 'Hospital', 'Clinic / health centre', 'Pharmacy', 'Market', 'Shop', 'Factory / industrial', 'Construction site', 'Government office', 'Playground / sports ground', 'Other'];
+    const PREM = { L: 'Larvae positive premises', N: 'Inspected – negative', B: 'Potential breeding site' };
+    const SYM = { L: '▲', N: '○', B: '◆' };
 
+    /* ---------- special places register: shared for the whole area (Firebase "special_places"), cached on this device ---------- */
+    let SP = [];
+    try { SP = JSON.parse(localStorage.getItem('h411_sp') || '[]') || []; } catch (e) { SP = []; }
+    const saveSP = () => { try { localStorage.setItem('h411_sp', JSON.stringify(SP)); } catch (e) {} };
+    const cloudReady = () => typeof fbDb !== 'undefined' && fbDb && typeof fbUser !== 'undefined' && fbUser && navigator.onLine;
+    let spAttached = false;
+    async function spPush() {
+        if (!cloudReady()) return;
+        for (const p of SP.filter(x => x.pending)) {
+            try { await fbDb.ref('special_places/' + p.id).set({ name: p.name, type: p.type, lat: p.lat, lng: p.lng }); p.pending = false; } catch (e) { console.log('Special place not saved to cloud:', e && e.message); break; }
+        }
+        saveSP();
+    }
+    function spAttach() {
+        if (spAttached || !cloudReady()) return;
+        spAttached = true;
+        fbDb.ref('special_places').on('value', snap => {
+            const v = snap.val() || {}, cloud = Object.keys(v).map(id => ({ id, name: v[id].name, type: v[id].type, lat: v[id].lat, lng: v[id].lng }));
+            const ids = new Set(cloud.map(c => c.id));
+            SP = cloud.concat(SP.filter(p => p.pending && !ids.has(p.id))); saveSP(); spPush();
+            if ($('ptPopup').classList.contains('open')) ptRedraw();
+            sched();
+        }, err => { spAttached = false; console.log('Special places read refused:', err && err.message); });
+    }
+    setInterval(spAttach, 4000);
+
+    /* ---------- OpenStreetMap special places ---------- */
     function classify(t) {
         const a = t.amenity || '', b = t.building || '';
         if (a === 'hospital' || b === 'hospital') return { type: 'Hospital', pri: 0, keep: true };
@@ -2723,7 +2785,7 @@ nwr["leisure"~"^(playground|sports_centre|stadium|pitch)$"](${bb});
             } catch (e) { lastErr = e; }
         }
         if (!data) throw new Error(lastErr && lastErr.name === 'AbortError' ? 'timeout' : (lastErr && lastErr.message) || 'no answer');
-        const hav = (a, b) => Math.hypot((a[1] - b[1]) * 111320 * Math.cos(g[0] * Math.PI / 180), (a[0] - b[0]) * 111320);
+        const dist = (a, b) => Math.hypot((a[1] - b[1]) * 111320 * Math.cos(g[0] * Math.PI / 180), (a[0] - b[0]) * 111320);
         const found = [];
         (data.elements || []).forEach(el => {
             const t = el.tags || {}, lat = el.lat != null ? el.lat : (el.center && el.center.lat), lng = el.lon != null ? el.lon : (el.center && el.center.lon);
@@ -2731,11 +2793,11 @@ nwr["leisure"~"^(playground|sports_centre|stadium|pitch)$"](${bb});
             const c = classify(t); if (!c) return;
             const name = (t.name || t['name:en'] || t['name:si'] || '').trim();
             if (!name && !c.keep) return;
-            found.push({ lat: +lat.toFixed(6), lng: +lng.toFixed(6), name, type: c.type, pri: c.pri, d: hav([lat, lng], g) });
+            found.push({ lat: +lat.toFixed(6), lng: +lng.toFixed(6), name, type: c.type, pri: c.pri, d: dist([lat, lng], g) });
         });
         found.sort((a, b) => a.pri - b.pri || a.d - b.d);
         const out = [];
-        found.forEach(p => { if (!out.some(o => o.type === p.type && ((o.name && o.name === p.name) || hav([o.lat, o.lng], [p.lat, p.lng]) < 40))) out.push(p); });
+        found.forEach(p => { if (!out.some(o => o.type === p.type && ((o.name && o.name === p.name) || dist([o.lat, o.lng], [p.lat, p.lng]) < 40))) out.push(p); });
         return out.slice(0, 22).map(p => ({ lat: p.lat, lng: p.lng, name: p.name, type: p.type }));
     }
 
@@ -2747,12 +2809,19 @@ nwr["leisure"~"^(playground|sports_centre|stadium|pitch)$"](${bb});
         tileCache.set(url, p); return p;
     }
 
+    /* ---------- everything the map needs ---------- */
+    function readPts() { try { const a = JSON.parse($('inP2Pts').value || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
     function buildState(g, pdata) {
         const c = { lat: g[0], lng: g[1], name: ($('inPatientName').value || '').trim() || 'Patient' };
         const off = (lat, lng) => ({ dx: (lng - c.lng) * 111320 * Math.cos(c.lat * Math.PI / 180), dy: (lat - c.lat) * 111320 });
         const inside = p => Math.abs(p.dx) <= HALF && Math.abs(p.dy) <= HALF;
-        const places = (pdata.places || []).map(p => Object.assign({}, p, off(p.lat, p.lng))).filter(inside);
-        places.forEach(p => { p.dist = Math.hypot(p.dx, p.dy); }); places.sort((a, b) => a.dist - b.dist); places.forEach((p, i) => { p.n = i + 1; });
+        const manual = SP.map(p => Object.assign({}, p, { manual: true }, off(p.lat, p.lng))).filter(inside);
+        const osm = (pdata.places || []).map(p => Object.assign({}, p, off(p.lat, p.lng))).filter(inside)
+            .filter(p => !manual.some(m => Math.hypot(m.dx - p.dx, m.dy - p.dy) < 35 || (m.name && p.name && m.name.toLowerCase() === p.name.toLowerCase())));
+        [manual, osm].forEach(a => a.forEach(p => { p.dist = Math.hypot(p.dx, p.dy); }));
+        osm.sort((a, b) => a.dist - b.dist);
+        const places = manual.concat(osm).slice(0, 28); places.sort((a, b) => a.dist - b.dist); places.forEach((p, i) => { p.n = i + 1; });
+        const pts = readPts().map(p => Object.assign({}, p, off(p.lat, p.lng))).filter(inside);
         const days = Math.max(1, parseInt($('inP2MapDays').value, 10) || 28);
         const ref = /^\d{4}-\d{2}-\d{2}$/.test($('inDateNotified').value) ? $('inDateNotified').value : today();
         const from = addDays(ref, -days), all = $('inP2MapAll').checked;
@@ -2771,26 +2840,30 @@ nwr["leisure"~"^(playground|sports_centre|stadium|pitch)$"](${bb});
             o.dist = Math.hypot(o.dx, o.dy); o.name = (r.inPatientName || '').trim() || (r.inPhiRefNo || 'Unnamed'); o.ref = r.inPhiRefNo || ''; o.date = d; o.disease = r.inDiseaseConfirmed || r.inDiseaseNotified || '';
             others.push(o);
         });
-        others.sort((a, b) => a.dist - b.dist);
-        return { c, places, others, days, from, ref, all, style: $('inP2MapStyle').value || 'bw' };
+        others.sort((a, b) => a.dist - b.dist); others.forEach((o, i) => { o.letter = letter(i); });
+        return { c, off, places, others, pts, days, from, ref, all, style: $('inP2MapStyle').value || 'bw', byName: $('inP2MapLabel').value === 'name', gn: $('inP2MapGN').checked, ring250: $('inP2MapRing').checked,
+                 disease: $('inDiseaseConfirmed').value || $('inDiseaseNotified').value || '', patRef: myRef, notified: $('inDateNotified').value || '' };
     }
 
-    async function renderMap(st) {
-        const bw = st.style === 'bw';
-        const cv = document.createElement('canvas'); cv.width = cv.height = SZ; const ctx = cv.getContext('2d');
+    /* ---------- draw the map (opt.px = canvas size, opt.z = tile zoom) ---------- */
+    async function renderMap(st, opt) {
+        opt = opt || {}; const PX = opt.px || SZ, S = PX / SZ, z = opt.z || 17;
+        const bw = st.style === 'bw' || st.style === 'satbw', sat = st.style === 'sat' || st.style === 'satbw';
+        const cv = document.createElement('canvas'); cv.width = cv.height = PX; const ctx = cv.getContext('2d'); ctx.scale(S, S);
         ctx.fillStyle = bw ? '#ffffff' : '#e5e7eb'; ctx.fillRect(0, 0, SZ, SZ);
-        const z = 17, lat = st.c.lat, lng = st.c.lng, scale = 256 * Math.pow(2, z);
-        const k = 156543.03392 * Math.cos(lat * Math.PI / 180) / Math.pow(2, z);     // canvas px per tile px
+        const lat = st.c.lat, lng = st.c.lng, scale = 256 * Math.pow(2, z);
+        const k = 156543.03392 * Math.cos(lat * Math.PI / 180) / Math.pow(2, z);     // map units per tile px
         const sinL = Math.sin(lat * Math.PI / 180), cx = (lng + 180) / 360 * scale, cy = (0.5 - Math.log((1 + sinL) / (1 - sinL)) / (4 * Math.PI)) * scale;
-        const tileUrl = (tx, ty) => st.style === 'sat' ? `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${ty}/${tx}`
+        const tileUrl = (tx, ty) => sat ? `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${ty}/${tx}`
             : st.style === 'topo' ? `https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/${z}/${ty}/${tx}`
             : `https://tile.openstreetmap.org/${z}/${tx}/${ty}.png`;
         const x0 = Math.floor((cx - HALF / k) / 256), x1 = Math.floor((cx + HALF / k) / 256), y0 = Math.floor((cy - HALF / k) / 256), y1 = Math.floor((cy + HALF / k) / 256);
         const jobs = [];
         for (let ty = y0; ty <= y1; ty++) for (let tx = x0; tx <= x1; tx++) jobs.push(loadTile(tileUrl(tx, ty)).then(img => ({ img, tx, ty })));
         const tiles = await Promise.all(jobs); let ok = 0;
-        const hasFilter = bw && ('filter' in ctx);
-        if (hasFilter) ctx.filter = 'grayscale(1) brightness(0.65) contrast(3.4)';          // black & white printer: strong, clear lines
+        const flt = st.style === 'bw' ? 'grayscale(1) brightness(0.65) contrast(3.4)' : (st.style === 'satbw' ? 'grayscale(1) brightness(1.1) contrast(1.35)' : '');
+        const hasFilter = !!flt && ('filter' in ctx);
+        if (hasFilter) ctx.filter = flt;
         tiles.forEach(t => { if (t.img) { ok++; ctx.drawImage(t.img, HALF + (t.tx * 256 - cx) * k - 0.5, HALF + (t.ty * 256 - cy) * k - 0.5, 256 * k + 1, 256 * k + 1); } });
         if (hasFilter) ctx.filter = 'none';
         else if (bw && ok) { ctx.globalCompositeOperation = 'saturation'; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, SZ, SZ); ctx.globalCompositeOperation = 'source-over'; }
@@ -2798,17 +2871,45 @@ nwr["leisure"~"^(playground|sports_centre|stadium|pitch)$"](${bb});
             ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2; for (let i = 0; i <= SZ; i += 100) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, SZ); ctx.moveTo(0, i); ctx.lineTo(SZ, i); ctx.stroke(); }
             ctx.fillStyle = '#334155'; ctx.font = 'bold 34px Arial'; ctx.textAlign = 'center'; ctx.fillText('Map picture could not be loaded (no internet)', HALF, 80); ctx.textAlign = 'left';
         }
-        const P = bw ? { ring: '#000', fill: 'rgba(255,255,255,0)', house: '#000', other: '#000', sq: '#000', txt: '#000' }
-                     : { ring: '#dc2626', fill: 'rgba(220,38,38,0.07)', house: '#dc2626', other: '#f59e0b', sq: '#1e3a8a', txt: '#111827' };
-        // 500 m buffer (white halo under the dashes so it stays visible on a busy map)
-        ctx.beginPath(); ctx.arc(HALF, HALF, HALF - 5, 0, Math.PI * 2); ctx.fillStyle = P.fill; ctx.fill();
-        ctx.setLineDash([26, 16]); ctx.lineWidth = 14; ctx.strokeStyle = '#fff'; ctx.stroke(); ctx.lineWidth = 6; ctx.strokeStyle = P.ring; ctx.stroke(); ctx.setLineDash([]);
-
+        const P = bw ? { ring: '#000', fill: 'rgba(255,255,255,0)', house: '#000', other: '#000', sq: '#000', txt: '#000', gn: '#000', prem: '#000' }
+                     : { ring: '#dc2626', fill: 'rgba(220,38,38,0.07)', house: '#dc2626', other: '#f59e0b', sq: '#1e3a8a', txt: '#111827', gn: '#7c3aed', prem: '#b91c1c' };
+        const XY = (la, lo) => ({ x: HALF + (lo - lng) * 111320 * Math.cos(lat * Math.PI / 180), y: HALF - (la - lat) * 111320 });
         const occ = [], X = p => HALF + p.dx, Y = p => HALF - p.dy;
         const rect = (x, y, w, h) => ({ x, y, w, h }), hit = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+
+        // GN division boundaries (dash-dot) + names
+        const gnLabels = [];
+        const geo = window.AREA_GEOJSON;
+        if (st.gn && geo && geo.features) {
+            ctx.save(); ctx.beginPath(); ctx.rect(0, 0, SZ, SZ); ctx.clip();
+            geo.features.forEach(f => {
+                if (!f.geometry) return;
+                const polys = f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : (f.geometry.type === 'MultiPolygon' ? f.geometry.coordinates : []);
+                let sx = 0, sy = 0, n = 0, hasHouse = false;
+                polys.forEach(poly => poly.forEach((ring, ri) => {
+                    ctx.beginPath();
+                    ring.forEach(([lo, la], i) => { const q = XY(la, lo); if (i) ctx.lineTo(q.x, q.y); else ctx.moveTo(q.x, q.y); if (q.x > 20 && q.x < SZ - 20 && q.y > 20 && q.y < SZ - 20) { sx += q.x; sy += q.y; n++; } });
+                    ctx.closePath(); ctx.lineJoin = 'round'; ctx.setLineDash([34, 10, 6, 10]);
+                    ctx.lineWidth = 11; ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.stroke(); ctx.lineWidth = 4.5; ctx.strokeStyle = P.gn; ctx.stroke(); ctx.setLineDash([]);
+                    if (ri === 0) { let ins = false; for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) { const [xi, yi] = ring[i], [xj, yj] = ring[j]; if (((yi > lat) !== (yj > lat)) && (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)) ins = !ins; } if (ins) hasHouse = true; }
+                }));
+                const nm = f.properties && (f.properties.GND_N || f.properties.name);
+                if (nm) { if (n >= 3) gnLabels.push({ text: nm, x: sx / n, y: sy / n }); else if (hasHouse) gnLabels.push({ text: nm, x: HALF, y: 75 }); }
+            });
+            ctx.restore();
+        }
+        // distance rings: 250 m and the 500 m buffer
+        ctx.beginPath(); ctx.arc(HALF, HALF, HALF - 5, 0, Math.PI * 2); ctx.fillStyle = P.fill; ctx.fill();
+        if (st.ring250) { ctx.beginPath(); ctx.arc(HALF, HALF, 250, 0, Math.PI * 2); ctx.setLineDash([12, 12]); ctx.lineWidth = 9; ctx.strokeStyle = '#fff'; ctx.stroke(); ctx.lineWidth = 3.5; ctx.strokeStyle = P.ring; ctx.stroke(); ctx.setLineDash([]); }
+        ctx.beginPath(); ctx.arc(HALF, HALF, HALF - 5, 0, Math.PI * 2);
+        ctx.setLineDash([26, 16]); ctx.lineWidth = 14; ctx.strokeStyle = '#fff'; ctx.stroke(); ctx.lineWidth = 6; ctx.strokeStyle = P.ring; ctx.stroke(); ctx.setLineDash([]);
+        const tag = (t, x, y) => { ctx.font = 'bold 24px Arial'; ctx.lineJoin = 'round'; ctx.lineWidth = 8; ctx.strokeStyle = '#fff'; ctx.strokeText(t, x, y); ctx.fillStyle = '#000'; ctx.fillText(t, x, y); occ.push(rect(x, y - 24, ctx.measureText(t).width, 28)); };
+        tag('500 m', HALF + 350, HALF - 345); if (st.ring250) tag('250 m', HALF + 172, HALF - 172);
+
         occ.push(rect(HALF - 30, HALF - 30, 60, 60));
         st.places.forEach(p => occ.push(rect(X(p) - 22, Y(p) - 22, 44, 44)));
-        st.others.forEach(o => occ.push(rect(X(o) - 18, Y(o) - 18, 36, 36)));
+        st.others.forEach(o => occ.push(rect(X(o) - 20, Y(o) - 20, 40, 40)));
+        st.pts.forEach(p => occ.push(rect(X(p) - 18, Y(p) - 18, 36, 36)));
         function label(text, x, y, r, size) {
             text = text.length > 24 ? text.slice(0, 23) + '…' : text;
             ctx.font = 'bold ' + size + 'px Arial, "Iskoola Pota", "Nirmala UI", sans-serif'; const w = ctx.measureText(text).width, h = size;
@@ -2820,50 +2921,101 @@ nwr["leisure"~"^(playground|sports_centre|stadium|pitch)$"](${bb});
             ctx.lineJoin = 'round'; ctx.lineWidth = 10; ctx.strokeStyle = '#fff'; ctx.strokeText(text, pick.x, pick.y + h - 2);
             ctx.fillStyle = P.txt; ctx.fillText(text, pick.x, pick.y + h - 2);
         }
-        // special places: numbered squares (white frame so they show on any background)
+        // GN names (italic)
+        gnLabels.forEach(g => {
+            ctx.font = 'italic bold 25px Arial, "Iskoola Pota", "Nirmala UI", sans-serif'; const t = g.text.length > 26 ? g.text.slice(0, 25) + '…' : g.text, w = ctx.measureText(t).width;
+            const x = Math.min(Math.max(g.x - w / 2, 8), SZ - w - 8), y = Math.min(Math.max(g.y, 40), SZ - 40);
+            ctx.lineJoin = 'round'; ctx.lineWidth = 9; ctx.strokeStyle = 'rgba(255,255,255,0.92)'; ctx.strokeText(t, x, y); ctx.fillStyle = P.gn; ctx.fillText(t, x, y); occ.push(rect(x, y - 24, w, 30));
+        });
+        // premises points: ▲ larvae positive, ○ inspected negative, ◆ breeding site
+        st.pts.forEach(p => {
+            const x = X(p), y = Y(p); ctx.lineJoin = 'round';
+            if (p.t === 'L') { ctx.beginPath(); ctx.moveTo(x, y - 20); ctx.lineTo(x + 18, y + 14); ctx.lineTo(x - 18, y + 14); ctx.closePath(); ctx.lineWidth = 9; ctx.strokeStyle = '#fff'; ctx.stroke(); ctx.fillStyle = P.prem; ctx.fill(); }
+            else if (p.t === 'B') { ctx.beginPath(); ctx.moveTo(x, y - 19); ctx.lineTo(x + 17, y); ctx.lineTo(x, y + 19); ctx.lineTo(x - 17, y); ctx.closePath(); ctx.lineWidth = 9; ctx.strokeStyle = '#fff'; ctx.stroke(); ctx.fillStyle = P.prem; ctx.fill(); }
+            else { ctx.beginPath(); ctx.arc(x, y, 13, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill(); ctx.lineWidth = 5; ctx.strokeStyle = P.prem; ctx.stroke(); }
+        });
+        // special places: numbered squares
         st.places.forEach(p => {
             const x = X(p), y = Y(p); ctx.fillStyle = '#fff'; ctx.fillRect(x - 22, y - 22, 44, 44); ctx.fillStyle = P.sq; ctx.fillRect(x - 18, y - 18, 36, 36);
-            ctx.fillStyle = '#fff'; ctx.font = 'bold 26px Arial'; ctx.textAlign = 'center'; ctx.fillText(String(p.n), x, y + 9); ctx.textAlign = 'left';
+            ctx.fillStyle = '#fff'; ctx.font = 'bold ' + (String(p.n).length > 1 ? 23 : 26) + 'px Arial'; ctx.textAlign = 'center'; ctx.fillText(String(p.n), x, y + 9); ctx.textAlign = 'left';
         });
-        // other cases: filled circles with a white ring
-        st.others.forEach(o => { const x = X(o), y = Y(o); ctx.beginPath(); ctx.arc(x, y, 18, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill(); ctx.beginPath(); ctx.arc(x, y, 13, 0, Math.PI * 2); ctx.fillStyle = P.other; ctx.fill(); if (!bw) { ctx.lineWidth = 4; ctx.strokeStyle = '#111'; ctx.stroke(); } });
-        st.others.forEach(o => label(o.name, X(o), Y(o), 18, 28));
+        // other cases: lettered discs (or dots with names)
+        st.others.forEach(o => {
+            const x = X(o), y = Y(o);
+            if (st.byName) { ctx.beginPath(); ctx.arc(x, y, 18, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill(); ctx.beginPath(); ctx.arc(x, y, 13, 0, Math.PI * 2); ctx.fillStyle = P.other; ctx.fill(); if (!bw) { ctx.lineWidth = 4; ctx.strokeStyle = '#111'; ctx.stroke(); } }
+            else { ctx.beginPath(); ctx.arc(x, y, 20, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill(); ctx.beginPath(); ctx.arc(x, y, 16, 0, Math.PI * 2); ctx.fillStyle = P.other; ctx.fill(); ctx.fillStyle = bw ? '#fff' : '#111'; ctx.font = 'bold 21px Arial'; ctx.textAlign = 'center'; ctx.fillText(o.letter, x, y + 7.5); ctx.textAlign = 'left'; }
+        });
+        if (st.byName) st.others.forEach(o => label(o.name, X(o), Y(o), 18, 28));
         // patient house
         ctx.beginPath(); ctx.moveTo(HALF, HALF - 28); ctx.lineTo(HALF + 28, HALF - 5); ctx.lineTo(HALF + 18, HALF - 5); ctx.lineTo(HALF + 18, HALF + 21); ctx.lineTo(HALF - 18, HALF + 21); ctx.lineTo(HALF - 18, HALF - 5); ctx.lineTo(HALF - 28, HALF - 5); ctx.closePath();
         ctx.lineJoin = 'round'; ctx.lineWidth = 12; ctx.strokeStyle = '#fff'; ctx.stroke(); ctx.fillStyle = P.house; ctx.fill();
         label(st.c.name, HALF, HALF, 30, 32);
-        // north arrow, scale bar, frame (always black)
+        // north arrow, scale bar, frame with 100 m ticks
         ctx.fillStyle = 'rgba(255,255,255,0.92)'; ctx.fillRect(SZ - 90, 20, 70, 100);
         ctx.fillStyle = '#000'; ctx.beginPath(); ctx.moveTo(SZ - 55, 30); ctx.lineTo(SZ - 75, 80); ctx.lineTo(SZ - 55, 68); ctx.lineTo(SZ - 35, 80); ctx.closePath(); ctx.fill();
         ctx.font = 'bold 30px Arial'; ctx.textAlign = 'center'; ctx.fillText('N', SZ - 55, 112); ctx.textAlign = 'left';
         ctx.fillStyle = 'rgba(255,255,255,0.92)'; ctx.fillRect(20, SZ - 82, 210, 62);
         ctx.fillStyle = '#000'; ctx.fillRect(34, SZ - 48, 100, 8); ctx.fillRect(34, SZ - 58, 4, 26); ctx.fillRect(130, SZ - 58, 4, 26); ctx.font = 'bold 26px Arial'; ctx.fillText('100 m', 146, SZ - 40);
         ctx.lineWidth = 10; ctx.strokeStyle = '#000'; ctx.strokeRect(5, 5, SZ - 10, SZ - 10);
+        ctx.lineWidth = 5; for (let i = 100; i < SZ; i += 100) { const L = i === HALF ? 34 : 18; ctx.beginPath(); ctx.moveTo(i, 10); ctx.lineTo(i, 10 + L); ctx.moveTo(i, SZ - 10); ctx.lineTo(i, SZ - 10 - L); ctx.moveTo(10, i); ctx.lineTo(10 + L, i); ctx.moveTo(SZ - 10, i); ctx.lineTo(SZ - 10 - L, i); ctx.stroke(); }
         return { canvas: cv, tiles: ok };
     }
 
-    function paint(cv) {
-        ['outP2MapCanvas', 'p2MapPreview'].forEach(id => { const t = $(id); t.width = cv.width; t.height = cv.height; const x = t.getContext('2d'); x.clearRect(0, 0, cv.width, cv.height); x.drawImage(cv, 0, 0); t.style.display = ''; });
-    }
+    /* ---------- page 2 / page 3 output ---------- */
+    function paintTo(id, cv) { const t = $(id); t.width = cv.width; t.height = cv.height; const x = t.getContext('2d'); x.clearRect(0, 0, cv.width, cv.height); x.drawImage(cv, 0, 0); t.style.display = ''; }
     function hideMap() {
-        ['outP2MapCanvas', 'p2MapPreview'].forEach(id => { $(id).style.display = 'none'; });
-        ['outP2MapCaption', 'outP2MapOthers', 'outP2MapPlaces'].forEach(id => { $(id).innerHTML = ''; });
+        ['outP2MapCanvas', 'p2MapPreview', 'outP3MapCanvas'].forEach(id => { $(id).style.display = 'none'; });
+        ['outP2MapCaption', 'outP2MapOthers', 'outP2MapPlaces', 'outP3Legend', 'outP3Title'].forEach(id => { $(id).innerHTML = ''; });
+        sheetVisible(false);
     }
+    function sheetVisible(on) { $('previewWrapperPage3').classList.toggle('p3-off', !on); $('btnPreviewPage3').style.display = on ? '' : 'none'; if (!on && !$('previewWrapperPage3').classList.contains('preview-page-inactive')) showPreviewPage(1); }
     window.p2MapCheck = function () { if (!parseGps($('inGpsCoords').value) || !$('inP2MapOn').checked) hideMap(); };
     const f5 = n => (+n).toFixed(5);
+    const dm = o => Math.round(o.dist) + ' m';
+    function premCounts(st) { const c = { L: 0, N: 0, B: 0 }; st.pts.forEach(p => { if (c[p.t] != null) c[p.t]++; }); return c; }
     function legends(st, pdata) {
-        $('outP2MapCaption').innerHTML = `<b>1 km × 1 km</b> · dashed circle = 500 m buffer · house GPS ${f5(st.c.lat)}, ${f5(st.c.lng)}<br>${ATTR[st.style] || ''} · places © OpenStreetMap contributors`;
+        const pc = premCounts(st), pcTxt = (pc.L + pc.N + pc.B) ? `<br>▲ larvae positive ${pc.L} · ○ inspected negative ${pc.N} · ◆ breeding site ${pc.B}` : '';
+        $('outP2MapCaption').innerHTML = `<b>1 km × 1 km</b> · rings 250 m / 500 m · house GPS ${f5(st.c.lat)}, ${f5(st.c.lng)}${pcTxt}<br>${ATTR[st.style] || ''} · places © OpenStreetMap contributors`;
         const oh = `<div><b>Other ${st.all ? '' : 'same-disease '}cases notified ${escT(st.from)} → ${escT(st.ref)} (${st.days} days): ${st.others.length}</b></div>`;
-        $('outP2MapOthers').innerHTML = oh + (st.others.length ? st.others.slice(0, 8).map(o => `<div>● ${escT(o.name)} · ${escT(o.ref || '-')} · ${escT(o.date)} · ${Math.round(o.dist)} m</div>`).join('') + (st.others.length > 8 ? `<div>+ ${st.others.length - 8} more</div>` : '') : '<div>none inside this area</div>');
-        const ph = `<div style="break-inside:avoid;"><b>Special places in this area (${st.places.length}) · GPS coordinates</b></div>`;
-        $('outP2MapPlaces').innerHTML = ph + (st.places.length ? st.places.map(p => `<div style="break-inside:avoid;"><b>${p.n}</b> ${escT(p.name || '(unnamed)')} <i>(${escT(p.type)})</i> · ${f5(p.lat)}, ${f5(p.lng)} · ${Math.round(p.dist)} m</div>`).join('')
-            : `<div>${pdata.failed ? 'Special places could not be loaded' + (pdata.err ? ' (' + escT(pdata.err) + ')' : '') + '.' : 'No special places found in OpenStreetMap for this area.'}</div>`);
+        $('outP2MapOthers').innerHTML = oh + (st.others.length ? st.others.slice(0, 8).map(o => `<div><b>${st.byName ? '●' : o.letter}</b> ${st.byName ? escT(o.name) + ' · ' : ''}${escT(o.ref || '-')} · ${escT(o.date)} · ${dm(o)}</div>`).join('') + (st.others.length > 8 ? `<div>+ ${st.others.length - 8} more</div>` : '') : '<div>none inside this area</div>');
+        $('outP2MapPlaces').innerHTML = placesHtml(st, pdata);
     }
+    function placesHtml(st, pdata) {
+        const ph = `<div style="break-inside:avoid;"><b>Special places in this area (${st.places.length}) · GPS coordinates</b></div>`;
+        return ph + (st.places.length ? st.places.map(p => `<div style="break-inside:avoid;"><b>${p.n}</b> ${escT(p.name || '(unnamed)')} <i>(${escT(p.type)})</i>${p.manual ? ' ★' : ''} · ${f5(p.lat)}, ${f5(p.lng)} · ${dm(p)}</div>`).join('')
+            : `<div>${pdata.failed ? 'Special places could not be loaded' + (pdata.err ? ' (' + escT(pdata.err) + ')' : '') + '. You can add them with "Special places (add / edit)".' : 'No special places found for this area. You can add them with "Special places (add / edit)".'}</div>`);
+    }
+    function measureH(html, width, cols, font) {
+        const m = document.createElement('div'); m.className = 'data-overlay-textarea p2-small';
+        m.style.cssText = 'position:absolute;left:-9999px;top:0;visibility:hidden;height:auto;overflow:visible;width:' + width + 'px;font-size:' + font + 'px;line-height:' + (font * 1.25) + 'px;' + (cols > 1 ? 'column-count:' + cols + ';column-gap:14px;' : '');
+        m.innerHTML = html; document.body.appendChild(m); const h = m.scrollHeight; m.remove(); return h;
+    }
+    function sheet(st, pdata, res) {
+        paintTo('outP3MapCanvas', res.canvas);
+        const pc = premCounts(st);
+        $('outP3Title').innerHTML = `PATIENT LOCATION MAP — ${escT(st.c.name)}${st.patRef ? ' (' + escT(st.patRef) + ')' : ''} — ${escT(st.disease)}${st.notified ? ' — notified ' + escT(st.notified) : ''}`;
+        const key = `<div style="margin-bottom:5px;"><b>Key</b><br>⌂ patient house (GPS ${f5(st.c.lat)}, ${f5(st.c.lng)})<br>dashed circles: 250 m and 500 m from the house · frame ticks every 100 m<br>▲ larvae positive premises ${pc.L} · ○ inspected, negative ${pc.N} · ◆ potential breeding site ${pc.B}<br>1, 2, 3 … special places · A, B, C … other cases · dash-dot line: GN division boundary</div>`;
+        const oth = `<div style="break-inside:avoid;margin:4px 0 2px;"><b>Other ${st.all ? '' : 'same-disease '}cases notified ${escT(st.from)} → ${escT(st.ref)} (${st.days} days): ${st.others.length}</b></div>` + st.others.map(o => `<div style="break-inside:avoid;"><b>${st.byName ? '●' : o.letter}</b> ${st.byName ? escT(o.name) + ' · ' : ''}${escT(o.ref || '-')} · ${escT(o.date)} · ${dm(o)}</div>`).join('');
+        const html = key + placesHtml(st, pdata) + oth + `<div style="margin-top:6px;color:#334155;">${ATTR[st.style] || ''} · places © OpenStreetMap contributors</div>`;
+        let f = 10.5; while (f > 7.5 && measureH(html, 395, 2, f) > 700) f -= 0.5;
+        const lg = $('outP3Legend'); lg.style.fontSize = f + 'px'; lg.style.lineHeight = (f * 1.25) + 'px'; lg.innerHTML = html;
+        sheetVisible(true);
+    }
+    window.p2Layout = function () {
+        const lg = $('outP2MapPlaces'), c1 = $('outP2Content1'), c2 = $('outP2Content2');
+        let H = 0;
+        if (lg.innerHTML.trim() && $('outP2MapCanvas').style.display !== 'none') H = Math.min(measureH(lg.innerHTML, 520, 2, 8.5) + 3, 230);
+        lg.style.display = H ? '' : 'none'; lg.style.height = H + 'px'; lg.style.top = (748 - H) + 'px';
+        c2.style.height = (748 - 275 - (H ? H + 6 : 0)) + 'px';
+        const ok1 = window.fitP2Text(c1, 12, 15), ok2 = window.fitP2Text(c2, 12, 15);
+        const w1 = $('p2Warn1'), w2 = $('p2Warn2'); if (w1) w1.style.display = ok1 ? 'none' : ''; if (w2) w2.style.display = ok2 ? 'none' : '';
+    };
 
-    let token = 0;
-    let lastFail = 0, lastErr = '';
+    let token = 0, lastFail = 0, lastErr = '';
+    function updatePremBtn() { const c = { L: 0, N: 0, B: 0 }; readPts().forEach(p => { if (c[p.t] != null) c[p.t]++; }); $('btnPrem').textContent = '🧪 Premises points (▲' + c.L + ' ○' + c.N + ' ◆' + c.B + ')'; $('btnPlaces').textContent = '📍 Special places (add / edit) · ' + SP.length; }
     window.p2MapRefresh = async function (forcePlaces) {
         const my = ++token, stEl = $('p2MapStatus');
+        updatePremBtn();
         if (!$('inP2MapOn').checked) { hideMap(); stEl.textContent = 'Map is switched off.'; return; }
         const g = parseGps($('inGpsCoords').value);
         if (!g) { hideMap(); stEl.textContent = 'Enter the patient GPS first (Section 03).'; return; }
@@ -2880,11 +3032,12 @@ nwr["leisure"~"^(playground|sports_centre|stadium|pitch)$"](${bb});
         }
         if (my !== token) return;
         const st = buildState(g, pdata);
-        let res; try { res = await renderMap(st); } catch (e) { stEl.textContent = 'Map error: ' + (e && e.message ? e.message : e); return; }
+        let res, big = null; try { res = await renderMap(st, { px: SZ, z: 17 }); if ($('inP2MapSheet').checked) big = await renderMap(st, { px: 2000, z: st.style === 'topo' ? 17 : 18 }); } catch (e) { stEl.textContent = 'Map error: ' + (e && e.message ? e.message : e); return; }
         if (my !== token) return;
-        paint(res.canvas); legends(st, pdata);
-        stEl.textContent = (res.tiles ? '✔ Map ready: ' : '⚠️ Map picture not loaded (check internet), but ') + st.places.length + ' special place(s), ' + st.others.length + ' other case(s).'
-            + (pdata.failed ? '  ⚠️ Special places could not be loaded (' + (pdata.err || 'no answer') + '). Press "Find special places again" later.' : '');
+        paintTo('outP2MapCanvas', res.canvas); paintTo('p2MapPreview', res.canvas); legends(st, pdata);
+        if (big) sheet(st, pdata, big); else { $('outP3MapCanvas').style.display = 'none'; sheetVisible(false); }
+        stEl.textContent = (res.tiles ? '✔ Map ready: ' : '⚠️ Map picture not loaded (check internet), but ') + st.places.length + ' special place(s), ' + st.others.length + ' other case(s), ' + st.pts.length + ' premises point(s).'
+            + (pdata.failed ? '  ⚠️ OpenStreetMap places could not be loaded (' + (pdata.err || 'no answer') + '). Press "Find special places again" later, or add places yourself.' : '');
         updatePrintForm();
     };
     window.printA4Form = async function () {
@@ -2894,10 +3047,85 @@ nwr["leisure"~"^(playground|sports_centre|stadium|pitch)$"](${bb});
         updatePrintForm(); window.print();
     };
 
-    let tmr = null; const sched = () => { clearTimeout(tmr); tmr = setTimeout(() => window.p2MapRefresh(false), 1200); };
-    ['inGpsCoords', 'inP2MapStyle', 'inP2MapDays', 'inP2MapAll', 'inP2MapOn'].forEach(id => ['input', 'change'].forEach(ev => $(id).addEventListener(ev, sched)));
+    /* =====================  EDITOR POPUP: tap the map to add special places / premises points  ===================== */
+    let em = null, eKind = 'places', eGrp = null;
+    const tapIcon = (html, cls) => L.divIcon({ className: '', html: `<div class="${cls || 'pt-m'}">${html}</div>`, iconSize: [26, 26], iconAnchor: [13, 13] });
+    function ptRedraw() {
+        if (!em) return;
+        eGrp.clearLayers();
+        const g = parseGps($('inGpsCoords').value);
+        if (g) {
+            L.marker(g, { icon: tapIcon('🏠', 'pt-m pt-house'), interactive: false, zIndexOffset: 900 }).addTo(eGrp);
+            L.circle(g, { radius: 500, color: '#dc2626', weight: 2, fill: false, dashArray: '6 6', interactive: false }).addTo(eGrp);
+            const dLat = 500 / 111320, dLng = 500 / (111320 * Math.cos(g[0] * Math.PI / 180));
+            L.rectangle([[g[0] - dLat, g[1] - dLng], [g[0] + dLat, g[1] + dLng]], { color: '#111', weight: 2, fill: false, interactive: false }).addTo(eGrp);
+        }
+        let rows = '';
+        if (eKind === 'places') {
+            SP.forEach(p => { L.marker([p.lat, p.lng], { icon: tapIcon('■', 'pt-m pt-sq') }).bindTooltip(escT(p.name) + ' (' + escT(p.type) + ')').addTo(eGrp);
+                rows += `<tr><td>${escT(p.name)}${p.pending ? ' <i style="color:#b45309">(not yet in cloud)</i>' : ''}</td><td>${escT(p.type)}</td><td>${f5(p.lat)}, ${f5(p.lng)}</td><td><button type="button" class="btn btn-reset" style="padding:3px 8px;font-size:11px;" onclick="ptDelete('${escT(p.id)}')">🗑️</button></td></tr>`; });
+            $('ptCount').textContent = SP.length + ' special place(s) registered for this area';
+        } else {
+            const pts = readPts();
+            pts.forEach((p, i) => { L.marker([p.lat, p.lng], { icon: tapIcon(SYM[p.t] || '•', 'pt-m pt-prem') }).bindTooltip(PREM[p.t] || '').addTo(eGrp);
+                rows += `<tr><td>${SYM[p.t] || ''} ${escT(PREM[p.t] || '')}</td><td></td><td>${f5(p.lat)}, ${f5(p.lng)}</td><td><button type="button" class="btn btn-reset" style="padding:3px 8px;font-size:11px;" onclick="ptDelete(${i})">🗑️</button></td></tr>`; });
+            $('ptCount').textContent = pts.length + ' premises point(s) in this report';
+        }
+        $('ptList').innerHTML = rows ? '<table style="width:100%;font-size:12px;border-collapse:collapse;">' + rows + '</table>' : '<div style="color:#64748b;font-size:12px;padding:6px;">Nothing added yet. Tap the map.</div>';
+    }
+    window.openPtEditor = function (kind) {
+        if (!window.L) { alert('The map needs internet (map library could not load).'); return; }
+        eKind = kind;
+        $('ptTitle').textContent = kind === 'places' ? '📍 Special places (shared by the whole area)' : '🧪 Premises points (this report only)';
+        $('ptPlacesBar').style.display = kind === 'places' ? '' : 'none'; $('ptPremBar').style.display = kind === 'places' ? 'none' : '';
+        $('ptPopup').classList.add('open'); document.body.style.overflow = 'hidden';
+        if (!em) {
+            em = L.map('ptMap'); eGrp = L.layerGroup().addTo(em);
+            const osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }).addTo(em);
+            const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, maxNativeZoom: 18, attribution: 'Tiles &copy; Esri' });
+            L.control.layers({ '🗺️ Street': osm, '🛰️ Satellite': sat }, null, { position: 'topright' }).addTo(em);
+            em.on('click', e => ptAdd(e.latlng));
+        }
+        setTimeout(() => em.invalidateSize(), 80);
+        const g = parseGps($('inGpsCoords').value);
+        if (g) em.setView(g, 17); else if (SP.length) em.setView([SP[0].lat, SP[0].lng], 16); else em.setView([7.27, 80.53], 13);
+        ptRedraw();
+    };
+    function ptAdd(ll) {
+        if (eKind === 'places') {
+            const name = $('ptName').value.trim();
+            if (!name) { alert('Type the name of the place first (e.g. temple / school / shop name), then tap the map.'); $('ptName').focus(); return; }
+            SP.push({ id: 'SP_' + Date.now(), name, type: $('ptType').value, lat: +ll.lat.toFixed(6), lng: +ll.lng.toFixed(6), pending: true }); saveSP(); spPush().then(() => { if ($('ptPopup').classList.contains('open')) ptRedraw(); });
+            $('ptName').value = '';
+        } else {
+            const a = readPts(); a.push({ lat: +ll.lat.toFixed(6), lng: +ll.lng.toFixed(6), t: $('ptPType').value });
+            $('inP2Pts').value = JSON.stringify(a); $('inP2Pts').dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        ptRedraw(); updatePremBtn();
+    }
+    window.ptDelete = async function (ref) {
+        if (eKind === 'places') {
+            const p = SP.find(x => x.id === ref); if (!p) return;
+            if (!confirm('Delete "' + p.name + '" for everyone using this area?')) return;
+            if (!p.pending) {
+                if (!cloudReady()) { alert('Deleting a registered place needs internet and a signed-in account.'); return; }
+                try { await fbDb.ref('special_places/' + p.id).remove(); } catch (e) { alert('Could not delete from the cloud: ' + (e && e.message ? e.message : e)); return; }
+            }
+            SP = SP.filter(x => x.id !== ref); saveSP();
+        } else {
+            const a = readPts(); a.splice(+ref, 1); $('inP2Pts').value = JSON.stringify(a); $('inP2Pts').dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        ptRedraw(); updatePremBtn();
+    };
+    window.ptClose = function () { $('ptPopup').classList.remove('open'); document.body.style.overflow = ''; sched(); };
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('ptPopup').classList.contains('open')) ptClose(); });
+    $('ptType').innerHTML = PLACE_TYPES.map(t => `<option>${t}</option>`).join('');
+
+    let tmr = null; function sched() { clearTimeout(tmr); tmr = setTimeout(() => window.p2MapRefresh(false), 1200); }
+    ['inGpsCoords', 'inP2MapStyle', 'inP2MapDays', 'inP2MapAll', 'inP2MapOn', 'inP2MapLabel', 'inP2MapGN', 'inP2MapRing', 'inP2MapSheet', 'inP2Pts'].forEach(id => ['input', 'change'].forEach(ev => $(id).addEventListener(ev, sched)));
     ['inPatientName', 'inDateNotified', 'inDiseaseNotified', 'inDiseaseConfirmed'].forEach(id => { const el = $(id); if (el) el.addEventListener('change', sched); });
     const _lre = loadRecordForEditing; loadRecordForEditing = function (id) { _lre(id); setTimeout(() => window.p2MapRefresh(false), 800); };
+    updatePremBtn(); spAttach();
 })();
 
 </script>

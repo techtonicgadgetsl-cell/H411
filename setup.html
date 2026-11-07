@@ -89,7 +89,7 @@
         <li>When a person leaves, delete the account <b>and</b> remove the e-mail from the rules.</li>
       </ol>
     </details>
-    <label>Rules to paste in Firebase → Realtime Database → Rules</label>
+    <label>Rules to paste in Firebase → Realtime Database → Rules <span style="font-weight:normal;color:#64748b">(covers the patient reports and the shared special-places list)</span></label>
     <pre id="rulesOut">Type the staff e-mail addresses above.</pre>
     <button class="btn" type="button" id="copyRules">Copy rules</button>
   </div>
@@ -188,7 +188,7 @@ function staffList() {
 }
 function rulesFor(emails) {
   const cond = 'auth != null && (' + emails.map(e => "auth.token.email == '" + e + "'").join(' || ') + ')';
-  return JSON.stringify({ rules: { '.read': false, '.write': false, health_reports: { '.read': cond, '.write': cond } } }, null, 2);
+  return JSON.stringify({ rules: { '.read': false, '.write': false, health_reports: { '.read': cond, '.write': cond }, special_places: { '.read': cond, '.write': cond } } }, null, 2);
 }
 function refreshRules() {
   const { ok, bad } = staffList(), on = $('requireLogin').checked;

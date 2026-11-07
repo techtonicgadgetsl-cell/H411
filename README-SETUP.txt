@@ -30,6 +30,9 @@ SECURITY (patient data)
   - Create the staff accounts in Firebase -> Authentication -> Users -> Add user, and
     turn off "Enable create (sign-up)" if you see that option.
   - When someone leaves: delete their account AND remove the e-mail from the rules.
+  - If you update the app from an older version: open setup.html again (Step 2b), copy the NEW rules
+    (they now also cover "special_places", the shared list of schools / temples / shops used on the page-2 map)
+    and Publish them in Firebase -> Realtime Database -> Rules. Without this, places you add stay only on that device.
   - Do NOT copy someone else's config.js (it holds their database key).
   - Never put patient exports / photos in a public GitHub repository.
   - Lock the phone / computer with a PIN: reports are also kept on the device.
