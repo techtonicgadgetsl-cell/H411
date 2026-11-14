@@ -3464,5 +3464,153 @@ nwr["leisure"~"^(playground|sports_centre|stadium|pitch)$"](${bb});
 })();
 
 </script>
+<!-- 🎤 VOICE TYPING (Web Speech API; Gemini audio fallback) -->
+<style>
+.vt-bar{display:flex;align-items:center;gap:8px;margin:5px 0 10px;flex-wrap:wrap;font-size:12px;font-family:Arial,sans-serif}
+.vt-btn{border:0;background:#2563eb;color:#fff;font-weight:bold;font-size:13px;padding:7px 14px;border-radius:999px;cursor:pointer}
+.vt-btn:hover{background:#1d4ed8}
+.vt-btn.rec{background:#dc2626;animation:vtPulse 1.1s infinite}
+.vt-bar select{width:auto!important;flex:none;margin:0!important;font-size:12px;padding:5px 6px;border:1px solid #94a3b8;border-radius:6px;background:#f8fafc}
+.vt-btn{flex:none}
+.vt-st{color:#64748b;flex:1 1 160px;min-width:0}
+.vt-st.err{color:#dc2626}.vt-st.ok{color:#166534}
+textarea.vt-live{border-color:#dc2626!important;box-shadow:0 0 0 2px rgba(220,38,38,.25)}
+@keyframes vtPulse{0%,100%{opacity:1}50%{opacity:.6}}
+</style>
+<script>
+(function () {
+    const IDS = ['inMovements', 'p2T1Text', 'p2Src', 'p2Spread', 'p2Action', 'p2Other', 'inP2Content1', 'inP2Content2'];
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const LANGS = { si: 'si-LK', en: 'en-US' };
+    let cur = null;      // the one active session: { ta, bar, btn, st, sel, rec, base, want, quick, chunks, stream, mr, fallback }
+    const getPref = () => { try { return localStorage.getItem('h411_voice_lang') || 'si'; } catch (e) { return 'si'; } };
+    const setPref = v => { try { localStorage.setItem('h411_voice_lang', v); } catch (e) {} };
+
+    function say(s, msg, cls) { s.st.textContent = msg || ''; s.st.className = 'vt-st' + (cls ? ' ' + cls : ''); }
+    function fire(ta) { ta.dispatchEvent(new Event('input', { bubbles: true })); }
+    function baseOf(ta) { const v = ta.value; return v && !/\s$/.test(v) ? v + ' ' : v; }
+
+    function finish(s, msg, cls) {
+        s.want = false;
+        s.btn.classList.remove('rec'); s.btn.textContent = '🎤 Speak';
+        s.ta.classList.remove('vt-live'); s.ta.removeEventListener('keydown', s.onKey);
+        if (s.rec) { try { s.rec.onend = null; s.rec.stop(); } catch (e) {} s.rec = null; }
+        if (s.mr && s.mr.state !== 'inactive') { try { s.mr.stop(); } catch (e) {} }
+        if (s.stream) { s.stream.getTracks().forEach(t => t.stop()); s.stream = null; }
+        if (cur === s) cur = null;
+        say(s, msg || '', cls);
+    }
+
+    /* ---------- live dictation (Chrome / Edge) ---------- */
+    function startRecognition(s) {
+        const rec = new SR();
+        s.rec = rec;
+        rec.lang = LANGS[s.sel.value] || 'si-LK';
+        rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 1;
+        s.base = baseOf(s.ta); s.got = false; s.startedAt = Date.now();
+        rec.onresult = e => {
+            let fin = '', itm = '';
+            for (let i = 0; i < e.results.length; i++) {
+                const r = e.results[i];
+                if (r.isFinal) fin += r[0].transcript; else itm += r[0].transcript;
+            }
+            s.got = true;
+            s.ta.value = s.base + (fin + itm).replace(/^\s+/, '');
+            s.ta.scrollTop = s.ta.scrollHeight; fire(s.ta);
+        };
+        rec.onerror = ev => {
+            const er = ev.error;
+            if (er === 'no-speech' || er === 'aborted') return;
+            if (er === 'not-allowed' || er === 'service-not-allowed') return finish(s, '⚠ Microphone is blocked. Allow the microphone for this site (lock icon in the address bar) and try again.', 'err');
+            if (er === 'language-not-supported') { finish(s, '', ''); return startFallback(s, '⚠ This browser has no live ' + (s.sel.value === 'si' ? 'Sinhala' : 'English') + ' dictation — using Gemini voice instead. '); }
+            if (er === 'audio-capture') return finish(s, '⚠ No microphone found.', 'err');
+            if (er === 'network') return finish(s, '⚠ Voice typing needs internet.', 'err');
+            finish(s, '⚠ Voice error: ' + er, 'err');
+        };
+        rec.onend = () => {             // Chrome stops after a pause: keep listening until the user presses Stop
+            if (!s.want || cur !== s) return;
+            if (!s.got && Date.now() - s.startedAt < 1500) { s.quick = (s.quick || 0) + 1; if (s.quick >= 3) return finish(s, '⚠ Could not hear anything. Check the microphone and try again.', 'err'); }
+            else s.quick = 0;
+            setTimeout(() => { if (s.want && cur === s) { try { startRecognition(s); } catch (e) { finish(s, '⚠ ' + e.message, 'err'); } } }, 200);
+        };
+        rec.start();
+    }
+
+    /* ---------- fallback: record, then Gemini writes it (any browser with a microphone) ---------- */
+    async function startFallback(s, prefix) {
+        const key = (document.getElementById('inAiApiKey') || {}).value;
+        const prov = (document.getElementById('inAiEngineProvider') || {}).value;
+        if (!navigator.mediaDevices || !window.MediaRecorder) return say(s, '⚠ Voice typing is not supported on this browser. Use Chrome, or the 🎤 on your phone keyboard.', 'err');
+        if (prov !== 'GEMINI_AI' || !(key || '').trim()) return say(s, '⚠ ' + (prefix || '') + 'Enter the Gemini API key in Section 00 to use Gemini voice.', 'err');
+        try {
+            s.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        } catch (e) { return say(s, '⚠ Microphone is blocked. Allow it for this site and try again.', 'err'); }
+        cur = s; s.want = true; s.fallback = true; s.chunks = [];
+        s.mr = new MediaRecorder(s.stream);
+        s.mr.ondataavailable = e => { if (e.data && e.data.size) s.chunks.push(e.data); };
+        s.mr.onstop = async () => {
+            const mime = (s.mr && s.mr.mimeType) || 'audio/webm';
+            const blob = new Blob(s.chunks, { type: mime });
+            finish(s, '', '');
+            if (blob.size < 1500) return say(s, '⚠ Nothing was recorded.', 'err');
+            say(s, '⏳ Gemini is writing what you said...');
+            try {
+                const b64 = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(blob); });
+                const G = window.GoogleGenAIReady ? await window.GoogleGenAIReady : window.GoogleGenAI;
+                if (!G) throw new Error('Gemini SDK is not loaded. Reload the page.');
+                const ai = new G({ apiKey: key.trim() });
+                const lang = s.sel.value === 'si' ? 'Sinhala. Write it in Sinhala letters only' : 'English';
+                const resp = await ai.models.generateContent({ model: 'gemini-3.6-flash', contents: [
+                    { inlineData: { mimeType: mime.split(';')[0], data: b64 } },
+                    { text: 'Transcribe exactly what the speaker says. The speech is in ' + lang + '. Output ONLY the transcribed text, no quotes, no notes, no markdown. If nothing can be heard output nothing.' } ] });
+                const txt = (resp && resp.text ? resp.text : '').trim().replace(/\*\*/g, '');
+                if (!txt) return say(s, '⚠ Could not hear any speech. Try again.', 'err');
+                s.ta.value = baseOf(s.ta) + txt; fire(s.ta);
+                say(s, '✅ Added.', 'ok');
+            } catch (e) { say(s, '⚠ ' + (e && e.message || e), 'err'); }
+        };
+        s.mr.start();
+        s.btn.classList.add('rec'); s.btn.textContent = '⏹ Stop & write';
+        say(s, (prefix || '') + '🔴 Recording... press Stop when you finish.');
+    }
+
+    function toggle(s) {
+        if (cur === s) {                                   // pressing again = stop
+            if (s.fallback && s.mr && s.mr.state === 'recording') { s.mr.stop(); return; }
+            return finish(s, '■ Stopped.', '');
+        }
+        if (cur) finish(cur, '', '');
+        s.fallback = false;
+        if (!SR) return startFallback(s, '');
+        cur = s; s.want = true; s.quick = 0;
+        s.btn.classList.add('rec'); s.btn.textContent = '⏹ Stop';
+        s.ta.classList.add('vt-live');
+        s.onKey = () => { if (cur === s && !s.fallback) finish(s, '■ Stopped (you started typing).', ''); };
+        s.ta.addEventListener('keydown', s.onKey);
+        say(s, '🔴 Listening... speak now. Press Stop when you finish.');
+        try { startRecognition(s); } catch (e) { finish(s, '⚠ ' + e.message, 'err'); }
+    }
+
+    function attach(id) {
+        const ta = document.getElementById(id);
+        if (!ta || ta.dataset.vt) return;
+        ta.dataset.vt = '1';
+        const bar = document.createElement('div'); bar.className = 'vt-bar';
+        bar.innerHTML = '<button type="button" class="vt-btn">🎤 Speak</button>'
+            + '<select title="Language you speak"><option value="si">සිංහල කතා කරන්න</option><option value="en">Speak English</option></select>'
+            + '<span class="vt-st"></span>';
+        ta.insertAdjacentElement('afterend', bar);
+        const s = { ta, bar, btn: bar.querySelector('button'), sel: bar.querySelector('select'), st: bar.querySelector('.vt-st') };
+        s.sel.value = getPref();
+        s.sel.addEventListener('change', () => { setPref(s.sel.value); document.querySelectorAll('.vt-bar select').forEach(o => { if (o !== s.sel) o.value = s.sel.value; }); if (cur === s) { finish(s, '', ''); toggle(s); } });
+        s.btn.addEventListener('click', () => toggle(s));
+    }
+
+    IDS.forEach(attach);
+    setInterval(() => { if (cur && !cur.ta.offsetParent) finish(cur, '', ''); }, 1000);   // popup closed -> mic off
+    window.addEventListener('pagehide', () => { if (cur) finish(cur, '', ''); });
+})();
+</script>
+
 </body>
 </html>
