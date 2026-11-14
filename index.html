@@ -604,19 +604,101 @@
             .wiz-foot .btn { min-width:0; flex:1; padding:11px 6px; font-size:13px; }
         }
         @media print { .wiz-overlay { display:none !important; } }
+    
+        /* ================= DASHBOARD (v2) ================= */
+        body { background:#f1f5f9; }
+        .dashboard-container { display:block; width:100%; min-height:100vh; }
+        .portal-panel { width:100% !important; height:auto !important; min-height:100vh; padding:0 !important; overflow:visible !important; background:#f1f5f9; }
+        #mobilePreviewToggle { display:none !important; }
+        .dash-top { position:sticky; top:0; z-index:60; background:#0f172a; color:#fff; padding:10px 20px; display:flex; flex-wrap:wrap; gap:10px 14px; align-items:center; justify-content:space-between; box-shadow:0 2px 10px rgba(0,0,0,.35); }
+        .dash-brand { display:flex; align-items:center; gap:10px; }
+        .dash-logo { width:38px; height:38px; border-radius:10px; background:linear-gradient(135deg,#ef4444,#2563eb); display:flex; align-items:center; justify-content:center; font-size:20px; }
+        .dash-title { font-size:18px; font-weight:bold; letter-spacing:.2px; } .dash-title small { font-weight:normal; color:#94a3b8; font-size:13px; margin-left:6px; }
+        .dash-sub { font-size:12px; color:#94a3b8; }
+        .dash-actions { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+        .dash-btn { border:1px solid #334155; background:#1e293b; color:#e2e8f0; padding:8px 13px; border-radius:8px; font-size:13px; font-weight:bold; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+        .dash-btn:hover { background:#334155; }
+        .dash-btn.primary { background:#16a34a; border-color:#16a34a; color:#fff; font-size:14px; padding:9px 16px; } .dash-btn.primary:hover { background:#15803d; }
+        .dash-menu { position:relative; } .dash-pop { display:none; position:absolute; right:0; top:110%; background:#fff; color:#0f172a; border-radius:10px; box-shadow:0 8px 30px rgba(0,0,0,.35); min-width:260px; z-index:70; overflow:hidden; }
+        .dash-pop.open { display:block; } .dash-pop button { display:block; width:100%; text-align:left; border:0; background:#fff; padding:11px 14px; font-size:13px; cursor:pointer; border-bottom:1px solid #e2e8f0; } .dash-pop button:hover { background:#eff6ff; }
+        .dash-main { max-width:1500px; margin:0 auto; padding:16px 20px 60px; }
+        .kpi-row { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:14px; }
+        .kpi { background:#fff; border-radius:12px; padding:14px 16px; display:flex; gap:12px; align-items:center; box-shadow:0 1px 6px rgba(15,23,42,.08); border-left:5px solid #2563eb; transition:transform .12s; }
+        .kpi[data-act]:hover { transform:translateY(-2px); box-shadow:0 4px 14px rgba(15,23,42,.15); }
+        .kpi.red { border-left-color:#dc2626; background:#fef2f2; } .kpi.amber { border-left-color:#d97706; background:#fffbeb; } .kpi.green { border-left-color:#16a34a; }
+        .kpi-ic { font-size:26px; } .kpi-val { font-size:28px; font-weight:bold; line-height:1.05; color:#0f172a; } .kpi.red .kpi-val { color:#b91c1c; }
+        .kpi-lab { font-size:12.5px; font-weight:bold; color:#475569; margin-top:2px; } .kpi-sub { font-size:11.5px; color:#64748b; margin-top:1px; }
+        .chart-row { display:grid; grid-template-columns:1.7fr 1fr 1fr; gap:12px; margin-bottom:14px; }
+        .dcard { background:#fff; border-radius:12px; padding:14px 16px; box-shadow:0 1px 6px rgba(15,23,42,.08); }
+        .dcard h4 { margin:0 0 8px; font-size:14px; color:#0f172a; display:flex; justify-content:space-between; align-items:baseline; gap:8px; } .dcard h4 small { font-weight:normal; color:#64748b; font-size:11.5px; }
+        .wk-svg { width:100%; height:auto; display:block; } .wk-svg g[data-act] { cursor:pointer; } .wk-svg g[data-act]:hover rect.hov { fill:rgba(37,99,235,.08); }
+        .lg-chips { display:flex; flex-wrap:wrap; gap:6px 12px; margin-top:6px; font-size:11.5px; color:#475569; } .lg-chips i { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:4px; vertical-align:-1px; }
+        .hb { display:grid; grid-template-columns:minmax(80px,38%) 1fr 30px; gap:8px; align-items:center; font-size:12.5px; padding:4px 5px; border-radius:6px; margin-bottom:2px; } .hb[data-act] { cursor:pointer; } .hb[data-act]:hover { background:#eff6ff; }
+        .hb-l { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .hb-t { height:12px; background:#e2e8f0; border-radius:6px; overflow:hidden; } .hb-t i { display:block; height:100%; border-radius:6px; } .hb b { text-align:right; }
+        .dfilters { position:sticky; top:62px; z-index:40; background:#fff; border-radius:12px; padding:12px 14px; box-shadow:0 2px 10px rgba(15,23,42,.12); margin-bottom:12px; }
+        .f-row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+        .f-row select, .f-row input[type=date] { padding:9px 10px; border:1px solid #cbd5e1; border-radius:8px; background:#f8fafc; font-size:13px; }
+        .f-search { flex:1 1 280px; display:flex; align-items:center; gap:8px; border:1px solid #cbd5e1; border-radius:8px; background:#f8fafc; padding:0 10px; } .f-search input { border:0; background:transparent; padding:10px 0; font-size:14px; width:100%; outline:none; }
+        .f-chips { display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:10px; }
+        .chip { border:1px solid #cbd5e1; background:#fff; color:#334155; border-radius:999px; padding:5px 12px; font-size:12.5px; font-weight:bold; cursor:pointer; } .chip:hover { background:#f1f5f9; }
+        .chip.on { background:#2563eb; border-color:#2563eb; color:#fff; } .chip.on.red { background:#dc2626; border-color:#dc2626; } .chip.on.green { background:#16a34a; border-color:#16a34a; } .chip.on.amber { background:#d97706; border-color:#d97706; }
+        .f-info { margin-left:auto; font-size:12.5px; color:#64748b; }
+        .dtable-card { background:#fff; border-radius:12px; box-shadow:0 1px 6px rgba(15,23,42,.08); overflow:hidden; }
+        .dtable { width:100%; border-collapse:collapse; font-size:13.5px; }
+        .dtable th { background:#0f172a; color:#fff; text-align:left; padding:10px 12px; font-size:12.5px; white-space:nowrap; }
+        .dtable td { padding:9px 12px; border-bottom:1px solid #e2e8f0; vertical-align:middle; }
+        .dtable tbody tr { cursor:pointer; } .dtable tbody tr:hover { background:#f8fafc; }
+        .dtable tbody tr.flash { animation:dflash 3.5s ease-out; } @keyframes dflash { 0% { background:#bbf7d0; } 100% { background:transparent; } }
+        .dtable small { color:#64748b; }
+        .pill { display:inline-block; padding:3px 9px; border-radius:999px; font-size:11.5px; font-weight:bold; } .pill.ok { background:#dcfce7; color:#166534; } .pill.local { background:#fef3c7; color:#92400e; }
+        .ic { border:1px solid #cbd5e1; background:#fff; border-radius:8px; width:32px; height:30px; cursor:pointer; font-size:14px; margin-right:3px; } .ic:hover { background:#eff6ff; border-color:#2563eb; } .ic.del:hover { background:#fef2f2; border-color:#dc2626; }
+        .dpager { display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; padding:10px 14px; font-size:13px; color:#475569; background:#f8fafc; }
+        .dpager button { border:1px solid #cbd5e1; background:#fff; border-radius:8px; padding:6px 12px; cursor:pointer; font-weight:bold; } .dpager button:disabled { opacity:.4; cursor:not-allowed; } .dpager select { padding:6px; border-radius:8px; border:1px solid #cbd5e1; }
+        .d-empty { padding:36px 10px; text-align:center; color:#64748b; }
+        /* detail drawer */
+        .drawer-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,.5); z-index:8600; justify-content:flex-end; } .drawer-overlay.open { display:flex; }
+        .drawer { width:min(460px,100%); height:100%; background:#fff; box-shadow:-8px 0 30px rgba(0,0,0,.3); display:flex; flex-direction:column; animation:dslide .18s ease-out; } @keyframes dslide { from { transform:translateX(40px); opacity:.4; } to { transform:none; opacity:1; } }
+        .dr-head { padding:14px 16px; background:#0f172a; color:#fff; display:flex; align-items:center; gap:8px; } .dr-head b { flex:1; font-size:15px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .dr-head button { border:0; background:rgba(255,255,255,.15); color:#fff; border-radius:8px; width:32px; height:32px; cursor:pointer; font-size:14px; }
+        .dr-body { padding:14px 16px; overflow-y:auto; flex:1; }
+        .dr-name { font-size:20px; font-weight:bold; margin:0 0 2px; } .dr-ref { color:#475569; font-size:13px; margin-bottom:10px; }
+        .dr-tags { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
+        .dr-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px 14px; font-size:13px; } .dr-grid div { min-width:0; } .dr-grid .w2 { grid-column:span 2; } .dr-grid span { display:block; font-size:11px; color:#64748b; font-weight:bold; text-transform:uppercase; letter-spacing:.03em; } .dr-grid p { margin:1px 0 0; word-break:break-word; }
+        .dr-foot { padding:12px 16px; background:#f1f5f9; display:flex; flex-wrap:wrap; gap:8px; border-top:1px solid #e2e8f0; } .dr-foot .btn { flex:1; min-width:120px; }
+        /* form preview becomes a full-screen overlay (the A4 pages used for printing) */
+        @media screen {
+            .dashboard-container .preview-panel { position:fixed !important; top:0; left:0; right:0; bottom:0; width:auto !important; height:auto !important; z-index:8500; background:#0b1220 !important; padding:0 0 30px !important; overflow:auto !important; display:none; flex-direction:column; align-items:center; gap:14px; border:0 !important; }
+            .dashboard-container:not(.preview-collapsed) .preview-panel { display:flex !important; }
+            .preview-page-switcher { position:sticky; top:0; z-index:5; background:#0f172a; padding:10px 14px; margin:0 !important; align-items:center; flex-wrap:wrap; gap:8px; }
+            .preview-scale-wrapper { width:calc(297mm * var(--ps, .55)); height:calc(210mm * var(--ps, .55)); overflow:hidden; flex:none; }
+            .preview-scale-wrapper .page-container { transform:scale(var(--ps, .55)) !important; transform-origin:top left !important; }
+        }
+        @media print { .preview-scale-wrapper { width:297mm !important; overflow:visible !important; } .drawer-overlay, .dash-top { display:none !important; } }
+        @media (max-width:1100px) { .kpi-row { grid-template-columns:repeat(3,1fr); } .chart-row { grid-template-columns:1fr 1fr; } .chart-row > :first-child { grid-column:span 2; } }
+        @media (max-width:760px) {
+            .dash-main { padding:10px 10px 50px; } .dash-top { padding:8px 10px; } .dash-title { font-size:16px; } .dash-sub { display:none; }
+            .kpi-row { grid-template-columns:1fr 1fr; gap:8px; } .kpi { padding:10px; gap:8px; } .kpi-ic { font-size:20px; } .kpi-val { font-size:22px; }
+            .chart-row { grid-template-columns:1fr; } .chart-row > :first-child { grid-column:auto; }
+            .dfilters { position:static; } .f-info { margin-left:0; width:100%; }
+            .dtable thead { display:none; } .dtable, .dtable tbody, .dtable tr, .dtable td { display:block; width:100%; }
+            .dtable tr { padding:10px 12px; border-bottom:8px solid #f1f5f9; } .dtable td { border:0; padding:3px 0; } .dtable td[data-l]:before { content:attr(data-l) ': '; font-size:11px; font-weight:bold; color:#64748b; }
+        }
     </style>
 </head>
 <body>
 
-<button type="button" id="mobilePreviewToggle" onclick="toggleMobilePreview()">👁️ Show Form Preview</button>
+
 
 <div class="dashboard-container preview-collapsed">
 
     <div class="preview-panel">
         <div class="preview-page-switcher">
+            <button type="button" class="preview-page-btn" onclick="closePreview()">⬅ Dashboard</button>
             <button type="button" class="preview-page-btn active" id="btnPreviewPage1" onclick="showPreviewPage(1)">📄 Page 1</button>
             <button type="button" class="preview-page-btn" id="btnPreviewPage2" onclick="showPreviewPage(2)">📄 Page 2</button>
             <button type="button" class="preview-page-btn" id="btnPreviewPage3" onclick="showPreviewPage(3)" style="display:none;">📄 Page 3 (map)</button>
+            <span style="flex:1"></span><span style="color:#94a3b8;font-size:12px;">Print: A4 · Landscape · Margins None · Scale 100 · Background graphics ✔</span>
+            <button type="button" class="btn btn-print" id="btnPrintA4" onclick="printA4Form()" style="padding:8px 16px;">🖨️ Print A4 Form</button>
         </div>
         <div class="preview-scale-wrapper" id="previewWrapperPage1">
             <div class="page-container" id="page-1">
@@ -707,18 +789,69 @@
     </div>
 
     <div class="portal-panel">
-        <div class="portal-card">
-            <div class="portal-header">
-                <h3>Communicable Disease Data Entry Portal</h3>
-                <span style="display:inline-flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                    <button type="button" class="btn btn-update" onclick="newReportEntry()" style="padding:6px 12px; border-radius:6px; font-size:13px; font-weight:bold;">➕ New Report</button>
-                    <a href="disease-map.html" target="_blank" class="btn btn-map" style="padding:6px 12px; border-radius:6px; font-size:13px; font-weight:bold;">🗺️ Disease Map</a>
-                    <button type="button" id="btnSignOut" class="btn btn-reset" style="display:none; padding:6px 12px; border-radius:6px; font-size:13px; font-weight:bold;"></button>
+        <div class="dash-app">
+            <header class="dash-top">
+                <div class="dash-brand">
+                    <div class="dash-logo">🩺</div>
+                    <div><div class="dash-title">Health 411<small id="dashArea"></small></div><div class="dash-sub">Communicable disease reports · live dashboard</div></div>
+                </div>
+                <div class="dash-actions">
+                    <button type="button" class="dash-btn primary" onclick="newReportEntry()">➕ New Report</button>
+                    <button type="button" class="dash-btn" id="btnPending" onclick="openPendingList()">⏳ Pending Confirmation</button>
+                    <a class="dash-btn" href="disease-map.html" target="_blank">🗺️ Disease Map</a>
+                    <button type="button" class="dash-btn" onclick="manualSyncToFirebase()" title="Reload all reports from the cloud">⟳ Refresh</button>
+                    <div class="dash-menu">
+                        <button type="button" class="dash-btn" id="btnExport" onclick="dashToggleExport(event)">⬇ Export ▾</button>
+                        <div class="dash-pop" id="dashExportMenu">
+                            <button type="button" onclick="dashExportCsv()">📊 CSV – the list below (opens in Excel)</button>
+                            <button type="button" onclick="dashExportJson()">💾 JSON – backup of ALL reports</button>
+                        </div>
+                    </div>
                     <span id="networkStatusBadge" class="status-badge status-online">🟢 Online Mode</span>
-                </span>
-            </div>
-            
-            <form id="healthPortalForm">
+                    <button type="button" id="btnSignOut" class="dash-btn" style="display:none;"></button>
+                </div>
+            </header>
+
+            <main class="dash-main">
+                <section class="kpi-row" id="kpiRow"></section>
+
+                <section class="chart-row">
+                    <div class="dcard" id="chWeekly"></div>
+                    <div class="dcard" id="chDisease"></div>
+                    <div class="dcard" id="chGN"></div>
+                </section>
+
+                <section class="dfilters" id="dashFilters">
+                    <div class="f-row">
+                        <div class="f-search"><span>🔍</span><input type="text" id="inSearchQuery" placeholder="Search name, Ref No, disease, GN, phone…  (press / )" oninput="filterAndRenderRecords()"></div>
+                        <select id="fDisease" onchange="dashSet('disease', this.value)"><option value="">All diseases</option></select>
+                        <select id="fGN" onchange="dashSet('gn', this.value)"><option value="">All GN divisions</option></select>
+                        <select id="fPeriod" onchange="dashSet('period', this.value)">
+                            <option value="all">All time</option><option value="week">This week</option><option value="7d">Last 7 days</option>
+                            <option value="month">This month</option><option value="28d">Last 28 days</option><option value="custom">Custom dates…</option>
+                        </select>
+                        <span id="fCustom" style="display:none;"><input type="date" id="fFrom" onchange="dashSet('from', this.value)"> – <input type="date" id="fTo" onchange="dashSet('to', this.value)"></span>
+                        <select id="fSort" onchange="dashSet('sort', this.value)">
+                            <option value="new">Newest first</option><option value="old">Oldest first</option>
+                            <option value="wait">Longest waiting for confirmation</option><option value="name">Name A–Z</option><option value="ref">Ref No</option>
+                        </select>
+                    </div>
+                    <div class="f-chips" id="fChips"></div>
+                </section>
+
+                <section class="dtable-card">
+                    <div style="overflow-x:auto;">
+                        <table class="dtable">
+                            <thead><tr><th>Ref No</th><th>Patient</th><th>Disease</th><th>Notified</th><th>Cloud</th><th style="width:150px;">Actions</th></tr></thead>
+                            <tbody id="savedRecordsTableBody"><tr><td colspan="6" class="d-empty">Loading reports…</td></tr></tbody>
+                        </table>
+                    </div>
+                    <div class="dpager" id="dashPager"></div>
+                </section>
+            </main>
+        </div>
+
+        <form id="healthPortalForm">
                 <!-- ===== ENTRY WIZARD POPUP (sections shown step by step) ===== -->
                 <div class="wiz-overlay" id="entryWizard">
                   <div class="wiz-card">
@@ -1106,71 +1239,26 @@
                   </div>
                 </div>
                 <!-- ===== END WIZARD ===== -->
-                <div class="btn-group" style="margin-bottom:12px;">
-                    <button type="button" class="btn btn-update" onclick="newReportEntry()">➕ New Report Entry</button>
-                </div>
-
-                <div class="section-title">09. Saved Reports Navigation & Search (All Browsers Synced)</div>
-                <div class="form-grid">
-                    <div class="form-group" style="grid-column: span 4; display: flex; flex-direction: row; gap: 10px; flex-wrap: wrap;">
-                        <button type="button" class="btn btn-update" onclick="saveRecordOfflineFirst()">💾 Save / Sync Report to Cloud</button>
-                        <button type="button" class="btn btn-gps" onclick="manualSyncToFirebase()">🔄 Refresh All Reports from Cloud</button>
-                    </div>
-                </div>
-
-                <div class="form-grid">
-                    <div class="form-group" style="grid-column: span 4;">
-                        <label>🔍 Search Saved Reports by Patient Name, Ref No, or Disease</label>
-                        <input type="text" id="inSearchQuery" placeholder="Type Patient Name, Ref No, or Disease to filter..." oninput="filterAndRenderRecords()">
-                    </div>
-                    <div class="form-group" style="grid-column: span 4;">
-                        <button type="button" id="btnPending" class="btn" style="background:#d97706; color:#fff;" onclick="openPendingList()">⏳ Pending Confirmation</button>
-                        <span style="font-size:12px; color:#64748b; margin-left:8px;">Reports with no confirmed disease / date. Red = not confirmed 3+ days after the notified date.</span>
-                    </div>
-                </div>
-
-                <div class="record-viewer-card" id="cardNavViewer" style="display: none;">
-                    <div class="record-nav-header">
-                        <span id="navCardCounter" style="font-weight: bold; color: #60a5fa; font-size: 13px;">Report 0 of 0</span>
-                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                            <button type="button" class="btn btn-gps" style="padding: 4px 10px; font-size: 12px;" onclick="navigateRecord(-1)">⏮️ Previous</button>
-                            <button type="button" class="btn btn-gps" style="padding: 4px 10px; font-size: 12px;" onclick="navigateRecord(1)">Next ⏭️</button>
-                        </div>
-                    </div>
-                    <div id="navCardBody" style="font-size: 13px; line-height: 1.6;"></div>
-                    <div style="margin-top: 12px; display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap;">
-                        <button type="button" class="btn btn-ai" style="font-size: 12px; padding: 6px 14px;" onclick="loadCurrentNavRecordToForm()">✏️ Load into Form to Edit / Print</button>
-                        <button type="button" class="btn btn-delete" style="font-size: 12px; padding: 6px 14px;" onclick="deleteCurrentNavRecord()">🗑️ Delete Report</button>
-                    </div>
-                </div>
-
-                <div class="table-scroll-container">
-                    <table class="db-records-table">
-                        <thead>
-                            <tr>
-                                <th>Ref No</th>
-                                <th>Patient Name</th>
-                                <th>Disease</th>
-                                <th>Cloud Sync</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="savedRecordsTableBody">
-                            <tr><td colspan="5" style="text-align:center;">Loading cloud database records...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="btn-group">
-                    <button type="button" class="btn btn-update" onclick="updatePrintForm(); if (typeof p2MapRefresh === 'function') p2MapRefresh(false);">Update Preview</button>
-                    <button type="button" class="btn btn-print" id="btnPrintA4" onclick="printA4Form()">Print A4 Form</button>
-                    <button type="button" class="btn btn-reset" onclick="resetForm()">Clear Form</button>
-                </div>
-                <div style="font-size:12px;color:#64748b;margin-top:8px;">🖨️ Print settings: Paper <b>A4</b> · Layout <b>Landscape</b> · Margins <b>None</b> · Scale <b>100</b> · <b>Background graphics ✔</b>. (If the preview shows 3 pages, the margins are not "None".)</div>
-            </form>
-        </div>
+        </form>
     </div>
 
+</div>
+
+<div class="drawer-overlay" id="dashDrawer" onclick="if (event.target === this) dashCloseDrawer()">
+  <aside class="drawer">
+    <div class="dr-head">
+      <button type="button" onclick="dashDrawerNav(-1)" title="Previous report">◀</button>
+      <b id="drTitle">Report</b>
+      <button type="button" onclick="dashDrawerNav(1)" title="Next report">▶</button>
+      <button type="button" onclick="dashCloseDrawer()" title="Close">✕</button>
+    </div>
+    <div class="dr-body" id="drBody"></div>
+    <div class="dr-foot">
+      <button type="button" class="btn btn-update" id="drEdit">✏️ Edit</button>
+      <button type="button" class="btn btn-print" id="drPrint">🖨️ Preview / Print</button>
+      <button type="button" class="btn btn-reset" id="drDelete">🗑️ Delete</button>
+    </div>
+  </aside>
 </div>
 
 <script type="module">
@@ -2303,7 +2391,7 @@
 
     /* Editing a saved report opens it in the wizard */
     const _load = loadRecordForEditing;
-    loadRecordForEditing = function (id) { _load(id); if (activeEditingRecordId === id) openWizard(0); };
+    loadRecordForEditing = function (id) { _load(id); if (activeEditingRecordId === id && !window.__quietLoad) openWizard(0); };
 
     /* After a successful save, close the popup */
     const _alert = window.alert;
@@ -3126,6 +3214,253 @@ nwr["leisure"~"^(playground|sports_centre|stadium|pitch)$"](${bb});
     ['inPatientName', 'inDateNotified', 'inDiseaseNotified', 'inDiseaseConfirmed'].forEach(id => { const el = $(id); if (el) el.addEventListener('change', sched); });
     const _lre = loadRecordForEditing; loadRecordForEditing = function (id) { _lre(id); setTimeout(() => window.p2MapRefresh(false), 800); };
     updatePremBtn(); spAttach();
+})();
+
+</script>
+<script>
+/* ===== DASHBOARD v2: KPIs, charts, filters, report table, detail drawer, export, form-preview overlay ===== */
+(function () {
+    const $ = id => document.getElementById(id);
+    const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const pad = n => String(n).padStart(2, '0');
+    const fmtD = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+    const parseD = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+    const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const mondayOf = d => { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; };
+    const addD = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+    const md = d => MON[d.getMonth()] + ' ' + d.getDate();
+    const GROUPS = [
+        { key: 'dengue', label: 'Dengue', color: '#dc2626', test: s => s.includes('dengue') },
+        { key: 'tb', label: 'Tuberculosis', color: '#2563eb', test: s => s.includes('tubercul') || s.trim() === 'tb' },
+        { key: 'lepto', label: 'Leptospirosis', color: '#16a34a', test: s => s.includes('leptospir') },
+        { key: 'chickenpox', label: 'Chicken pox', color: '#facc15', test: s => s.includes('chicken') },
+        { key: 'dysentery', label: 'Dysentery', color: '#ec4899', test: s => s.includes('dysentery') },
+        { key: 'other', label: 'Other', color: '#334155', test: () => true }];
+    const dname = r => (r.inDiseaseConfirmed || r.inDiseaseNotified || '').trim();
+    const grp = r => { const s = dname(r).toLowerCase(); return GROUPS.find(g => g.test(s)); };
+    const nd = r => /^\d{4}-\d{2}-\d{2}$/.test(r.inDateNotified || '') ? r.inDateNotified : '';
+    const recsNow = () => (typeof allFetchedRecords !== 'undefined' ? allFetchedRecords : []);
+
+    const F = { status: 'all', disease: '', gn: '', period: 'all', from: '', to: '', sort: 'new', page: 1, size: 25, flash: null };
+    let list = [], lastSig = '', drawerId = null;
+
+    /* ---------- KPI cards ---------- */
+    function renderKpis(recs) {
+        const now = new Date(), today = fmtD(now), mon = mondayOf(now), thisW = fmtD(mon), lastW = fmtD(addD(mon, -7)), from28 = fmtD(addD(now, -27));
+        let wk = 0, lwk = 0, d28 = 0;
+        recs.forEach(r => { const d = nd(r); if (!d) return; const k = fmtD(mondayOf(parseD(d))); if (k === thisW) wk++; else if (k === lastW) lwk++; if (d >= from28 && d <= today) d28++; });
+        const pend = recs.filter(r => !confirmInfo(r).confirmed), od = pend.filter(r => confirmInfo(r).overdue).length, local = recs.filter(r => r.synced === false).length;
+        const delta = wk - lwk, dTxt = delta === 0 ? '＝ same as last week' : (delta > 0 ? '▲ +' + delta : '▼ ' + delta) + ' vs last week (' + lwk + ')';
+        const K = [
+            { ic: '📋', val: recs.length, lab: 'Total reports', sub: d28 + ' in the last 28 days', act: 'k-total' },
+            { ic: '📅', val: wk, lab: 'This week', sub: dTxt, act: 'k-week', cls: delta > 0 ? 'amber' : '' },
+            { ic: '⏳', val: pend.length, lab: 'Waiting for confirmation', sub: od ? '⏰ ' + od + ' overdue (' + CONFIRM_ALERT_DAYS + '+ days)' : 'none overdue', act: 'k-pending', cls: od ? 'red' : (pend.length ? 'amber' : 'green') },
+            { ic: '🗓️', val: d28, lab: 'Last 28 days', sub: 'cases notified', act: 'k-28d' },
+            { ic: local ? '🟡' : '☁️', val: local ? local : '✔', lab: local ? 'Waiting to upload' : 'All synced to cloud', sub: local ? 'Local only – sent when online' : 'nothing pending upload', act: local ? 'k-local' : '', cls: local ? 'amber' : 'green' }];
+        $('kpiRow').innerHTML = K.map(k => `<div class="kpi ${k.cls || ''}"${k.act ? ` data-act="${k.act}"` : ''}><div class="kpi-ic">${k.ic}</div><div><div class="kpi-val">${k.val}</div><div class="kpi-lab">${k.lab}</div><div class="kpi-sub">${esc(k.sub)}</div></div></div>`).join('');
+    }
+
+    /* ---------- charts ---------- */
+    function weekly(recs) {
+        const N = 12, W = 640, H = 235, ml = 30, mr = 6, mt = 16, mb = 34, pw = W - ml - mr, ph = H - mt - mb, bw = pw / N, monNow = mondayOf(new Date());
+        const weeks = []; for (let i = N - 1; i >= 0; i--) { const m = addD(monNow, -7 * i); weeks.push({ m, key: fmtD(m), by: {}, tot: 0 }); }
+        const ix = {}; weeks.forEach((w, i) => { ix[w.key] = i; });
+        const seen = new Set();
+        recs.forEach(r => { const d = nd(r); if (!d) return; const k = fmtD(mondayOf(parseD(d))); if (!(k in ix)) return; const w = weeks[ix[k]], g = grp(r).key; w.by[g] = (w.by[g] || 0) + 1; w.tot++; seen.add(g); });
+        const mx = Math.max(1, ...weeks.map(w => w.tot)), step = mx <= 5 ? 1 : mx <= 10 ? 2 : mx <= 20 ? 5 : mx <= 50 ? 10 : 20, top = Math.ceil(mx / step) * step, Y = v => mt + ph - (v / top) * ph;
+        let svg = `<svg class="wk-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Weekly cases">`;
+        for (let v = 0; v <= top; v += step) svg += `<line x1="${ml}" x2="${W - mr}" y1="${Y(v)}" y2="${Y(v)}" stroke="#e2e8f0"/><text x="${ml - 6}" y="${Y(v) + 4}" font-size="10" text-anchor="end" fill="#64748b">${v}</text>`;
+        weeks.forEach((w, i) => {
+            const x = ml + i * bw, bx = x + bw * 0.16, bwid = bw * 0.68; let acc = 0, bars = '';
+            GROUPS.forEach(g => { const c = w.by[g.key] || 0; if (!c) return; const y1 = Y(acc + c), y0 = Y(acc); bars += `<rect x="${bx}" y="${y1}" width="${bwid}" height="${y0 - y1}" fill="${g.color}"${g.key === 'chickenpox' ? ' stroke="#ca8a04" stroke-width=".6"' : ''}/>`; acc += c; });
+            const tip = md(w.m) + ' – ' + md(addD(w.m, 6)) + ': ' + w.tot + ' case(s)' + GROUPS.filter(g => w.by[g.key]).map(g => ' · ' + g.label + ' ' + w.by[g.key]).join('');
+            svg += `<g data-act="week" data-v="${w.key}"><title>${esc(tip)}</title><rect class="hov" x="${x}" y="${mt}" width="${bw}" height="${ph}" fill="transparent"/>${bars}${w.tot ? `<text x="${bx + bwid / 2}" y="${Y(w.tot) - 3}" font-size="10" font-weight="bold" text-anchor="middle" fill="#0f172a">${w.tot}</text>` : ''}`
+                + `<text x="${bx + bwid / 2}" y="${H - 18}" font-size="9.5" text-anchor="middle" fill="${i === N - 1 ? '#0f172a' : '#64748b'}" font-weight="${i === N - 1 ? 'bold' : 'normal'}">${w.m.getDate()}</text>${(i === 0 || w.m.getDate() <= 7) ? `<text x="${bx + bwid / 2}" y="${H - 6}" font-size="9.5" text-anchor="middle" fill="#64748b">${MON[w.m.getMonth()]}</text>` : ''}</g>`;
+        });
+        svg += '</svg>';
+        const lg = GROUPS.filter(g => seen.has(g.key)).map(g => `<span><i style="background:${g.color}"></i>${g.label}</span>`).join('');
+        $('chWeekly').innerHTML = `<h4>Cases per week <small>last 12 weeks · click a bar to filter</small></h4>${svg}<div class="lg-chips">${lg || '<span>No cases yet</span>'}</div>`;
+    }
+    function bars(recs, keyFn, act, color, max) {
+        const from = fmtD(addD(new Date(), -27)), to = fmtD(new Date()), cnt = {}, samp = {};
+        recs.forEach(r => { const d = nd(r); if (!d || d < from || d > to) return; const k = keyFn(r); if (!k) return; cnt[k] = (cnt[k] || 0) + 1; samp[k] = r; });
+        let arr = Object.keys(cnt).map(k => ({ k, c: cnt[k] })).sort((a, b) => b.c - a.c), rest = 0;
+        if (arr.length > max) { rest = arr.slice(max).reduce((s, x) => s + x.c, 0); arr = arr.slice(0, max); }
+        const mx = Math.max(1, ...arr.map(x => x.c), rest), total = Object.values(cnt).reduce((s, v) => s + v, 0);
+        const html = arr.map(x => `<div class="hb" data-act="${act}" data-v="${esc(x.k)}" title="Click to filter"><span class="hb-l">${esc(x.k)}</span><span class="hb-t"><i style="width:${Math.max(4, x.c / mx * 100)}%;background:${color ? color : grp(samp[x.k]).color}"></i></span><b>${x.c}</b></div>`).join('')
+            + (rest ? `<div class="hb"><span class="hb-l">Others</span><span class="hb-t"><i style="width:${Math.max(4, rest / mx * 100)}%;background:#94a3b8"></i></span><b>${rest}</b></div>` : '');
+        return { html: html || '<div class="d-empty" style="padding:18px 0;">No cases in the last 28 days</div>', total };
+    }
+    function charts(recs) {
+        weekly(recs);
+        const d = bars(recs, dname, 'disease', null, 7), g = bars(recs, r => (r.inGNArea || '').trim(), 'gn', '#2563eb', 8);
+        $('chDisease').innerHTML = `<h4>Diseases <small>last 28 days · ${d.total} cases</small></h4>${d.html}`;
+        $('chGN').innerHTML = `<h4>GN divisions <small>last 28 days</small></h4>${g.html}`;
+    }
+
+    /* ---------- filters + table ---------- */
+    function inPeriod(r) {
+        if (F.period === 'all') return true;
+        const d = nd(r); if (!d) return false;
+        const now = new Date(), t = fmtD(now);
+        if (F.period === 'week') { const m = mondayOf(now); return d >= fmtD(m) && d <= fmtD(addD(m, 6)); }
+        if (F.period === '7d') return d >= fmtD(addD(now, -6)) && d <= t;
+        if (F.period === '28d') return d >= fmtD(addD(now, -27)) && d <= t;
+        if (F.period === 'month') return d.slice(0, 7) === t.slice(0, 7);
+        return (!F.from || d >= F.from) && (!F.to || d <= F.to);
+    }
+    function applyFilters(recs) {
+        const q = ($('inSearchQuery').value || '').toLowerCase().trim();
+        let a = recs.filter(r => {
+            const ci = confirmInfo(r);
+            if (q && ![r.inPatientName, r.inPhiRefNo, r.inDiseaseNotified, r.inDiseaseConfirmed, r.inGNArea, r.inPatientPhone, r.inPatientAddress].some(v => String(v || '').toLowerCase().includes(q))) return false;
+            if (F.status === 'pending' && ci.confirmed) return false;
+            if (F.status === 'overdue' && !ci.overdue) return false;
+            if (F.status === 'confirmed' && !ci.confirmed) return false;
+            if (F.status === 'local' && r.synced !== false) return false;
+            if (F.disease && dname(r).toLowerCase() !== F.disease.toLowerCase()) return false;
+            if (F.gn && (r.inGNArea || '').trim() !== F.gn) return false;
+            return inPeriod(r);
+        });
+        const nk = r => (nd(r) || '0000') + '|' + (r.id || '');
+        if (F.sort === 'new') a.sort((x, y) => nk(y).localeCompare(nk(x)));
+        else if (F.sort === 'old') a.sort((x, y) => nk(x).localeCompare(nk(y)));
+        else if (F.sort === 'name') a.sort((x, y) => String(x.inPatientName || '~').localeCompare(String(y.inPatientName || '~')));
+        else if (F.sort === 'ref') a.sort((x, y) => String(x.inPhiRefNo || '~').localeCompare(String(y.inPhiRefNo || '~'), undefined, { numeric: true }));
+        else a.sort((x, y) => { const cx = confirmInfo(x), cy = confirmInfo(y); if (cx.confirmed !== cy.confirmed) return cx.confirmed ? 1 : -1; if (!cx.confirmed) return (cy.days === null ? -1 : cy.days) - (cx.days === null ? -1 : cx.days); return nk(y).localeCompare(nk(x)); });
+        return a;
+    }
+    function syncControls(recs) {
+        const fill = (id, vals, first) => { const el = $(id), cur = F[id === 'fDisease' ? 'disease' : 'gn'], sig = vals.join('\u0001'); if (el.dataset.sig === sig) { el.value = cur; return; } el.dataset.sig = sig; el.innerHTML = `<option value="">${first}</option>` + vals.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join(''); el.value = cur; };
+        const uniq = fn => [...new Set(recs.map(fn).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+        fill('fDisease', uniq(dname), 'All diseases'); fill('fGN', uniq(r => (r.inGNArea || '').trim()), 'All GN divisions');
+        $('fPeriod').value = F.period; $('fSort').value = F.sort; $('fFrom').value = F.from; $('fTo').value = F.to; $('fCustom').style.display = F.period === 'custom' ? '' : 'none';
+    }
+    function ago(r) { const n = daysSince(r.inDateNotified); if (n === null) return ''; return n === 0 ? 'today' : n === 1 ? 'yesterday' : n < 0 ? 'in the future' : n + ' days ago'; }
+    function renderTable(recs) {
+        const sig = [$('inSearchQuery').value, F.status, F.disease, F.gn, F.period, F.from, F.to, F.sort].join('|');
+        if (sig !== lastSig) { F.page = 1; lastSig = sig; }
+        list = applyFilters(recs); if (typeof filteredRecords !== 'undefined') filteredRecords = list;
+        const pages = Math.max(1, Math.ceil(list.length / F.size)); F.page = Math.min(Math.max(1, F.page), pages);
+        const a = (F.page - 1) * F.size, slice = list.slice(a, a + F.size), tb = $('savedRecordsTableBody');
+        const cnt = { all: recs.length, pending: 0, overdue: 0, confirmed: 0, local: 0 };
+        recs.forEach(r => { const c = confirmInfo(r); if (c.confirmed) cnt.confirmed++; else { cnt.pending++; if (c.overdue) cnt.overdue++; } if (r.synced === false) cnt.local++; });
+        const chip = (v, lab, cls) => `<button type="button" class="chip ${cls || ''}${F.status === v ? ' on' : ''}" data-act="status" data-v="${v}">${lab} <b>${cnt[v]}</b></button>`;
+        const active = F.status !== 'all' || F.disease || F.gn || F.period !== 'all' || $('inSearchQuery').value.trim();
+        $('fChips').innerHTML = chip('all', 'All') + chip('pending', '⏳ Pending', 'amber') + chip('overdue', '⏰ Overdue', 'red') + chip('confirmed', '✔ Confirmed', 'green') + chip('local', '🟡 Local only', 'amber')
+            + `<span class="f-info">Showing <b>${list.length}</b> of ${recs.length} reports${active ? ' · <a href="#" data-act="clear">✕ clear filters</a>' : ''}</span>`;
+        if (!recs.length) { tb.innerHTML = '<tr><td colspan="6" class="d-empty">No reports yet. Press <b>➕ New Report</b> to add the first one.</td></tr>'; }
+        else if (!slice.length) { tb.innerHTML = '<tr><td colspan="6" class="d-empty">No report matches these filters. <a href="#" data-act="clear">Clear filters</a></td></tr>'; }
+        else tb.innerHTML = slice.map(r => {
+            const ci = confirmInfo(r), age = (r.inPatientAge || '').trim(), sex = (r.sexOption || '').trim(), gn = (r.inGNArea || '').trim(), id = esc(r.id);
+            return `<tr data-id="${id}"${F.flash === r.id ? ' class="flash"' : ''}${ci.overdue ? ' style="background:#fef2f2;"' : ''}>
+                <td data-l="Ref"><b>${esc(r.inPhiRefNo || 'No Ref')}</b></td>
+                <td data-l="Patient"><b>${esc(r.inPatientName || 'Unnamed Patient')}</b><br><small>${esc([age, sex, gn].filter(Boolean).join(' · ') || '—')}</small></td>
+                <td data-l="Disease">${diseaseCellHtml(r)}</td>
+                <td data-l="Notified" style="white-space:nowrap;">${esc(r.inDateNotified || '-')}<br><small>${esc(ago(r))}</small></td>
+                <td data-l="Cloud">${r.synced === false ? '<span class="pill local">🟡 Local only</span>' : '<span class="pill ok">🟢 Synced</span>'}</td>
+                <td style="white-space:nowrap;"><button type="button" class="ic" data-act="view" data-id="${id}" title="View details">👁</button><button type="button" class="ic" data-act="edit" data-id="${id}" title="Edit report">✏️</button><button type="button" class="ic" data-act="print" data-id="${id}" title="Preview / Print">🖨️</button><button type="button" class="ic del" data-act="del" data-id="${id}" title="Delete">🗑️</button></td></tr>`;
+        }).join('');
+        const from = list.length ? a + 1 : 0, to = Math.min(a + F.size, list.length);
+        $('dashPager').innerHTML = `<span>${from}–${to} of ${list.length}</span><span><button type="button" data-act="prev"${F.page <= 1 ? ' disabled' : ''}>◀ Prev</button> Page <b>${F.page}</b> / ${pages} <button type="button" data-act="next"${F.page >= pages ? ' disabled' : ''}>Next ▶</button></span>`
+            + `<span>Rows <select onchange="dashSet('size', +this.value)">${[25, 50, 100].map(n => `<option${n === F.size ? ' selected' : ''}>${n}</option>`).join('')}</select></span>`;
+    }
+
+    window.updatePendingBadge = function () {
+        const btn = $('btnPending'); if (!btn) return;
+        const pend = recsNow().filter(r => !confirmInfo(r).confirmed), od = pend.filter(r => confirmInfo(r).overdue).length;
+        btn.innerHTML = `⏳ Pending Confirmation (${pend.length})` + (od ? ` · <span class="pill" style="background:#fff;color:#dc2626;">${od} overdue</span>` : '');
+        btn.style.background = od ? '#dc2626' : ''; btn.style.borderColor = od ? '#dc2626' : '';
+    };
+    function render() {
+        const recs = recsNow();
+        const ar = $('dashArea'); if (ar) ar.textContent = (typeof APP !== 'undefined' && APP && APP.areaName) ? ' · ' + APP.areaName : '';
+        renderKpis(recs); charts(recs); syncControls(recs); renderTable(recs); window.updatePendingBadge();
+        if (drawerId && $('dashDrawer').classList.contains('open')) { if (recs.some(r => r.id === drawerId)) fillDrawer(drawerId); else dashCloseDrawer(); }
+    }
+    window.filterAndRenderRecords = render;
+    window.dashSet = function (k, v) { F[k] = v; if (k === 'size') F.page = 1; render(); };
+    function clearAll() { F.status = 'all'; F.disease = ''; F.gn = ''; F.period = 'all'; F.from = ''; F.to = ''; F.page = 1; $('inSearchQuery').value = ''; }
+
+    /* ---------- detail drawer ---------- */
+    function fillDrawer(id) {
+        const r = recsNow().find(x => x.id === id); if (!r) return;
+        drawerId = id; const ci = confirmInfo(r), idx = list.findIndex(x => x.id === id);
+        $('drTitle').textContent = (idx >= 0 ? 'Report ' + (idx + 1) + ' of ' + list.length : 'Report');
+        const f = (l, v, w2) => `<div${w2 ? ' class="w2"' : ''}><span>${l}</span><p>${v ? esc(v) : '—'}</p></div>`;
+        const gps = (r.inGpsCoords || '').trim(), gm = gps && /-?\d+\.\d+/.test(gps) ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(gps.replace(/\s+/g, ''))}" target="_blank" rel="noopener">${esc(gps)} ↗</a>` : '';
+        const tag = ci.confirmed ? '<span class="pill ok">✔ Confirmed' + (r.inDateConfirmed ? ' · ' + esc(r.inDateConfirmed) : '') + '</span>' : (ci.overdue ? '<span class="pill" style="background:#fee2e2;color:#b91c1c;">⏰ Not confirmed · ' + ci.days + ' days</span>' : '<span class="pill local">⏳ Not confirmed yet' + (ci.days !== null ? ' · ' + ci.days + ' d' : '') + '</span>');
+        $('drBody').innerHTML = `<h3 class="dr-name">${esc(r.inPatientName || 'Unnamed Patient')}</h3><div class="dr-ref">Ref No <b>${esc(r.inPhiRefNo || '—')}</b> · ${esc((r.inPatientAge || '') + (r.sexOption ? ' · ' + r.sexOption : ''))}</div>
+            <div class="dr-tags">${tag}${r.synced === false ? '<span class="pill local">🟡 Local only</span>' : '<span class="pill ok">🟢 Synced</span>'}</div>
+            <div class="dr-grid">${f('Disease (notified)', r.inDiseaseNotified)}${f('Disease (confirmed)', r.inDiseaseConfirmed)}${f('Date notified', r.inDateNotified)}${f('Date confirmed', r.inDateConfirmed)}
+            ${f('Date of onset', r.inDateOnset)}${f('Hospitalized', r.inDateHospitalization)}${f('Discharged', r.inDateDischarge)}${f('Hospital', r.inHospitalName)}
+            ${f('Address', r.inPatientAddress, true)}${f('Phone', r.inPatientPhone)}${f('GN division', r.inGNArea)}${f('PHM area', r.inPHMArea)}${f('Village', r.inVillage)}${f('Occupation', r.inOccupation)}
+            <div class="w2"><span>GPS</span><p>${gm || '—'}</p></div></div>`;
+        $('drEdit').onclick = () => { dashCloseDrawer(); loadRecordForEditing(id); };
+        $('drPrint').onclick = () => { dashCloseDrawer(); previewRecord(id); };
+        $('drDelete').onclick = () => { deleteRecord(id); };
+    }
+    window.dashOpenDrawer = function (id) { fillDrawer(id); $('dashDrawer').classList.add('open'); };
+    window.dashCloseDrawer = function () { $('dashDrawer').classList.remove('open'); drawerId = null; };
+    window.dashDrawerNav = function (d) { if (!list.length) return; let i = list.findIndex(x => x.id === drawerId); i = Math.min(Math.max(0, (i < 0 ? 0 : i) + d), list.length - 1); fillDrawer(list[i].id); };
+
+    /* ---------- form preview overlay (the A4 pages that are printed) ---------- */
+    const setPs = () => document.documentElement.style.setProperty('--ps', Math.max(0.3, Math.min(1, (window.innerWidth - 24) / 1123)).toFixed(3));
+    const box = () => document.querySelector('.dashboard-container');
+    window.openPreview = function (page) { box().classList.remove('preview-collapsed'); setPs(); showPreviewPage(page || 1); document.body.style.overflow = 'hidden'; };
+    window.closePreview = function () { box().classList.add('preview-collapsed'); const w = $('entryWizard'); if (!w || !w.classList.contains('open')) document.body.style.overflow = ''; };
+    window.toggleMobilePreview = function () { if (box().classList.contains('preview-collapsed')) openPreview(1); else closePreview(); };
+    window.previewRecord = function (id) {
+        window.__quietLoad = true; try { loadRecordForEditing(id); } finally { window.__quietLoad = false; }
+        updatePrintForm(); openPreview(1); if (typeof p2MapRefresh === 'function') p2MapRefresh(false);
+    };
+    window.addEventListener('resize', () => { if (!box().classList.contains('preview-collapsed')) setPs(); });
+
+    /* ---------- export ---------- */
+    const csvCell = v => { v = v == null ? '' : String(v); return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+    function download(name, text, type) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 3000); }
+    window.dashExportCsv = function () {
+        $('dashExportMenu').classList.remove('open');
+        const head = ['Ref No', 'Patient name', 'Age', 'Sex', 'Address', 'Phone', 'GN division', 'PHM area', 'Village', 'Disease (notified)', 'Disease (confirmed)', 'Date notified', 'Date confirmed', 'Date of onset', 'Hospitalized', 'Discharged', 'Hospital', 'GPS', 'Cloud'];
+        const rows = list.map(r => [r.inPhiRefNo, r.inPatientName, r.inPatientAge, r.sexOption, r.inPatientAddress, r.inPatientPhone, r.inGNArea, r.inPHMArea, r.inVillage, r.inDiseaseNotified, r.inDiseaseConfirmed, r.inDateNotified, r.inDateConfirmed, r.inDateOnset, r.inDateHospitalization, r.inDateDischarge, r.inHospitalName, r.inGpsCoords, r.synced === false ? 'Local only' : 'Synced']);
+        download('health411-reports-' + fmtD(new Date()) + '.csv', '\uFEFF' + [head].concat(rows).map(r => r.map(csvCell).join(',')).join('\r\n'), 'text/csv;charset=utf-8');
+    };
+    window.dashExportJson = function () { $('dashExportMenu').classList.remove('open'); download('health411-backup-' + fmtD(new Date()) + '.json', JSON.stringify(recsNow(), null, 1), 'application/json'); };
+    window.dashToggleExport = function (e) { e.stopPropagation(); $('dashExportMenu').classList.toggle('open'); };
+    document.addEventListener('click', e => { if (!e.target.closest('.dash-menu')) $('dashExportMenu').classList.remove('open'); });
+
+    /* ---------- clicks (cards, chips, charts, table) ---------- */
+    document.addEventListener('click', e => {
+        const t = e.target.closest('[data-act]');
+        if (t && (t.closest('.dash-main'))) {
+            const a = t.dataset.act, v = t.dataset.v, id = t.dataset.id;
+            if (a === 'status') { F.status = v; render(); return; }
+            if (a === 'clear') { e.preventDefault(); clearAll(); render(); return; }
+            if (a === 'prev') { F.page--; render(); return; } if (a === 'next') { F.page++; render(); return; }
+            if (a === 'view') { dashOpenDrawer(id); return; } if (a === 'edit') { loadRecordForEditing(id); return; }
+            if (a === 'print') { previewRecord(id); return; } if (a === 'del') { deleteRecord(id); return; }
+            if (a === 'week') { F.period = 'custom'; F.from = v; F.to = fmtD(addD(parseD(v), 6)); render(); $('dashFilters').scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+            if (a === 'disease') { F.disease = v; render(); return; } if (a === 'gn') { F.gn = v; render(); return; }
+            if (a === 'k-total') { clearAll(); render(); return; } if (a === 'k-week') { clearAll(); F.period = 'week'; render(); return; } if (a === 'k-28d') { clearAll(); F.period = '28d'; render(); return; }
+            if (a === 'k-pending') { openPendingList(); return; } if (a === 'k-local') { clearAll(); F.status = 'local'; render(); return; }
+        }
+        const row = e.target.closest('#savedRecordsTableBody tr[data-id]');
+        if (row && !e.target.closest('button,a')) dashOpenDrawer(row.dataset.id);
+    });
+    document.addEventListener('keydown', e => {
+        const typing = /^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement || {}).tagName || '');
+        if (e.key === '/' && !typing && !document.querySelector('.p2-overlay.open,.pt-overlay.open,.gp-overlay.open,#entryWizard.open,.pc-overlay.open,.lg-overlay.open')) { e.preventDefault(); $('inSearchQuery').focus(); }
+        if (e.key === 'Escape') {
+            if ($('dashDrawer').classList.contains('open')) dashCloseDrawer();
+            else if (!box().classList.contains('preview-collapsed') && !document.querySelector('.p2-overlay.open,.pt-overlay.open,.gp-overlay.open,#entryWizard.open,.pc-overlay.open,.lg-overlay.open')) closePreview();
+        }
+    });
+
+    /* ---------- when a report is saved: show it at the top of an unfiltered list, highlighted ---------- */
+    const _ups = upsertAndShow;
+    upsertAndShow = function (rec) { clearAll(); F.sort = 'new'; F.flash = rec.id; setTimeout(() => { if (F.flash === rec.id) { F.flash = null; render(); } }, 4000); _ups(rec); };
+
+    render();
 })();
 
 </script>
