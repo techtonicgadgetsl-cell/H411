@@ -3492,8 +3492,9 @@ textarea.vt-live{border-color:#dc2626!important;box-shadow:0 0 0 2px rgba(220,38
 
     function finish(s, msg, cls) {
         s.want = false;
-        s.btn.classList.remove('rec'); s.btn.textContent = '🎤 Speak';
+        s.btn.classList.remove('rec'); s.btn.textContent = '🎤 Speak'; s.btn2.classList.remove('rec'); s.btn2.textContent = '🎙 Gemini voice';
         s.ta.classList.remove('vt-live'); s.ta.removeEventListener('keydown', s.onKey);
+        clearTimeout(s.hint);
         if (s.rec) { try { s.rec.onend = null; s.rec.stop(); } catch (e) {} s.rec = null; }
         if (s.mr && s.mr.state !== 'inactive') { try { s.mr.stop(); } catch (e) {} }
         if (s.stream) { s.stream.getTracks().forEach(t => t.stop()); s.stream = null; }
@@ -3508,13 +3509,17 @@ textarea.vt-live{border-color:#dc2626!important;box-shadow:0 0 0 2px rgba(220,38
         rec.lang = LANGS[s.sel.value] || 'si-LK';
         rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 1;
         s.base = baseOf(s.ta); s.got = false; s.startedAt = Date.now();
+        rec.onstart = () => say(s, '🔴 Mic is ON (' + rec.lang + '). Speak now...');
+        rec.onspeechstart = () => say(s, '🔴 Hearing you...');
+        clearTimeout(s.hint);
+        s.hint = setTimeout(() => { if (cur === s && !s.got) say(s, '⚠ Mic is on but no text came. If Sinhala does not work here, press 🎙 Gemini voice instead.', 'err'); }, 8000);
         rec.onresult = e => {
             let fin = '', itm = '';
             for (let i = 0; i < e.results.length; i++) {
                 const r = e.results[i];
                 if (r.isFinal) fin += r[0].transcript; else itm += r[0].transcript;
             }
-            s.got = true;
+            s.got = true; clearTimeout(s.hint);
             s.ta.value = s.base + (fin + itm).replace(/^\s+/, '');
             s.ta.scrollTop = s.ta.scrollHeight; fire(s.ta);
         };
@@ -3522,10 +3527,10 @@ textarea.vt-live{border-color:#dc2626!important;box-shadow:0 0 0 2px rgba(220,38
             const er = ev.error;
             if (er === 'no-speech' || er === 'aborted') return;
             if (er === 'not-allowed' || er === 'service-not-allowed') return finish(s, '⚠ Microphone is blocked. Allow the microphone for this site (lock icon in the address bar) and try again.', 'err');
-            if (er === 'language-not-supported') { finish(s, '', ''); return startFallback(s, '⚠ This browser has no live ' + (s.sel.value === 'si' ? 'Sinhala' : 'English') + ' dictation — using Gemini voice instead. '); }
+            if (er === 'language-not-supported') return finish(s, '⚠ This browser has no live ' + (s.sel.value === 'si' ? 'Sinhala' : 'English') + ' dictation. Press 🎙 Gemini voice instead.', 'err');
             if (er === 'audio-capture') return finish(s, '⚠ No microphone found.', 'err');
-            if (er === 'network') return finish(s, '⚠ Voice typing needs internet.', 'err');
-            finish(s, '⚠ Voice error: ' + er, 'err');
+            if (er === 'network') return finish(s, '⚠ Live dictation could not reach Google (network). Press 🎙 Gemini voice instead.', 'err');
+            finish(s, '⚠ Voice error: ' + er + '. Try 🎙 Gemini voice.', 'err');
         };
         rec.onend = () => {             // Chrome stops after a pause: keep listening until the user presses Stop
             if (!s.want || cur !== s) return;
@@ -3570,10 +3575,15 @@ textarea.vt-live{border-color:#dc2626!important;box-shadow:0 0 0 2px rgba(220,38
             } catch (e) { say(s, '⚠ ' + (e && e.message || e), 'err'); }
         };
         s.mr.start();
-        s.btn.classList.add('rec'); s.btn.textContent = '⏹ Stop & write';
+        s.btn2.classList.add('rec'); s.btn2.textContent = '⏹ Stop & write';
         say(s, (prefix || '') + '🔴 Recording... press Stop when you finish.');
     }
 
+    function toggle2(s) {                                 // Gemini voice: record, then Gemini writes it
+        if (cur === s && s.fallback) { if (s.mr && s.mr.state === 'recording') s.mr.stop(); return; }
+        if (cur) finish(cur, '', '');
+        startFallback(s, '');
+    }
     function toggle(s) {
         if (cur === s) {                                   // pressing again = stop
             if (s.fallback && s.mr && s.mr.state === 'recording') { s.mr.stop(); return; }
@@ -3596,14 +3606,15 @@ textarea.vt-live{border-color:#dc2626!important;box-shadow:0 0 0 2px rgba(220,38
         if (!ta || ta.dataset.vt) return;
         ta.dataset.vt = '1';
         const bar = document.createElement('div'); bar.className = 'vt-bar';
-        bar.innerHTML = '<button type="button" class="vt-btn">🎤 Speak</button>'
+        bar.innerHTML = '<button type="button" class="vt-btn">🎤 Speak</button><button type="button" class="vt-btn vt-b2" style="background:#7c3aed">🎙 Gemini voice</button>'
             + '<select title="Language you speak"><option value="si">සිංහල කතා කරන්න</option><option value="en">Speak English</option></select>'
             + '<span class="vt-st"></span>';
         ta.insertAdjacentElement('afterend', bar);
-        const s = { ta, bar, btn: bar.querySelector('button'), sel: bar.querySelector('select'), st: bar.querySelector('.vt-st') };
+        const s = { ta, bar, btn: bar.querySelector('button'), btn2: bar.querySelector('.vt-b2'), sel: bar.querySelector('select'), st: bar.querySelector('.vt-st') };
         s.sel.value = getPref();
-        s.sel.addEventListener('change', () => { setPref(s.sel.value); document.querySelectorAll('.vt-bar select').forEach(o => { if (o !== s.sel) o.value = s.sel.value; }); if (cur === s) { finish(s, '', ''); toggle(s); } });
+        s.sel.addEventListener('change', () => { setPref(s.sel.value); document.querySelectorAll('.vt-bar select').forEach(o => { if (o !== s.sel) o.value = s.sel.value; }); if (cur === s && !s.fallback) { finish(s, '', ''); toggle(s); } });
         s.btn.addEventListener('click', () => toggle(s));
+        s.btn2.addEventListener('click', () => toggle2(s));
     }
 
     IDS.forEach(attach);
