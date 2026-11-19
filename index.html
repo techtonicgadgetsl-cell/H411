@@ -950,6 +950,11 @@
             .dash-actions a[href="disease-map.html"] {
                 display: none !important;
             }
+            #btnDashboardFinalSave {
+                display: inline-flex !important;
+                font-size: 13px !important;
+                padding: 8px 12px !important;
+            }
             .mobile-fab {
                 display: flex;
                 align-items: center;
@@ -1138,6 +1143,7 @@
                 </div>
                 <div class="dash-actions">
                     <button type="button" class="dash-btn primary" onclick="newReportEntry()">➕ New Report</button>
+                    <button type="button" class="dash-btn" id="btnDashboardFinalSave" onclick="wizSave()" style="background:linear-gradient(135deg,#2563eb,#1d4ed8);border-color:#2563eb;color:#fff;font-size:14px;padding:9px 16px;box-shadow:0 4px 12px rgba(37,99,235,0.35);">💾 Final Save Report</button>
                     <button type="button" class="dash-btn" id="btnPending" onclick="openPendingList()">⏳ Pending Confirmation</button>
                     <a class="dash-btn" href="disease-map.html" target="_blank">🗺️ Disease Map</a>
                     <button type="button" class="dash-btn" onclick="openSettingsModal()" title="Configure AI Engine, PHI Range & MOH Area">⚙️ Settings</button>
@@ -1564,7 +1570,7 @@
                     </div>
                     <div class="wiz-foot">
                         <button type="button" class="btn btn-reset" id="wizBack" onclick="wizGo(-1)">⬅ Back</button>
-                        <button type="button" class="btn btn-update" id="wizSave" onclick="wizSave()">💾 Save Report</button>
+                        <button type="button" class="btn btn-gps" id="wizDoneClose" onclick="closeWizard()" style="background:#334155;">✔ Done (Back to Dashboard)</button>
                         <button type="button" class="btn btn-ai" id="wizNext" onclick="wizGo(1)">Next ➡</button>
                     </div>
                   </div>
@@ -1851,18 +1857,25 @@
         } catch (e) { console.log('IndexedDB save notice:', e.message); }
         upsertAndShow(formData);   // show the record in the table straight away
 
+        // Clean any undefined values before Firebase .set()
+        Object.keys(formData).forEach(k => { if (formData[k] === undefined) delete formData[k]; });
+
         if (fbDb && fbUser && navigator.onLine) {
             formData.synced = true;
-            fbDb.ref('health_reports/' + recordId).set(formData).then(() => {
-                alert(wasEditing ? "✅ Record Updated in Cloud Database!" : "✅ Full Report Saved & Synced to Cloud!");
-                activeEditingRecordId = null;
-                sessionStorage.removeItem('h411_active_edit_id');
-                delete pendingLocal[recordId];
-                const m = allFetchedRecords.find(r => r.id === recordId); if (m) m.synced = true;
-                filterAndRenderRecords();
-            }).catch(err => {
-                alert("⚠️ Cloud Save Error. Stored locally: " + err.message);
-            });
+            try {
+                fbDb.ref('health_reports/' + recordId).set(formData).then(() => {
+                    alert(wasEditing ? "✅ Record Updated in Cloud Database!" : "✅ Full Report Saved & Synced to Cloud!");
+                    activeEditingRecordId = null;
+                    sessionStorage.removeItem('h411_active_edit_id');
+                    delete pendingLocal[recordId];
+                    const m = allFetchedRecords.find(r => r.id === recordId); if (m) m.synced = true;
+                    filterAndRenderRecords();
+                }).catch(err => {
+                    alert("⚠️ Cloud Save Error. Stored locally: " + (err && err.message ? err.message : err));
+                });
+            } catch (syncErr) {
+                alert("⚠️ Cloud Save Error. Stored locally: " + (syncErr && syncErr.message ? syncErr.message : syncErr));
+            }
         } else {
             alert("✅ Full Report saved locally in Browser! Will auto-sync when Online.");
             activeEditingRecordId = null;
@@ -1965,7 +1978,7 @@
 
         if (filteredRecords.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No matching saved reports found.</td></tr>';
-            cardViewer.style.display = 'none';
+            if (cardViewer) cardViewer.style.display = 'none';
             return;
         }
 
@@ -1989,8 +2002,10 @@
         });
 
         if (currentNavIndex >= filteredRecords.length) currentNavIndex = 0;
-        cardViewer.style.display = 'block';
-        renderCurrentNavCard();
+        if (cardViewer) {
+            cardViewer.style.display = 'block';
+            renderCurrentNavCard();
+        }
     }
 
     function navigateRecord(direction) {
@@ -2607,6 +2622,11 @@
             }
         });
         localStorage.setItem('h411_form_data', JSON.stringify(formData));
+        const finalBtn = document.getElementById('btnDashboardFinalSave');
+        if (finalBtn) {
+            const refVal = (document.getElementById('inPhiRefNo')?.value || '').trim();
+            finalBtn.innerHTML = refVal ? `💾 Final Save (${refVal})` : '💾 Final Save Report';
+        }
     }
 
     function loadSavedData() {
@@ -2694,9 +2714,15 @@
     window.wizGo = function (d) { show(cur + d); };
     window.wizSave = function () {
         const el = document.getElementById('inPhiRefNo');
-        if (el && !el.value.trim()) {   // Ref No missing: jump to the step that has it, then show the warning
+        if (el && !el.value.trim()) {   // Ref No missing: open wizard at the step that has it, then show the warning
             const i = steps.indexOf(el.closest('.wiz-step'));
-            if (i >= 0) { show(i); setTimeout(saveRecordOfflineFirst, 80); return; }
+            if (!ov.classList.contains('open')) {
+                openWizard(i >= 0 ? i : 0);
+            } else if (i >= 0) {
+                show(i);
+            }
+            setTimeout(saveRecordOfflineFirst, 100);
+            return;
         }
         saveRecordOfflineFirst();
     };
